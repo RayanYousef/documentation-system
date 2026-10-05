@@ -15,7 +15,7 @@ sources:
 sidebar_position: 7
 ---
 
-`@platform/viewers` exports two React components with no platform dependencies: `ModelViewerCore` (glTF/GLB on `@google/model-viewer`) and `FbxViewerCore` (FBX on raw `three`). Both take an already-resolved `src` URL plus `height` (and `alt` for the model viewer). They know nothing about repositories, refs or sessions; that is the point of the package (decision 1 in [Decisions](decisions.md)): the site and the editor both need the rendering code, and the editor may not import site code.
+`@platform/viewers` exports two React components with no platform dependencies: `ModelViewerCore` (glTF/GLB on `@google/model-viewer`) and `FbxViewerCore` (FBX on raw `three`). Both take an already-resolved `src` URL plus `height` (and `alt` for the model viewer). Besides the two components, the package exports their prop types (`ModelViewerCoreProps`, `FbxViewerCoreProps`) and the `viewerBoxStyle` constant, and both cores default `height` to 480. `FbxViewerCore` has no `alt` and always auto-rotates with fixed lights. They know nothing about repositories, refs or sessions; that is the point of the package (decision 1 in [Decisions](decisions.md)): the site and the editor both need the rendering code, and the editor may not import site code.
 
 ## How the site uses them
 
@@ -28,7 +28,7 @@ While loading, the wrapper shows a placeholder; on failure it shows the error an
 
 ## How the editor uses them
 
-The editor's JSX descriptors (`services/editor/src/mdx/descriptors.tsx`) render live previews with `ModelViewerCore` and `FbxViewerCore` directly, and its toolbar can upload a model (`InsertModelButton`) or reference one from a code repository (`InsertFromRepoButton`). The prop list the editor offers comes from `site/components.json` (`ComponentsManifest`), which lists `src`, `repo`, `ref`, `path`, `alt` and `height` for both viewers.
+The editor's JSX descriptors (`services/editor/src/mdx/descriptors.tsx`) render live previews with `ModelViewerCore` and `FbxViewerCore` directly, and its toolbar can upload a `.glb`, `.gltf` or `.fbx` into the site's static `models/` folder (`InsertModelButton`) or insert a model or image already committed to the site (`InsertFromRepoButton`, which lists the site's assets). `InsertModelButton` always inserts a viewer with `src` set; `InsertFromRepoButton` inserts a viewer with `src` set for a model and a plain image for an image asset. To point a viewer at a code repository, fill in `repo`, `ref` and `path` in the preview's property fields. The prop list the editor offers comes from `site/components.json` (`ComponentsManifest`), which lists `src`, `repo`, `ref`, `path`, `alt` and `height` for both viewers.
 
 ## Adding a viewer
 

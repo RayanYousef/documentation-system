@@ -81,7 +81,7 @@
     "route": "/platform/agent-skill",
     "file": "platform/agent-skill.md",
     "title": "Agent skill",
-    "description": "Explains the docs-platform agent skill (the only agent entry point), its user-level registry that maps a code repository to its docs bundle, the navigation walk it prescribes and its relationship to the ray-okf-core format skill; open it when setting up an agent to work on this documentation or when a repo is \"not registered\".",
+    "description": "Explains the docs-platform agent skill (the only platform agent skill), its user-level registry that maps a code repository to its docs bundle, the navigation walk it prescribes and its relationship to the ray-okf-core format skill; open it when setting up an agent to work on this documentation or when a repo is \"not registered\".",
     "type": "system",
     "tags": [
       "platform",
@@ -218,7 +218,7 @@
     "route": "/platform/editor",
     "file": "platform/editor.md",
     "title": "Editor service",
-    "description": "Describes the in-browser editor (Vite + React + MDXEditor): how it is composed from platform.config.js, what each screen and dialog does, how frontmatter edits preserve YAML, and how it is built and deployed under /editor/; open it when changing editor behaviour or debugging a save from the UI.",
+    "description": "Describes the in-browser editor (Vite + React + MDXEditor): how it is composed from platform.config.js, what each screen and dialog does, how frontmatter edits preserve YAML, how the arcade theme is applied, and how it is built and deployed under /editor/; open it when changing editor behaviour or debugging a save from the UI.",
     "type": "system",
     "tags": [
       "platform",
@@ -226,7 +226,8 @@
       "vite",
       "react",
       "mdxeditor",
-      "frontmatter"
+      "frontmatter",
+      "theme"
     ],
     "resource": "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor",
     "sources": [
@@ -237,8 +238,11 @@
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/mdx/descriptors.tsx",
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/mdx/componentsManifest.ts",
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/session/SessionStore.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/theme/index.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/theme/tokens.css",
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/vite.config.ts",
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/e2e/editor.spec.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/e2e/theme.spec.ts",
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/copy-editor.mjs"
     ]
   },
@@ -480,7 +484,18 @@
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/okf.mjs",
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/copy-editor.mjs",
       "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/lint-boundaries.test.ts",
-      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/vitest.workspace.ts"
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/vitest.workspace.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/viewers/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform/vitest.config.ts",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.gitattributes",
+      "https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.gitignore"
     ]
   },
   {

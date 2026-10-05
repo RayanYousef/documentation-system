@@ -6,8 +6,15 @@ Docusaurus site + OKF Core index layer + in-browser editor + 3D viewers, organis
 
 1. Edit `platform.config.js`: site identity, `codeRepos` (the code repositories the docs describe), enabled features.
 2. Replace `site/docs/` with your bundle (keep `index.md`, `log.md`, `AGENTS.md`; see `.agents/skills/docs-platform/`).
-3. `npm ci && npm run okf:generate && npm run site:build`.
-4. Push to `main`: `deploy-pages.yml` publishes the site and the editor to GitHub Pages; `okf-validate.yml` guards every push.
+3. Install, build the packages, then generate and build the site:
+   ```bash
+   npm ci
+   npm run build -w @platform/contracts -w @platform/okf-core -w @platform/viewers -w @platform/auth -w @platform/content
+   npm run okf:generate
+   npm run site:build
+   ```
+   The packages export from the git-ignored `dist/` folder, so they must be built before `okf:generate`. Note: the frozen demo version `1.0.0` (`site/versions.json`) pins this template repository, so keep that repository in `codeRepos`; otherwise the validator reports `undeclared-repo`.
+4. Turn on GitHub Pages for the `gh-pages` branch before the first deploy. Push to `main`: `deploy-pages.yml` publishes the site and the editor to GitHub Pages; `okf-validate.yml` guards every push.
 
 ## Commands
 

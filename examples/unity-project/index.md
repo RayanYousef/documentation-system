@@ -1,6 +1,6 @@
 # Skyforge (Unity project)
 
-Cooperative airship-crafting game. This is the code repository; the player-facing and engineering documentation lives in the separate docs bundle, whose pages point back here via `resource` URLs.
+Cooperative airship-crafting game. This is the sample code folder; the player-facing and engineering documentation lives in the same repository under `site/docs`, and its pages point back here via `resource` URLs. The C# files here are stubs and the meshes are placeholders, so the docs describe the intended design, not code present in this folder.
 
 ## Files
 
@@ -8,4 +8,4 @@ Cooperative airship-crafting game. This is the code repository; the player-facin
 
 ## Folders
 
-* [Assets](Assets/) - everything Unity loads: scripts, models, scenes and data.
+* [Assets](Assets/) - the sample's scripts (stubs) and models (placeholders).

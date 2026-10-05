@@ -40,12 +40,14 @@ sidebar_position: 2
 
 ## components-manifest.ts
 
-`ComponentsManifest { components: ComponentDescriptor[] }` is the shape of `site/components.json`, which the editor fetches from `<baseUrl>platform/components.json` to drive component insertion. `ComponentDescriptor { name, kind: 'flow', hasChildren, preview, props }`; `preview` is one of `model-viewer`, `fbx-viewer`, `tabs`, `tab-item`, `generic`.
+`ComponentsManifest { components: ComponentDescriptor[] }` is the shape of `site/components.json`, which the editor fetches from `<baseUrl>platform/components.json` to drive component insertion. `ComponentDescriptor { name, kind: 'flow', hasChildren, preview, props: ComponentProp[] }` with `ComponentProp { name, type: 'string' | 'number' | 'boolean' }`; `preview` is one of `model-viewer`, `fbx-viewer`, `tabs`, `tab-item`, `generic`.
 
 ## Contract test suites
 
 - `describeAuthProviderContract(name, factory)` takes a factory returning `{ provider, validCredentials, invalidCredentials, nonCollaboratorCredentials?, cleanup? }` and checks the id, login, verify, invalid credentials, unsupported credentials and (when supplied) the `NOT_COLLABORATOR` path.
 - `describeContentBackendContract(name, factory)` takes a factory returning `{ backend, readFile(relPath), listTags(), cleanup? }` seeded with `MINI_BUNDLE`, and checks version listing, page listing (reserved files and `code-maps/` hidden), etags, `NOT_FOUND`, single-commit regeneration of index, manifest and log, `CONFLICT` on a stale etag, create, delete, rename, `FROZEN`, `VALIDATION`, upload, search and publish (sha-pinned URLs, `versions/<v>.json`, tag).
-- `testing/fixtures/miniBundle.ts` exports the in-memory bundle, `NEW_PAGE_TEXT` and `INVALID_PAGE_TEXT` shared by both suites and by okf-core tests.
+- `testing/fixtures/miniBundle.ts` exports `MINI_BUNDLE` (the in-memory bundle), `MINI_CODE_REPOS` (the single `acme/game` code repo the harnesses pass as `codeRepos`), `NEW_PAGE_TEXT` and `INVALID_PAGE_TEXT`, shared by both suites and by okf-core tests.
+
+The suites are imported from the `@platform/contracts/testing` subpath, and `vitest` is a peer dependency of the package.
 
 Every implementation, present or future, registers itself with one of these suites in its own test file; that is what "substitutable" means in this codebase.

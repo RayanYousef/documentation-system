@@ -19,10 +19,10 @@ sidebar_position: 4
 `new GithubTokenProvider({ owner, repo, fetch?, apiRoot? })`, id `github-token`.
 
 - `login({ kind: 'github-token', token })` trims the token, builds `{ provider: 'github-token', token, createdAt }` and calls `verify`; any other `Credentials.kind` throws `UNSUPPORTED_CREDENTIALS`.
-- `verify(session)` calls `GET /repos/{owner}/{repo}` with the token. 401, 403 and 404 become `AuthError('INVALID_CREDENTIALS')`; other failures `NETWORK`. It then requires `permissions.push === true`, otherwise `AuthError('NOT_COLLABORATOR', ...)` with a message that tells the user to ask for write access and create a fine-grained token with Contents: Read and write. Name, login and email come from `GET /user` (`email` may be null; the content service then commits as `<login>@users.noreply.github.com`). Role is `editor` when push is true.
+- `verify(session)` calls `GET /repos/{owner}/{repo}` with the token. 401, 403 and 404 become `AuthError('INVALID_CREDENTIALS')`; other failures `NETWORK`. It then requires `permissions.push === true`, otherwise `AuthError('NOT_COLLABORATOR', ...)` with a message that tells the user to ask for write access and create a fine-grained token with Contents: Read and write. Name, login and email come from `GET /user` (`email` may be null; the editor then sets the commit author email to `<login>@users.noreply.github.com`). Role is `editor` when push is true.
 - The fix this design introduced: the old editor only checked that the repository call succeeded, so any valid token passed the gate and failed at save time. The push check moves that failure to login.
 
-Tests run the contract suite against a mocked `fetch` (`test/fakeGithubAuth.ts`) covering valid, invalid, non-collaborator and network cases.
+Tests run the contract suite against a mocked `fetch` (`test/fakeGithubAuth.ts`) covering valid, invalid and non-collaborator cases, plus checks for the `NOT_COLLABORATOR` message and the `Bearer` and `X-GitHub-Api-Version` headers. The `NETWORK` path is not covered by a test.
 
 ## MockAuthProvider
 

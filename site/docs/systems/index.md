@@ -7,6 +7,8 @@ Runtime systems that make up the Skyforge gameplay layer: how state is stored, h
 
 Each page links to the service that implements it; the services are plain C# classes registered in `Bootstrap.cs`, not MonoBehaviours.
 
+Note: the C# files in the sample project are stubs. These pages describe the intended design, not code that is present in the repository.
+
 <!-- okf:index -->
 ## Pages
 * [Inventory](inventory.md) - Explains how items are stacked, stored and moved between containers, and which service API you call to change a player's inventory.

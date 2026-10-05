@@ -1,6 +1,6 @@
 # Assets
 
-Everything Unity loads at runtime. Scripts are plain C# services plus thin MonoBehaviour views; models are FBX under LFS.
+The sample contains only scripts and models. Scripts are plain C# service stubs; models are placeholder FBX meshes.
 
 ## Folders
 

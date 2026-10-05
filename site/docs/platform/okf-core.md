@@ -37,14 +37,16 @@ sidebar_position: 3
 
 1. Index blocks in every folder `index.md`: `## Pages` and `## Folders` bullets, each a link titled with the page title followed by ` - ` and its description, descriptions copied verbatim from page frontmatter or the child folder's intro paragraph, ordered by `sidebar_position` (missing = 999) then title. Markers are created at the end of an index that lacks them; text outside them is preserved byte for byte.
 2. `manifest.json`: flat array sorted by route with `route`, `file`, `title`, `description`, `type`, `tags`, `resource`, `sources`. Not written while problems remain.
-3. Code maps: one `code-maps/<owner>--<repo>.md` per declared repository, a path-ordered list of every path cited by `resource` or `sources` with the pages that cite it (`(source)` marks a sources citation). Keyed by `owner/repo`, so a repository declared once covers every path in it, including this platform's own code once pages cite it.
+3. Code maps: also not written while problems remain. One `code-maps/<owner>--<repo>.md` per declared repository, a path-ordered list of every path cited by `resource` or `sources` with the pages that cite it (`(source)` marks a sources citation). Keyed by `owner/repo`, so a repository declared once covers every path in it, including this platform's own code once pages cite it.
 4. Log entries: the content service turns each write into `LogEntry` objects and calls `prependLogEntries`; `logEntriesFromCommits` exists for backends that read git history. The validator checks log format and date ordering only (completeness is guaranteed by the write path).
+
+When problems exist, `generate` still rewrites the index blocks but writes neither `manifest.json` nor any code map until the problems are fixed.
 
 Generated text is compared with line endings normalised to LF, so a CRLF checkout is never reported as stale.
 
 ## Validator rules
 
-`rule` values in the problem list: `frontmatter` (missing frontmatter, `title`, `description` or `type`; root index missing `okf_version`), `resource` (`resource` or a `sources[].resource` not matching `https://github.com/<owner>/<repo>/blob/<ref>/<path>`), `undeclared-repo` (points at a repository not passed with `--repo`; skipped when no repos are declared), `link` (relative link whose target does not exist), `index-frontmatter` (folder with Markdown but no `index.md`, index without `title`, index keys other than `title` and `sidebar_position`, root also `okf_version`), `log` (log frontmatter keys other than `title` and `sidebar_position`, headings not `## YYYY-MM-DD`, dates not strictly descending, malformed bullets), and `stale` (check mode only: any generated file a run would change).
+`rule` values in the problem list: `frontmatter` (concept page with missing frontmatter, `title`, `description` or `type`), `resource` (`resource` or a `sources[].resource` not matching `https://github.com/<owner>/<repo>/blob/<ref>/<path>`), `undeclared-repo` (points at a repository not passed with `--repo`; skipped when no repos are declared), `link` (relative link whose target does not exist), `missing-index` (a folder that holds Markdown but has no `index.md`), `index-frontmatter` (index without `title`, index keys other than `title` and `sidebar_position`; the root index may also carry `okf_version` and must declare `okf_version: "0.2"`), `log` (log frontmatter keys other than `title` and `sidebar_position`, headings not `## YYYY-MM-DD`, dates not strictly descending, malformed bullets), and `stale` (check mode only: any generated file a run would change).
 
 ## Running it
 

@@ -27,7 +27,7 @@ Section 7 of the design specification records decisions that were not in the ori
 | 10 | `versions/<v>.json` keeps the profile's `pins` map and adds `refs` (branch labels). | The addition is additive; profile consumers still read `pins`. |
 | 11 | Code maps live in the reserved generated folder `code-maps/` inside the bundle. | A platform extension to the profile; documented as generated in `AGENTS.md`. |
 | 12 | Log completeness is guaranteed by the write path; the validator checks format and order only. | The log is append-only generated, so re-deriving it from git history would add cost without adding truth. |
-| 13 | Two Orama indexes: the Docusaurus plugin's for the site UI and `static/platform/search-index-<version>.json` for `ContentBackend.search`. | The plugin index is not addressable from the contract; the second one is. |
+| 13 | Two Orama indexes: the Docusaurus plugin's for the site UI and the one `ContentBackend.search` builds with `buildSearchIndex` (the site prebuild also writes it to `static/platform/search-index-<version>.json`, which no backend reads yet). | The plugin index is not addressable from the contract; the second one is. |
 | 14 | The editor edits frontmatter through the `yaml` package's document API; okf-core keeps its own zero-dependency YAML subset parser for validation. | Editing must preserve comments, quoting and scalar types; validation must stay dependency-free. |
 | 15 | Viewers are global MDX components; editor descriptors have no `source`, so no import lines are emitted. | Pages stay plain Markdown with components. |
 | 16 | Asset fetches use `media.githubusercontent.com` first and `raw.githubusercontent.com` as fallback, cached with the Cache API. | The media endpoint serves real bytes for Git LFS pointers. |

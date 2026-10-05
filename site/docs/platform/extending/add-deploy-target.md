@@ -18,10 +18,10 @@ Deployment is additive: `deploy-pages.yml` stays as it is and a new target gets 
 | Item | Where |
 |---|---|
 | Contract to implement | none in code; the contract is the build output: `site/build/` (static site with the editor at `site/build/editor/`) produced by `npm run site:build` |
-| Contract test to run | `npm run okf:check`, `npm run lint`, `npm test` before the build, exactly as `okf-validate.yml` does; a smoke check that `site/build/index.html` and `site/build/editor/index.html` exist after it |
+| Contract test to run | `npm run okf:check`, `npm run lint`, `npm test` after the package build step and before `npm run site:build`, as `okf-validate.yml` does (it runs them without `site:build`; `deploy-pages.yml` runs only `okf:check`); a smoke check that `site/build/index.html` and `site/build/editor/index.html` exist after it |
 | Composition root to register in | Phase 1: none (static). Phase 2: the Hono shell's mount table (`/` gate + site, `/editor/`, `/api/content/*`, `/api/auth/*`, `/api/search`) |
 | Config field | `siteUrl`, `baseUrl`, `deployBranch` in `platform.config.js` (they drive Docusaurus `url`/`baseUrl`, the editor's Vite `base` and the GitHub backend's branch); `content.backend`/`content.url` when the target hosts a content service |
-| Boundary rule | workflows and root scripts are the `root` element: they may import `platform.config.js`, `@platform/contracts`, `@platform/okf-core` and `@platform/content`, nothing else |
+| Boundary rule | root scripts (`scripts/**`) are the `root` element and may import `platform.config.js`, `@platform/contracts`, `@platform/okf-core` and `@platform/content`, nothing else; workflow YAML is not linted, so keep logic in a root script rather than inline in the workflow |
 
 ## Static host (Netlify, S3, another Pages site)
 
@@ -38,4 +38,4 @@ Deployment is additive: `deploy-pages.yml` stays as it is and a new target gets 
 
 ## Keep both green
 
-Every new workflow must run `npm run okf:check` before building so a stale index or broken link never ships, and must not modify `deploy-pages.yml`; if GitHub Pages is retired, delete that workflow rather than repurposing it.
+Every new workflow must run `npm run okf:check` before `npm run site:build` (and after the package build) so a stale index or broken link never ships, and must not modify `deploy-pages.yml`; if GitHub Pages is retired, delete that workflow rather than repurposing it.

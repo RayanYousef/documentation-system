@@ -12,6 +12,17 @@ sources:
   - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/copy-editor.mjs
   - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/lint-boundaries.test.ts
   - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/vitest.workspace.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/viewers/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform/vitest.config.ts
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.gitattributes
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.gitignore
 sidebar_position: 10
 ---
 
@@ -37,6 +48,20 @@ Both run on Node 22 (`engines.node` stays at 20 or newer). The site is served fr
 | `npm run site:build` | build the editor, build the site (prebuild artifacts included), `node scripts/copy-editor.mjs` |
 | `npm run site:start` | Docusaurus dev server |
 
+Each project's `vitest.config.ts` sets a unique `name` and its own `include` glob, so a new test must live where its project looks for it:
+
+| Project name | Include glob | Environment |
+|---|---|---|
+| `contracts` | `src/**/*.test.ts` | node |
+| `okf-core`, `auth`, `content` | `test/**/*.test.ts` (`content` raises test and hook timeouts to 30000 ms) | node |
+| `viewers` | `test/**/*.test.tsx` | jsdom |
+| `editor` | `src/**/*.test.{ts,tsx}` | jsdom |
+| `site` | `scripts/**/*.test.ts` (inside `site/`) | node |
+| `root-scripts` | `scripts/**/*.test.ts` (repo root) | node |
+| `docs-platform-skill` | `test/**/*.test.ts` | node |
+
+`scripts/vitest.config.ts` sets `root` explicitly to the repo root, because Vitest resolves `root` against `process.cwd()`; a new root-level test config must anchor it the same way.
+
 Workspace-level extras: `npm run dev -w @platform/editor` (editor dev server) and `npm run e2e -w @platform/editor` (Playwright; not part of `npm test`).
 
 ## Root scripts folder
@@ -55,5 +80,11 @@ npm run lint
 npm test
 npm run site:build
 ```
+
+## Repository hygiene
+
+- Line endings: `.gitattributes` sets `* text=auto eol=lf`, so every text file is LF in the repository and the working tree, whatever `core.autocrlf` says. A CRLF checkout on Windows made `okf:check` report stale generated content and broke `vite-node` on `.mjs` files. Binary types (`fbx`, `glb`, `bin`, `png`, `jpg`, `jpeg`, `gif`, `webp`, `ico`, `woff`, `woff2`, `ttf`, `otf`, `pdf`, `zip`) are marked `binary` and never normalised; a new binary asset type needs its own `*.ext binary` line.
+- Ignored paths (`.gitignore`): `.ignored/` (local scratch, never pushed), `*.log`, `node_modules/`, `dist/`, `build/`, `.docusaurus/`, `site/static/platform/`, `services/editor/test-results/`, `services/editor/playwright-report/`, `*.tsbuildinfo` and `services/editor/e2e/.repo-path`.
+- `dist/` is not committed and the package exports point at it, so on a fresh clone run the package builds (see above) before `okf:check`, `lint` or `npm test`.
 
 Adding a deploy target means adding a workflow (or a job) that consumes `site/build` and, in Phase 2, the server image; see [Add a deploy target](extending/add-deploy-target.md).

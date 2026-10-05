@@ -14,7 +14,7 @@ The site's Editor link (`<baseUrl>editor/`) opens the in-browser editor. Sign in
 
 ## Remote bundles (kind: content-service)
 
-Read `${tokenEnv}` from the environment and call the content service: `POST <url>/rpc` with `{"method":"readPage","args":["current","systems/inventory.md"]}` (methods: listVersions, listPages, readPage, writePage, createPage, deletePage, renamePage, listAssets, search, publishVersion). Writes need `{"message": "...", "author": {"name": "...", "email": "..."}}` as the last argument. Errors come back as `{"error": {"code": "VALIDATION", "message": "...", "details": [...]}}`; fix the listed problems and retry.
+Read `${tokenEnv}` from the environment and call the content service: `POST <url>/rpc` with `{"method":"readPage","args":["current","systems/inventory.md"]}` (methods: listVersions, listPages, readPage, writePage, createPage, deletePage, renamePage, listAssets, search, publishVersion). Writes need `{"message": "...", "author": {"name": "...", "email": "..."}}` as the last argument. Errors come back as `{"error": {"code": "VALIDATION", "message": "...", "details": [...]}}`; fix the listed problems and retry. Failures from the backend come back as HTTP 200 with an `error` body, so always check the body for `error` instead of the status (an unknown method returns 400). The hosted content service is Phase 2: in Phase 1 only the dev server `serveContentBackend` exists (localhost, no auth), and the token header is not defined yet.
 
 ## Publishing a frozen version
 

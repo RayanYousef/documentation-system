@@ -11,7 +11,11 @@ sidebar_position: 1
 
 ## Contents
 
-`Airship.fbx` contains the hull, deck, balloon and rigging as separate meshes under a single root, plus the LOD group. The hull is 18k triangles at LOD0, 7k at LOD1 and 1.5k at LOD2; the balloon is a low-poly shell with a normal map doing the work. Textures are 2048 albedo, 2048 normal and a 1024 packed mask (metallic, occlusion, emissive) in the URP Lit layout.
+:::note
+The `Airship.fbx` in the sample repository is a generated placeholder cube made for testing the FBX viewer. The meshes, LOD budgets and sockets below describe the intended shipped model, not the placeholder file.
+:::
+
+`Airship.fbx` is meant to contain the hull, deck, balloon and rigging as separate meshes under a single root, plus the LOD group. The hull is 18k triangles at LOD0, 7k at LOD1 and 1.5k at LOD2; the balloon is a low-poly shell with a normal map doing the work. Textures are 2048 albedo, 2048 normal and a 1024 packed mask (metallic, occlusion, emissive) in the URP Lit layout.
 
 ## Sockets
 

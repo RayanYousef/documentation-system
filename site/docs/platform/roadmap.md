@@ -21,7 +21,7 @@ Phase 1 (shipped) is the static composition documented in [Architecture](archite
 
 ### Server-side content service in a Hono shell (spec 4.4, 4.8)
 
-A thin Hono application mounting the services on paths in one process: `/` (gate plus site), `/editor/`, `/api/content/*`, `/api/auth/*`, `/api/search`. The content route promotes today's `serveContentBackend` bridge: the server-side backend holds the GitHub token as a secret and enforces the auth session; browsers keep using `HttpContentBackend` (`content: { backend: 'http', url }`). `search` becomes an HTTP endpoint over the same `search-index-<version>.json`. An OpenAPI document is derived from the TypeScript contracts at this point. Guides: [Add a content backend](extending/add-content-backend.md), [Add a new service module](extending/add-service-module.md).
+A thin Hono application mounting the services on paths in one process: `/` (gate plus site), `/editor/`, `/api/content/*`, `/api/auth/*`, `/api/search`. The content route promotes today's `serveContentBackend` bridge: the server-side backend holds the GitHub token as a secret and enforces the auth session; browsers keep using `HttpContentBackend` (`content: { backend: 'http', url }`). `search` becomes an HTTP endpoint backed by the same `buildSearchIndex` and `searchRaw` functions the backends use today (the prebuilt `search-index-<version>.json` is not read by any backend yet). An OpenAPI document is derived from the TypeScript contracts at this point. Guides: [Add a content backend](extending/add-content-backend.md), [Add a new service module](extending/add-service-module.md).
 
 ### Gate for private viewing (spec 4.6)
 

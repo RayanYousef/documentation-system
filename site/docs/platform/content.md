@@ -40,11 +40,13 @@ Every backend follows the same write rules: reject frozen versions with `FROZEN`
 
 ## Assets
 
-`fetchAsset(ref, { token?, fetch?, cache? })` in `src/assets/getAsset.ts` builds two URLs from `AssetRef { repo, ref, path }`: `media.githubusercontent.com` first (serves real bytes for Git LFS pointers), `raw.githubusercontent.com` as fallback. A token adds `Authorization: token ...`. Responses are cached in the Cache API store `docs-platform-assets` (immutable for a 40-hex sha, ten-minute TTL for a branch); `MAX_ASSET_BYTES` is 100 MB and larger files throw `TOO_LARGE`. `uploadAsset` writes into `static/models`, `static/uploads` or `static/img` and returns an `AssetInfo`.
+`fetchAsset(ref, { token?, fetch?, cache? })` in `src/assets/getAsset.ts` builds two URLs from `AssetRef { repo, ref, path }`: `media.githubusercontent.com` first (serves real bytes for Git LFS pointers), `raw.githubusercontent.com` as fallback. A token adds `Authorization: token ...`. Responses are cached in the Cache API store `docs-platform-assets` (immutable for a 40-hex sha, ten-minute TTL for a branch); `MAX_ASSET_BYTES` is 100 MB and larger files throw `TOO_LARGE`.
+
+`uploadAsset` is a backend method, not part of `fetchAsset`. It writes to `static/<path>` after rejecting empty or `..` segments, and returns an `AssetInfo`. `listAssets` only reports files under `static/models`, `static/uploads` and `static/img`, so keep uploads inside those folders or they will not be listed.
 
 ## Search
 
-`buildSearchIndex(files)` in `src/search/index.ts` creates an Orama index over every concept page (path, title, description, type, tags, first 2,000 body characters) and returns its serialised form; `searchRaw(raw, query)` loads it and returns up to 20 `SearchHit`s. The site prebuild writes `static/platform/search-index-<version>.json` from this, and `ContentBackend.search` loads that file. The site's search box uses the separate `@orama/plugin-docusaurus-v3` index (decision 13 in [Decisions](decisions.md)).
+`buildSearchIndex(files)` in `src/search/index.ts` creates an Orama index over every concept page (path, title, description, type, tags, first 2,000 body characters) and returns its serialised form; `searchRaw(raw, query)` loads it and returns up to 20 `SearchHit`s. Each backend's `search` builds that Orama index in memory with `buildSearchIndex` over the version's bundle, caches it (per version for `LocalFolderBackend`, per `version@treeSha` for `GithubBrowserBackend`; `HttpContentBackend` forwards the call to the server backend) and queries it with `searchRaw`. The site prebuild also writes `static/platform/search-index-<version>.json` with the same function, but no backend reads that file yet. The site's search box uses the separate `@orama/plugin-docusaurus-v3` index (decision 13 in [Decisions](decisions.md)).
 
 ## Tests
 

@@ -8,7 +8,7 @@ Location: `~/.docs-platform/registry.json` (`%USERPROFILE%\.docs-platform\regist
   "bundles": [
     {
       "remote": "https://github.com/RayanYousef/CloudDocumentationPersonal",
-      "docs": { "kind": "local", "sitePath": "H:/Personal-Projects/CloudDocumentation/site" }
+      "docs": { "kind": "local", "sitePath": "C:/path/to/repo/site" }
     },
     {
       "remote": "https://github.com/acme/game",
@@ -23,4 +23,4 @@ Location: `~/.docs-platform/registry.json` (`%USERPROFILE%\.docs-platform\regist
 - `kind: content-service`: `url` is the HTTP content service (Phase 2); `tokenEnv` names the environment variable that holds the token. Never store tokens in the registry.
 - The docs repository itself may also be registered (its own remote -> its own `site/`), which is how this template repo is found from inside itself.
 
-Adding an entry: create the folder and file if missing, append a bundle object, keep the JSON valid. Confirm with `node <skill>/scripts/resolve-bundle.mjs <repoDir>`.
+Adding an entry: create the folder and file if missing, append a bundle object, keep the JSON valid. Confirm with `node <skill>/scripts/resolve-bundle.mjs <repoDir>`, then check that `<sitePath>/docs/index.md` exists; a stale or mistyped `sitePath` resolves without error but points nowhere.

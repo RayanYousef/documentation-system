@@ -20,4 +20,4 @@ All mutations go through `InventoryService`. The three calls you will use are `T
 
 ## Constraints
 
-Inventories are authoritative on the host. Clients send intents and receive the resulting delta through the [Sync Model](networking/sync-model.md); the service never mutates local state on a client without a host acknowledgement. Item definitions themselves are ScriptableObjects under `Assets/Data/Items` and are not covered here.
+Inventories are authoritative on the host. Clients send intents and receive the resulting delta through the [Sync Model](networking/sync-model.md); the service never mutates local state on a client without a host acknowledgement. Item definitions themselves are ScriptableObjects in the real game; they are not part of the sample project and are not covered here.

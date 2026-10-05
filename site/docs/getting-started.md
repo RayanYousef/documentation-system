@@ -7,18 +7,22 @@ resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/ex
 sidebar_position: 2
 ---
 
+:::note
+Skyforge is a fictional game. The project in `examples/unity-project` is a documentation sample made of C# stubs and placeholder meshes. It has no scenes, addressables or project settings, so it cannot be opened or played in Unity. The steps below describe the intended setup for the real game.
+:::
+
 ## Prerequisites
 
-Skyforge targets **Unity 6000.0.32f1** with the Universal Render Pipeline. Install it through Unity Hub together with the Windows and Android build modules. You also need Git LFS, because every `.fbx` and texture in `Assets/Models` is stored as an LFS pointer.
+Skyforge targets **Unity 6000.0.32f1** with the Universal Render Pipeline. Install it through Unity Hub together with the Windows and Android build modules.
 
 ## Clone and open
 
 ```
-git clone https://github.com/skyforge-studio/skyforge.git
-cd skyforge && git lfs pull
+git clone https://github.com/RayanYousef/documentation-system.git
+cd documentation-system/examples/unity-project
 ```
 
-Open the folder from Unity Hub. The first import takes around six minutes on a laptop because the addressables catalog is rebuilt. Once the editor is up, load `Assets/Scenes/Bootstrap.unity` and press Play; the bootstrap scene spins up the service container and loads the hangar.
+Open the folder from Unity Hub. In the real game the first import takes around six minutes on a laptop because the addressables catalog is rebuilt. Once the editor is up, load `Assets/Scenes/Bootstrap.unity` and press Play; the bootstrap scene spins up the service container and loads the hangar.
 
 ## Where to go next
 

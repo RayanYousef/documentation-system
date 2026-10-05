@@ -24,7 +24,7 @@ The repository is an npm-workspaces monorepo. Every runtime piece is a workspace
 | `services/content` | `@platform/content` | `LocalFolderBackend`, `GithubBrowserBackend`, `HttpContentBackend` + `serveContentBackend`, write and publish pipelines, asset fetch, search ([Content](content.md)) |
 | `services/editor` | `@platform/editor` | Vite + React in-browser editor served at `<baseUrl>editor/` ([Editor](editor.md)) |
 | `site` | `@platform/site` | Docusaurus site rendering `site/docs` and the frozen versions ([Site](site.md)) |
-| `.agents/skills/docs-platform` | (skill) | the only agent entry point ([Agent skill](agent-skill.md)) |
+| `.agents/skills/docs-platform` | (skill) | the only platform agent skill ([Agent skill](agent-skill.md)) |
 | `.github/workflows`, `scripts/` | (root) | validation and deploy workflows, root generator entry ([Workflows](workflows.md)) |
 
 `platform.config.js` at the root is the single source of identity, features, auth and content wiring and declared code repositories. It is bundled into the browser, so it holds no secrets.
