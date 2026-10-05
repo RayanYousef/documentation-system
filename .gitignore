@@ -1,5 +1,6 @@
 # Local research, scratch notes, and scratch artifacts — never pushed
 .ignored/
+.examples/
 
 # Log files (e.g. website/serve_changes.log from `npm run serve`)
 *.log
