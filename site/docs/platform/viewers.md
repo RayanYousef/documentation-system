@@ -12,6 +12,8 @@ sources:
   - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/platform/useAssetUrl.ts
   - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/theme/MDXComponents.js
   - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/components.json
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/richtext/plate/nodes/ViewerElement.tsx
+  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/richtext/viewerUrl.ts
 sidebar_position: 7
 ---
 
@@ -28,8 +30,8 @@ While loading, the wrapper shows a placeholder; on failure it shows the error an
 
 ## How the editor uses them
 
-The editor's JSX descriptors (`services/editor/src/mdx/descriptors.tsx`) render live previews with `ModelViewerCore` and `FbxViewerCore` directly, and its toolbar can upload a `.glb`, `.gltf` or `.fbx` into the site's static `models/` folder (`InsertModelButton`) or insert a model or image already committed to the site (`InsertFromRepoButton`, which lists the site's assets). `InsertModelButton` always inserts a viewer with `src` set; `InsertFromRepoButton` inserts a viewer with `src` set for a model and a plain image for an image asset. To point a viewer at a code repository, fill in `repo`, `ref` and `path` in the preview's property fields. The prop list the editor offers comes from `site/components.json` (`ComponentsManifest`), which lists `src`, `repo`, `ref`, `path`, `alt` and `height` for both viewers.
+The editor's viewer block (`services/editor/src/richtext/plate/nodes/ViewerElement.tsx`) renders a live preview with `ModelViewerCore` or `FbxViewerCore` directly, loaded lazily so three.js is only fetched when a page shows a viewer; the preview uses height 480 when the block has none, and that default is never written to the page. The block resolves its URL in `services/editor/src/richtext/viewerUrl.ts`: a `src` starting with `/` is served under the site's base URL, otherwise `repo` + `path` (+ `ref`, else the repo's `defaultRef`) is read through `ContentBackend.getAsset`. The toolbar can upload a `.glb` or `.gltf` into the site's static `models/` folder or an `.fbx` into `models/fbx/` (`InsertModelButton`), or insert a model or image already committed to the site (`InsertFromRepoButton`, which lists the site's assets). `InsertModelButton` always inserts a viewer with `src` set; `InsertFromRepoButton` inserts a viewer with `src` set for a model and a plain image for an image asset. To point a viewer at a code repository, fill in `repo`, `ref` and `path` in the block's prop fields. The prop list the editor offers comes from `site/components.json` (`ComponentsManifest`), which lists `src`, `repo`, `ref`, `path`, `alt` and `height` for both viewers. See [Editor service](editor.md).
 
 ## Adding a viewer
 
-A new format means a new core in this package, a site wrapper via `makeViewer` (or a sibling), a global registration in `MDXComponents.js`, a `components.json` entry so the editor can insert it, and an editor preview mapping. The full checklist is in [Add a site plugin or viewer component](extending/add-site-plugin-or-viewer.md).
+A new format means a new core in this package, a site wrapper via `makeViewer` (or a sibling), a global registration in `MDXComponents.js`, a `components.json` entry so the editor can insert it, and an editor block that maps the new `preview` value. The full checklist is in [Add a site plugin or viewer component](extending/add-site-plugin-or-viewer.md).

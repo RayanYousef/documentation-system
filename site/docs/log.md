@@ -7,6 +7,11 @@ Newest first. Each entry names the page that changed and who changed it.
 
 ## 2026-10-05
 
+* **Update**: [Editor service](/platform/editor.md) - rewrote the page for Plate replacing MDXEditor: the RichTextEditor interface, Markdown import and export rules, Raw mode, custom blocks, toolbar and "/" menu, the Tailwind and shadcn theme, and the unit tests and six Playwright specs. (by Rayan Yousef)
+* **Update**: [Platform decisions](/platform/decisions.md) - added decision 23 (Plate replaces MDXEditor behind one interface) and updated decision 15 to say the Plate component rules write no import lines. (by Rayan Yousef)
+* **Update**: [Viewers package](/platform/viewers.md) - described the editor's Plate viewer block and how it resolves the model URL instead of the removed descriptors file. (by Rayan Yousef)
+* **Update**: [Site](/platform/site.md) - removed the MDXEditor and CodeMirror overrides from the custom.css description and reworded the MDXComponents.js note. (by Rayan Yousef)
+* **Update**: [Add a site plugin or viewer component](/platform/extending/add-site-plugin-or-viewer.md) - replaced the descriptors.tsx steps with the Plate files a new preview type needs. (by Rayan Yousef)
 * **Update**: [Contracts](/platform/contracts.md) - added the MINI_BUNDLE and MINI_CODE_REPOS fixtures, the @platform/contracts/testing import path with its vitest peer dependency, and the ComponentProp shape. (by Rayan Yousef)
 * **Update**: [OKF Core package](/platform/okf-core.md) - fixed the validator rule list (new missing-index rule, root okf_version under index-frontmatter) and noted that code maps are not written while problems remain. (by Rayan Yousef)
 * **Update**: [Auth service](/platform/auth.md) - said the editor, not the content service, sets the noreply commit email, and corrected the test coverage description. (by Rayan Yousef)
