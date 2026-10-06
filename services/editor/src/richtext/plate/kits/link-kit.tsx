@@ -1,0 +1,17 @@
+// From the Plate UI registry `link-kit` (MIT). S3: the link node and input rules only;
+// the floating link toolbar (edit, open, remove) arrives in S5.
+import { LinkRules } from '@platejs/link';
+import { LinkPlugin } from '@platejs/link/react';
+import { LinkElement } from '../ui/link-node.js';
+
+export const LinkKit = [
+  LinkPlugin.configure({
+    inputRules: [
+      LinkRules.markdown(),
+      LinkRules.autolink({ variant: 'paste' }),
+      LinkRules.autolink({ variant: 'space' }),
+      LinkRules.autolink({ variant: 'break' }),
+    ],
+    render: { node: LinkElement },
+  }),
+];

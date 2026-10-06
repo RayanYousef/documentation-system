@@ -1,0 +1,10 @@
+// From the Plate UI registry `indent-kit` (MIT). Lists are indented blocks in Plate.
+import { IndentPlugin } from '@platejs/indent/react';
+import { KEYS } from 'platejs';
+
+export const IndentKit = [
+  IndentPlugin.configure({
+    inject: { targetPlugins: [...KEYS.heading, KEYS.p, KEYS.blockquote, KEYS.codeBlock, KEYS.img] },
+    options: { offset: 24 },
+  }),
+];

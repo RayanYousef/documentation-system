@@ -2,7 +2,7 @@
  * Arcade palette for the editor, as --ed-* tokens.
  * Dark is the default (the site's default color mode too). Light applies when <html data-theme="light">
  * is set, or when no data-theme attribute is present and the OS prefers light.
- * Every color in arcade.css and codeMirror.ts goes through these tokens; nothing else defines a color.
+ * Every color in arcade.css and tailwind.css goes through these tokens; nothing else defines a color.
  */
 :root {
   color-scheme: dark;

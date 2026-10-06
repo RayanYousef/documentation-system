@@ -24,12 +24,20 @@ export function readFields(head: string): FrontmatterFields {
   };
 }
 
-/** Rewrite only the given keys; untouched lines, comments, quoting and scalar types survive. */
+const sameValue = (a: unknown, b: unknown): boolean =>
+  Array.isArray(a) && Array.isArray(b) ? a.length === b.length && a.every((x, i) => x === b[i]) : a === b;
+
+/**
+ * Rewrite only the keys whose value changed; untouched lines, comments, quoting and scalar types survive.
+ * When no value changed the text comes back byte for byte, so saving an untouched page does not rewrite it.
+ */
 export function applyFields(text: string, fields: Partial<FrontmatterFields>): string {
   const { head, body, hasFrontmatter } = splitDocument(text);
+  const current: Partial<FrontmatterFields> = hasFrontmatter ? readFields(head) : {};
+  const changed = Object.entries(fields).filter(([k, v]) => v !== undefined && !(hasFrontmatter && sameValue(current[k as keyof FrontmatterFields], v)));
+  if (hasFrontmatter && changed.length === 0) return text;
   const doc: Document = hasFrontmatter ? parseDocument(head) : new Document({});
-  for (const [k, v] of Object.entries(fields)) {
-    if (v === undefined) continue;
+  for (const [k, v] of changed) {
     if (v === null || (Array.isArray(v) && v.length === 0 && k === 'tags' && !doc.has(k))) { if (doc.has(k)) doc.delete(k); continue; }
     if (Array.isArray(v)) {
       // Keep the list style the author used: `tags: [a, b]` stays a flow list instead of becoming a block list.
@@ -41,6 +49,7 @@ export function applyFields(text: string, fields: Partial<FrontmatterFields>): s
   }
   // lineWidth: 0 disables folding: okf-core's parseYamlSubset reads only the first physical line of a scalar,
   // so a folded description would silently truncate index.md / manifest.json / log.md.
-  const yaml = doc.toString({ lineWidth: 0 }).replace(/\n$/, '');
+  // flowCollectionPadding: false writes `[a, b]`, the style the pages use (the library default is `[ a, b ]`).
+  const yaml = doc.toString({ lineWidth: 0, flowCollectionPadding: false }).replace(/\n$/, '');
   return `---\n${yaml}\n---\n${body}`;
 }
