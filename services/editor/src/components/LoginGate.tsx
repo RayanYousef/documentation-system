@@ -1,9 +1,9 @@
 import { useState, type FormEvent } from 'react';
 import type { Credentials, Identity, Session } from '@platform/contracts';
-import type { Platform } from '../composition/createPlatform.js';
+import type { InPlaceHost } from '../host.js';
 import { Modal } from './Modal.js';
 
-export function LoginGate({ platform, onAuthed, initialError = '' }: { platform: Platform; onAuthed: (session: Session, identity: Identity, remember: boolean) => void; initialError?: string }) {
+export function LoginGate({ host: platform, onAuthed, initialError = '' }: { host: Pick<InPlaceHost, 'auth' | 'config'>; onAuthed: (session: Session, identity: Identity, remember: boolean) => void; initialError?: string }) {
   const [token, setToken] = useState('');
   const [name, setName] = useState('');
   const [remember, setRemember] = useState(false);

@@ -15,7 +15,7 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     // Plain-JS Node entry points (root scripts, site prebuild, site plugins, okf bin, e2e helper, skill scripts) use Node globals.
-    files: ['scripts/**/*.mjs', 'site/scripts/**/*.mjs', 'site/plugins/**/*.mjs', 'packages/*/bin/*.js', 'services/editor/e2e/*.mjs', '.agents/skills/docs-platform/scripts/*.mjs'],
+    files: ['scripts/**/*.mjs', 'site/scripts/**/*.mjs', 'site/plugins/**/*.mjs', 'packages/*/bin/*.js', '.agents/skills/docs-platform/scripts/*.mjs'],
     languageOptions: { globals: { process: 'readonly', console: 'readonly', Buffer: 'readonly', URL: 'readonly' } },
   },
   {
@@ -28,7 +28,6 @@ export default tseslint.config(
         { type: 'viewers', pattern: 'packages/viewers/**' },
         { type: 'auth', pattern: 'services/auth/**' },
         { type: 'content', pattern: 'services/content/**' },
-        { type: 'editor-composition', pattern: 'services/editor/src/composition/**', mode: 'full' },
         { type: 'editor', pattern: 'services/editor/**' },
         { type: 'site-composition', pattern: 'site/src/platform/**', mode: 'full' },
         // Build-time Node scripts (prebuild artifacts) may use okf-core and content like the root scripts do.
@@ -53,10 +52,10 @@ export default tseslint.config(
           { from: ['viewers'], allow: ['viewers'] },
           { from: ['auth'], allow: ['auth', 'contracts', 'okf-core'] },
           { from: ['content'], allow: ['content', 'contracts', 'okf-core'] },
-          { from: ['editor'], allow: ['editor', 'editor-composition', 'contracts', 'okf-core', 'viewers', 'platform-config'] },
-          { from: ['editor-composition'], allow: ['editor', 'editor-composition', 'contracts', 'okf-core', 'viewers', 'auth', 'content', 'platform-config'] },
+          { from: ['editor'], allow: ['editor', 'contracts', 'okf-core', 'viewers'] },
           { from: ['site'], allow: ['site', 'site-composition', 'contracts', 'viewers', 'platform-config'] },
-          { from: ['site-composition'], allow: ['site', 'site-composition', 'contracts', 'okf-core', 'viewers', 'auth', 'content', 'platform-config'] },
+          // The site composition root (site/src/platform) is the one place that wires implementations, including the editor.
+          { from: ['site-composition'], allow: ['site', 'site-composition', 'contracts', 'okf-core', 'viewers', 'auth', 'content', 'editor', 'platform-config'] },
           { from: ['site-scripts'], allow: ['site-scripts', 'contracts', 'okf-core', 'content', 'platform-config'] },
           { from: ['site-plugins'], allow: ['site-plugins', 'contracts', 'okf-core', 'content', 'platform-config'] },
           { from: ['root'], allow: ['root', 'platform-config', 'contracts', 'okf-core', 'content'] },
@@ -71,7 +70,7 @@ export default tseslint.config(
           { from: ['viewers'], disallow: platformPackages.filter((p) => p !== 'viewers').map((p) => `@platform/${p}`) },
           { from: ['auth'], disallow: ['@platform/content', '@platform/viewers', '@platform/editor', '@platform/site'] },
           { from: ['content'], disallow: ['@platform/auth', '@platform/viewers', '@platform/editor', '@platform/site'] },
-          { from: ['editor'], disallow: ['@platform/auth', '@platform/content', '@platform/site'] },
+          { from: ['editor'], disallow: ['@platform/auth', '@platform/content', '@platform/site', '@platform/editor'] },
           { from: ['site'], disallow: ['@platform/auth', '@platform/content', '@platform/editor'] },
           { from: ['site-plugins'], disallow: ['@platform/auth', '@platform/editor', '@platform/viewers'] },
         ],

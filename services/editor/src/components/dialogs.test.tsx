@@ -8,7 +8,7 @@ import { NewPageDialog } from './NewPageDialog.js';
 import { PublishDialog } from './PublishDialog.js';
 import { LoginGate } from './LoginGate.js';
 import { Modal } from './Modal.js';
-import type { Platform } from '../composition/createPlatform.js';
+import type { InPlaceHost } from '../host.js';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -77,16 +77,16 @@ describe('PublishDialog', () => {
 });
 
 describe('LoginGate', () => {
-  const platform = (auth: AuthProvider): Platform => ({ auth, backend: () => { throw new Error('unused'); }, config: { organizationName: 'o', projectName: 'r' } as Platform['config'], componentsUrl: '' });
+  const platform = (auth: AuthProvider): Pick<InPlaceHost, 'auth' | 'config'> => ({ auth, config: { organizationName: 'o', projectName: 'r' } as InPlaceHost['config'] });
   it('announces why a saved session was forgotten', async () => {
     const auth: AuthProvider = { id: 'github-token', login: async () => { throw new Error('unused'); }, verify: async () => { throw new Error('unused'); } };
-    const host = await mount(<LoginGate platform={platform(auth)} initialError="Your saved session is no longer valid and was forgotten. You are not a write collaborator of o/r." onAuthed={() => {}} />);
+    const host = await mount(<LoginGate host={platform(auth)} initialError="Your saved session is no longer valid and was forgotten. You are not a write collaborator of o/r." onAuthed={() => {}} />);
     expect(host.querySelector('[role="alert"]')!.textContent).toContain('not a write collaborator of o/r');
     expect(host.textContent).toContain('Only write collaborators can sign in.');
   });
   it('shows the provider error for a rejected token', async () => {
     const auth: AuthProvider = { id: 'github-token', login: async () => { throw new Error('You are not a write collaborator of o/r. Ask a repository admin for write access.'); }, verify: async () => { throw new Error('unused'); } };
-    const host = await mount(<LoginGate platform={platform(auth)} onAuthed={() => {}} />);
+    const host = await mount(<LoginGate host={platform(auth)} onAuthed={() => {}} />);
     await type(byLabel(host, 'GitHub token'), 'github_pat_x');
     await click(button(host, 'Sign in'));
     await tick();

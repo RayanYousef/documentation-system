@@ -15,7 +15,7 @@
     "typecheck": "tsc -b packages/contracts packages/okf-core packages/viewers services/auth services/content services/editor",
     "okf:generate": "node scripts/okf.mjs generate",
     "okf:check": "node scripts/okf.mjs check",
-    "site:build": "npm run build -w @platform/editor && npm run build -w @platform/site && node scripts/copy-editor.mjs",
+    "site:build": "npm run build -w @platform/site",
     "site:start": "npm run start -w @platform/site"
   },
   "devDependencies": {

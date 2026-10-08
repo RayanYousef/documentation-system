@@ -20,7 +20,7 @@ function fakeBackend(over: Partial<ContentBackend> = {}) {
   } as unknown as ContentBackend;
   return { backend, uploads };
 }
-const session = (backend: ContentBackend, id: Identity = identity): RichTextSession => ({ platform: { config } as RichTextSession['platform'], backend, identity: id });
+const session = (backend: ContentBackend, id: Identity = identity): RichTextSession => ({ host: { config } as RichTextSession['host'], backend, identity: id });
 const file = (name: string) => new File(['abc'], name);
 
 describe('createRichTextServices', () => {
