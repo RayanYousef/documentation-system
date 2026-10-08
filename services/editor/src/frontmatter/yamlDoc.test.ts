@@ -32,6 +32,14 @@ describe('yamlDoc', () => {
     const out = applyFields('Just body\n', { title: 'T', type: 'guide' });
     expect(out.startsWith('---\ntitle: T\ntype: guide\n---\n')).toBe(true);
   });
+  it('returns an untouched document byte for byte', () => {
+    const odd = doc.replace('tags: [inventory, items]', "tags: [ inventory, 'items' ]  # kept");
+    expect(applyFields(odd, readFields(splitDocument(odd).head))).toBe(odd);
+  });
+  it('keeps the other keys as written when one key changes', () => {
+    const out = applyFields(doc, { ...readFields(splitDocument(doc).head), title: 'Inventory v2' });
+    expect(out).toBe(doc.replace('title: Inventory\n', 'title: Inventory v2\n'));
+  });
   it('writes tags as a list', () => {
     const out = applyFields(doc, { tags: ['a', 'b'] });
     expect(readFields(splitDocument(out).head).tags).toEqual(['a', 'b']);
@@ -54,7 +62,7 @@ describe('yamlDoc long scalars', () => {
 describe('yamlDoc list style and quoting', () => {
   it('keeps a flow tag list as a flow list', () => {
     const out = applyFields(doc, { tags: ['a', 'b'] });
-    expect(splitDocument(out).head).toMatch(/^tags: \[ ?a, ?b ?\]$/m);
+    expect(splitDocument(out).head).toMatch(/^tags: \[a, b\]$/m);
   });
   it('keeps a block tag list as a block list', () => {
     const block = '---\ntitle: T\ntags:\n  - a\n---\n\nBody.\n';

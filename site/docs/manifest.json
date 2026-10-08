@@ -199,7 +199,7 @@
     "route": "/platform/decisions",
     "file": "platform/decisions.md",
     "title": "Platform decisions",
-    "description": "Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each; read it before reopening any of them.",
+    "description": "Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each, plus later decisions such as Plate replacing MDXEditor in the editor; read it before reopening any of them.",
     "type": "decision",
     "tags": [
       "platform",
@@ -218,14 +218,17 @@
     "route": "/platform/editor",
     "file": "platform/editor.md",
     "title": "Editor service",
-    "description": "Describes the in-browser editor (Vite + React + MDXEditor): how it is composed from platform.config.js, what each screen and dialog does, how frontmatter edits preserve YAML, how the arcade theme is applied, and how it is built and deployed under /editor/; open it when changing editor behaviour or debugging a save from the UI.",
+    "description": "Describes the in-browser editor (Vite + React, page body in Plate behind the RichTextEditor interface): how it is composed from platform.config.js, what each screen, toolbar and dialog does, how Markdown is imported and written back, when a page opens in Raw mode, how frontmatter edits preserve YAML, how the Tailwind and arcade theme is applied, and how it is built, tested and deployed under /editor/; open it when changing editor behaviour or debugging a save from the UI.",
     "type": "system",
     "tags": [
       "platform",
       "editor",
       "vite",
       "react",
-      "mdxeditor",
+      "plate",
+      "markdown",
+      "tailwind",
+      "shadcn",
       "frontmatter",
       "theme"
     ],
@@ -233,15 +236,32 @@
     "sources": [
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/App.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/BodyEditor.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/FrontmatterForm.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/frontmatter/yamlDoc.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/descriptors.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/componentsManifest.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/RichTextEditor.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/index.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/createRichTextServices.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/assets.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/PlateDocument.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/docsMarkdown.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/supportedSyntax.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/componentRules.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/nodes/docsNodesKit.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/kits/editor-kit.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/toolbar/FixedToolbarButtons.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/slash/SlashInputElement.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/session/SessionStore.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/index.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/tokens.css",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/tailwind.css",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/components.json",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vite.config.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/editor.spec.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/playwright.config.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/body.spec.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/formatting.spec.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/components.spec.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/theme.spec.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs"
     ]
@@ -360,7 +380,8 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/MDXComponents.js",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/components.json",
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/components-manifest.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/descriptors.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/componentRules.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/nodes/docsNodesKit.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/docusaurus.config.js"
     ]
   },
@@ -459,7 +480,9 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/components/FbxViewer/index.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/useAssetUrl.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/MDXComponents.js",
-      "https://github.com/RayanYousef/documentation-system/blob/main/site/components.json"
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/components.json",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/nodes/ViewerElement.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/viewerUrl.ts"
     ]
   },
   {

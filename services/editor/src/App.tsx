@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import type { MDXEditorMethods } from '@mdxeditor/editor';
 import { ContentError, CURRENT_VERSION, type ComponentsManifest, type Identity, type PageSummary, type Session, type VersionInfo } from '@platform/contracts';
 import { validatePage, type Problem } from '@platform/okf-core';
 import type { Platform } from './composition/createPlatform.js';
@@ -15,6 +14,7 @@ import { PublishDialog } from './components/PublishDialog.js';
 import { FolderIntroEditor } from './components/FolderIntroEditor.js';
 import { splitDocument, readFields, applyFields, type FrontmatterFields } from './frontmatter/yamlDoc.js';
 import { loadComponentsManifest, DEFAULT_COMPONENTS } from './mdx/componentsManifest.js';
+import type { RichTextHandle } from './richtext/index.js';
 
 const store = new BrowserSessionStore(typeof localStorage === 'undefined' ? null : localStorage);
 const authorOf = (id: Identity) => ({ name: id.name, email: id.email ?? `${id.login}@users.noreply.github.com` });
@@ -55,7 +55,7 @@ export function App({ platform }: { platform: Platform }) {
   const [dialog, setDialog] = useState<'new' | 'publish' | null>(null);
   const [busy, setBusy] = useState(false);
   const [dirty, setDirty] = useState(false);
-  const mdx = useRef<MDXEditorMethods>(null);
+  const body = useRef<RichTextHandle>(null);
   const frozen = versions.find((v) => v.id === version)?.frozen ?? false;
   const isIndex = selected?.endsWith('index.md') ?? false;
 
@@ -92,9 +92,9 @@ export function App({ platform }: { platform: Platform }) {
 
   const compose = useCallback((): string => {
     if (mode === 'raw') return rawText;
-    const body = mdx.current?.getMarkdown() ?? splitDocument(text).body;
+    const content = body.current?.getMarkdown() ?? splitDocument(text).body;
     const withFields = fields ? applyFields(text, fields) : text;
-    return `${splitDocument(withFields).head ? `---\n${splitDocument(withFields).head}\n---\n` : ''}${body.startsWith('\n') ? body : `\n${body}`}`;
+    return `${splitDocument(withFields).head ? `---\n${splitDocument(withFields).head}\n---\n` : ''}${content.startsWith('\n') ? content : `\n${content}`}`;
   }, [mode, rawText, text, fields]);
 
   /** Runs a backend action, surfacing errors in the status line; `rethrow` lets dialogs show the error too. */
@@ -192,9 +192,9 @@ export function App({ platform }: { platform: Platform }) {
             ) : (<>
               <FrontmatterForm fields={fields} typesInUse={typesInUse} disabled={frozen} onChange={(f) => { setFields(f); setDirty(true); }} />
               <div className="editorFrame">
-                <BodyEditor key={selected + etag} editorRef={mdx} markdown={splitDocument(text).body} fileLabel={selected} components={components} readOnly={frozen}
-                  onChange={(_, initialNormalize) => { if (!initialNormalize) setDirty(true); }}
-                  onError={(e) => { console.error('MDXEditor parse error', e); setRawText(text); setMode('raw'); setStatus({ kind: 'error', text: 'This file could not be opened in the visual editor; editing raw MDX instead.' }); }} />
+                <BodyEditor key={selected + etag} editorRef={body} markdown={splitDocument(text).body} fileLabel={selected} components={components} readOnly={frozen}
+                  onChange={() => setDirty(true)}
+                  onParseError={(e) => { console.error('Rich text parse error', e); setRawText(text); setMode('raw'); setStatus({ kind: 'error', text: 'This file could not be opened in the visual editor; editing raw MDX instead.' }); }} />
               </div>
             </>)}
             <div style={{ marginTop: '1rem' }}>
@@ -204,7 +204,7 @@ export function App({ platform }: { platform: Platform }) {
             </div>
           </>)}
           <ProblemList problems={problems} title="Validation problems" />
-          {status && <p className={status.kind === 'ok' ? 'ok' : 'problems'} role="status">{status.text} {status.url && <a href={status.url} target="_blank" rel="noreferrer">View commit</a>}</p>}
+          {status && <p className={status.kind === 'ok' ? 'ok' : 'problems'} role="status" data-testid="app-status">{status.text} {status.url && <a href={status.url} target="_blank" rel="noreferrer">View commit</a>}</p>}
         </main>
       </div>
       {dialog === 'new' && <NewPageDialog typesInUse={typesInUse} defaultResource={platform.config.codeRepos[0] ? `https://github.com/${platform.config.codeRepos[0].owner}/${platform.config.codeRepos[0].repo}/blob/${platform.config.codeRepos[0].defaultRef}/${platform.config.codeRepos[0].pathPrefix ?? ''}` : ''} onCreate={create} onClose={() => setDialog(null)} />}

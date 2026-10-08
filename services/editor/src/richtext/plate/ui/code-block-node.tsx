@@ -1,0 +1,253 @@
+
+import * as React from 'react';
+
+import { formatCodeBlock, isLangSupported } from '@platejs/code-block';
+import { BracesIcon, Check, CheckIcon, CopyIcon } from 'lucide-react';
+import { type TCodeBlockElement, type TCodeSyntaxLeaf, NodeApi } from 'platejs';
+import {
+  type PlateElementProps,
+  type PlateLeafProps,
+  PlateElement,
+  PlateLeaf,
+} from 'platejs/react';
+import { useEditorRef, useElement, useReadOnly } from 'platejs/react';
+
+import { Button } from '@/richtext/plate/ui/button';
+import {
+  Command,
+  CommandEmpty,
+  CommandGroup,
+  CommandInput,
+  CommandItem,
+  CommandList,
+} from '@/richtext/plate/ui/command';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/richtext/plate/ui/popover';
+import { cn } from '@/richtext/plate/lib/utils';
+
+type CodeBlockElementProps = PlateElementProps<TCodeBlockElement> & {
+  showLanguageLabel?: boolean;
+};
+
+// Docs pages use these languages (same list the previous editor's toolbar offered). A fence with another
+// language keeps it: the picker shows the current value, and import never changes `lang`.
+// Token colours come from the `.docs-code-block .hljs-*` rules in theme/tailwind.css.
+const codeBlockLanguages: { label: string; value: string }[] = [
+  { label: 'Plain text', value: 'text' },
+  { label: 'C#', value: 'csharp' },
+  { label: 'YAML', value: 'yaml' },
+  { label: 'Bash', value: 'bash' },
+  { label: 'JSON', value: 'json' },
+];
+
+function getCodeBlockLanguageLabel(lang?: string | null) {
+  const value = lang?.trim();
+
+  if (!value) return null;
+
+  return (
+    codeBlockLanguages.find((language) => language.value === value)?.label ??
+    value
+  );
+}
+
+export function CodeBlockElement({
+  showLanguageLabel = true,
+  ...props
+}: CodeBlockElementProps) {
+  const { editor, element } = props;
+
+  return (
+    <PlateElement
+      className="docs-code-block py-1"
+      {...props}
+    >
+      <div className="relative rounded-md bg-muted/50">
+        <pre className="overflow-x-auto p-8 pr-4 font-mono text-sm leading-[normal] [tab-size:2] print:break-inside-avoid">
+          <code>{props.children}</code>
+        </pre>
+
+        <div
+          className="absolute top-1 right-1 z-10 flex select-none gap-0.5"
+          contentEditable={false}
+        >
+          {isLangSupported(element.lang) && (
+            <Button
+              size="icon"
+              variant="ghost"
+              className="size-6 text-xs"
+              onClick={() => formatCodeBlock(editor, { element })}
+              title="Format code"
+            >
+              <BracesIcon className="!size-3.5 text-muted-foreground" />
+            </Button>
+          )}
+
+          <CodeBlockCombobox showLanguageLabel={showLanguageLabel} />
+
+          <CopyButton
+            size="icon"
+            variant="ghost"
+            className="size-6 gap-1 text-muted-foreground text-xs"
+            value={() => NodeApi.string(element)}
+          />
+        </div>
+      </div>
+    </PlateElement>
+  );
+}
+
+function CodeBlockCombobox({
+  showLanguageLabel,
+}: {
+  showLanguageLabel: boolean;
+}) {
+  const [open, setOpen] = React.useState(false);
+  const readOnly = useReadOnly();
+  const editor = useEditorRef();
+  const element = useElement<TCodeBlockElement>();
+  const value = element.lang ?? '';
+  const [searchValue, setSearchValue] = React.useState('');
+
+  const items = React.useMemo(
+    () =>
+      [
+        ...codeBlockLanguages,
+        // keep a language the list does not know (it came from the page)
+        ...(value && !codeBlockLanguages.some((l) => l.value === value)
+          ? [{ label: value, value }]
+          : []),
+      ].filter(
+        (language) =>
+          !searchValue ||
+          language.label.toLowerCase().includes(searchValue.toLowerCase())
+      ),
+    [searchValue, value]
+  );
+
+  if (readOnly) {
+    if (!showLanguageLabel) return null;
+
+    return <CodeBlockLanguageLabel lang={element.lang} />;
+  }
+
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger asChild>
+        <Button
+          size="sm"
+          variant="ghost"
+          className="h-6 select-none justify-between gap-1 px-2 text-muted-foreground text-xs"
+          aria-expanded={open}
+          role="combobox"
+        >
+          {getCodeBlockLanguageLabel(value) ?? 'No language'}
+        </Button>
+      </PopoverTrigger>
+      <PopoverContent
+        className="w-[200px] p-0"
+        onCloseAutoFocus={() => setSearchValue('')}
+      >
+        <Command shouldFilter={false}>
+          <CommandInput
+            className="h-9"
+            value={searchValue}
+            onValueChange={(value) => setSearchValue(value)}
+            placeholder="Search language..."
+          />
+          <CommandEmpty>No language found.</CommandEmpty>
+
+          <CommandList className="h-[344px] overflow-y-auto">
+            <CommandGroup>
+              {items.map((language) => (
+                <CommandItem
+                  key={language.label}
+                  className="cursor-pointer"
+                  value={language.value}
+                  onSelect={(value) => {
+                    editor.tf.setNodes<TCodeBlockElement>(
+                      { lang: value },
+                      { at: element }
+                    );
+                    setSearchValue(value);
+                    setOpen(false);
+                  }}
+                >
+                  <Check
+                    className={cn(
+                      value === language.value ? 'opacity-100' : 'opacity-0'
+                    )}
+                  />
+                  {language.label}
+                </CommandItem>
+              ))}
+            </CommandGroup>
+          </CommandList>
+        </Command>
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function CodeBlockLanguageLabel({ lang }: { lang?: string | null }) {
+  const label = getCodeBlockLanguageLabel(lang);
+
+  if (!label) return null;
+
+  return (
+    <span className="flex h-6 select-none items-center px-2 text-muted-foreground text-xs">
+      {label}
+    </span>
+  );
+}
+
+function CopyButton({
+  value,
+  ...props
+}: { value: (() => string) | string } & Omit<
+  React.ComponentProps<typeof Button>,
+  'value'
+>) {
+  const [hasCopied, setHasCopied] = React.useState(false);
+
+  // Local fix: only time out after a copy, and clear the timer on unmount.
+  React.useEffect(() => {
+    if (!hasCopied) return;
+    const id = setTimeout(() => {
+      setHasCopied(false);
+    }, 2000);
+    return () => clearTimeout(id);
+  }, [hasCopied]);
+
+  return (
+    <Button
+      onClick={() => {
+        void navigator.clipboard.writeText(
+          typeof value === 'function' ? value() : value
+        );
+        setHasCopied(true);
+      }}
+      {...props}
+    >
+      <span className="sr-only">Copy</span>
+      {hasCopied ? (
+        <CheckIcon className="!size-3" />
+      ) : (
+        <CopyIcon className="!size-3" />
+      )}
+    </Button>
+  );
+}
+
+export function CodeLineElement(props: PlateElementProps) {
+  return <PlateElement {...props} />;
+}
+
+export function CodeSyntaxLeaf(props: PlateLeafProps<TCodeSyntaxLeaf>) {
+  const tokenClassName = props.leaf.className as string;
+
+  return <PlateLeaf className={tokenClassName} {...props} />;
+}

@@ -4,6 +4,10 @@ export default defineConfig({
   testDir: './e2e',
   timeout: 90_000,
   expect: { timeout: 15_000 },
+  // All specs share one content server and one git repo, which commits one change at a time.
+  // Each test seeds the pages it changes, so the order does not matter, but writes must not overlap.
+  workers: 1,
+  fullyParallel: false,
   use: { baseURL: 'http://127.0.0.1:5173/documentation-system/editor/', headless: true },
   webServer: [
     { command: 'node e2e/content-server.mjs', port: 4321, reuseExistingServer: false, timeout: 60_000 },

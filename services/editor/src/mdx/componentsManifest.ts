@@ -1,6 +1,4 @@
-import type { ComponentsManifest, ComponentDescriptor } from '@platform/contracts';
-import type { JsxComponentDescriptor } from '@mdxeditor/editor';
-import type { ComponentType } from 'react';
+import type { ComponentsManifest } from '@platform/contracts';
 
 export const DEFAULT_COMPONENTS: ComponentsManifest = {
   components: [
@@ -18,17 +16,4 @@ export async function loadComponentsManifest(url: string, f: typeof fetch = glob
     const data = (await res.json()) as ComponentsManifest;
     return Array.isArray(data.components) && data.components.length ? data : DEFAULT_COMPONENTS;
   } catch { return DEFAULT_COMPONENTS; }
-}
-
-export type PreviewRegistry = Record<ComponentDescriptor['preview'], ComponentType<{ mdastNode: never; descriptor: JsxComponentDescriptor }>>;
-
-/** Descriptors carry no `source`: the site registers these components globally, so no import lines are emitted. */
-export function toJsxDescriptors(manifest: ComponentsManifest, previews: PreviewRegistry): JsxComponentDescriptor[] {
-  return manifest.components.map((c) => ({
-    name: c.name,
-    kind: c.kind,
-    props: c.props.map((p) => ({ name: p.name, type: p.type === 'number' ? 'number' : p.type === 'boolean' ? 'expression' : 'string' })),
-    hasChildren: c.hasChildren,
-    Editor: (previews[c.preview] ?? previews.generic) as JsxComponentDescriptor['Editor'],
-  }));
 }

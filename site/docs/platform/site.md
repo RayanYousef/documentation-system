@@ -37,8 +37,8 @@ This script is the `site-scripts` lint element: it may import `@platform/okf-cor
 
 ## Theme, styles and static files
 
-- `site/src/theme/MDXComponents.js` is the global MDX registry: it registers `Tabs`, `TabItem`, `ModelViewer` and `FbxViewer`, so pages need no import lines. The editor's JSX descriptors rely on this registry (they emit no imports). See [Viewers](viewers.md) and [Add a site plugin or viewer](extending/add-site-plugin-or-viewer.md).
-- `site/src/css/custom.css` holds the arcade light and dark palette, the navbar GitHub icon, and the dark-mode overrides for MDXEditor and CodeMirror.
+- `site/src/theme/MDXComponents.js` is the global MDX registry: it registers `Tabs`, `TabItem`, `ModelViewer` and `FbxViewer`, so pages need no import lines. The editor relies on this registry: its Markdown rules write these components as plain JSX tags with no import lines. See [Viewers](viewers.md) and [Add a site plugin or viewer](extending/add-site-plugin-or-viewer.md).
+- `site/src/css/custom.css` holds the arcade light and dark palette, a few brand rules, the round navbar logo and the navbar GitHub icon. The editor has its own theme module (`services/editor/src/theme/`), so the site needs no editor overrides.
 - `site/static/` holds `img`, `models`, `uploads` and the generated, git-ignored `platform` folder.
 
 ## Composition root

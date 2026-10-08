@@ -1,6 +1,6 @@
 ---
 title: Platform decisions
-description: Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each; read it before reopening any of them.
+description: Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each, plus later decisions such as Plate replacing MDXEditor in the editor; read it before reopening any of them.
 type: decision
 tags: [platform, decisions, adr, design]
 resource: https://github.com/RayanYousef/documentation-system/blob/main/docs/design/2026-09-06-documentation-platform-design.md
@@ -29,7 +29,7 @@ Section 7 of the design specification records decisions that were not in the ori
 | 12 | Log completeness is guaranteed by the write path; the validator checks format and order only. | The log is append-only generated, so re-deriving it from git history would add cost without adding truth. |
 | 13 | Two Orama indexes: the Docusaurus plugin's for the site UI and the one `ContentBackend.search` builds with `buildSearchIndex` (the site prebuild also writes it to `static/platform/search-index-<version>.json`, which no backend reads yet). | The plugin index is not addressable from the contract; the second one is. |
 | 14 | The editor edits frontmatter through the `yaml` package's document API; okf-core keeps its own zero-dependency YAML subset parser for validation. | Editing must preserve comments, quoting and scalar types; validation must stay dependency-free. |
-| 15 | Viewers are global MDX components; editor descriptors have no `source`, so no import lines are emitted. | Pages stay plain Markdown with components. |
+| 15 | Viewers are global MDX components; the editor writes no import lines (first through MDXEditor descriptors with no `source`, now through the Plate component rules, see decision 23). | Pages stay plain Markdown with components. |
 | 16 | Asset fetches use `media.githubusercontent.com` first and `raw.githubusercontent.com` as fallback, cached with the Cache API. | The media endpoint serves real bytes for Git LFS pointers. |
 | 17 | `index.md`, `log.md`, `AGENTS.md`, `README.md` and `code-maps/` are hidden from the editor's file picker; folder intros are edited through a dedicated view that only touches text before the markers. | Generated content can never be hand-edited from the UI. |
 | 18 | Node 22 in CI; `engines.node` stays at 20 or newer. | Current LTS in CI without forcing local upgrades. |
@@ -42,3 +42,9 @@ Two decisions made while adding this platform documentation follow the same spir
 |---|---|---|
 | 21 | The platform is documented as a folder of the same OKF bundle (`site/docs/platform/`), not as a second bundle. | One manifest, one code map and one generator run cover project docs and platform docs; agents navigate both through the same index. |
 | 22 | `codeRepos` keeps a single entry for this repository even though it now hosts both the sample Unity project and the platform code. | Code maps and pins are keyed by `owner/repo`, so one entry already covers every path; a second entry would be a duplicate key with no extra coverage, and `pathPrefix` is only the editor's default for new pages. |
+
+A later decision about the editor, also recorded here rather than in the spec:
+
+| # | Decision | Why |
+|---|---|---|
+| 23 | Plate replaces MDXEditor for the page body, behind the editor's own `RichTextEditor` interface (`services/editor/src/richtext/`). | Plate gives a better look (Tailwind and shadcn styled with the arcade tokens) and more features (a "/" menu, a floating toolbar over a selection, block drag handles). It is MIT licensed, and only its free parts are used. Pages stay plain Markdown with globally registered components, and a page the editor cannot write back safely opens in Raw mode. Because the app only knows the interface, a later editor, or a move to a database format, is a new implementation next to `plate/`, not a rewrite of the app. |
