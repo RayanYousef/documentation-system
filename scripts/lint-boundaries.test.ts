@@ -38,4 +38,16 @@ describe('import boundaries', () => {
     const rules = await lint('site/docusaurus.config.js');
     expect(rules.filter((r) => r.startsWith('boundaries/'))).toEqual([]);
   }, TIMEOUT_MS);
+  it('accepts a local site plugin importing the Node content backend', async () => {
+    const rules = await lint('site/plugins/good.mjs');
+    expect(rules.filter((r) => r.startsWith('boundaries/'))).toEqual([]);
+  }, TIMEOUT_MS);
+  it('rejects reader code (a theme component) importing the editor', async () => {
+    const rules = await lint('site/src/theme/bad.tsx');
+    expect(rules.filter((r) => r.startsWith('boundaries/'))).not.toEqual([]);
+  }, TIMEOUT_MS);
+  it('accepts the site composition root importing the editor', async () => {
+    const rules = await lint('site/src/platform/good.ts');
+    expect(rules.filter((r) => r.startsWith('boundaries/'))).toEqual([]);
+  }, TIMEOUT_MS);
 });

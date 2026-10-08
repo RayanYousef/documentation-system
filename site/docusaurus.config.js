@@ -19,7 +19,7 @@ const config = {
   i18n: { defaultLocale: 'en', locales: ['en'] },
 
   plugins: [
-    ['./plugins/platform-inplace-edit/index.mjs', { enabled: platform.features.editor }],
+    ['./plugins/platform-inplace-edit/index.mjs', { enabled: platform.features.editor, codeRepos: platform.codeRepos }],
     ...(platform.features.search
     ? [[
         '@orama/plugin-docusaurus-v3',

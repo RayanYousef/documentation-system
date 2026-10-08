@@ -14,9 +14,9 @@ export default tseslint.config(
   js.configs.recommended,
   ...tseslint.configs.recommended,
   {
-    // Plain-JS Node entry points (root scripts, site prebuild, okf bin, e2e helper, skill scripts) use Node globals.
-    files: ['scripts/**/*.mjs', 'site/scripts/**/*.mjs', 'packages/*/bin/*.js', 'services/editor/e2e/*.mjs', '.agents/skills/docs-platform/scripts/*.mjs'],
-    languageOptions: { globals: { process: 'readonly', console: 'readonly' } },
+    // Plain-JS Node entry points (root scripts, site prebuild, site plugins, okf bin, e2e helper, skill scripts) use Node globals.
+    files: ['scripts/**/*.mjs', 'site/scripts/**/*.mjs', 'site/plugins/**/*.mjs', 'packages/*/bin/*.js', 'services/editor/e2e/*.mjs', '.agents/skills/docs-platform/scripts/*.mjs'],
+    languageOptions: { globals: { process: 'readonly', console: 'readonly', Buffer: 'readonly', URL: 'readonly' } },
   },
   {
     files: ['**/*.{ts,tsx,js,jsx,mjs}'],
@@ -33,6 +33,8 @@ export default tseslint.config(
         { type: 'site-composition', pattern: 'site/src/platform/**', mode: 'full' },
         // Build-time Node scripts (prebuild artifacts) may use okf-core and content like the root scripts do.
         { type: 'site-scripts', pattern: 'site/scripts/**', mode: 'full' },
+        // Local Docusaurus plugins: bundler config and the dev server's disk endpoint (Node only, never in the browser bundle).
+        { type: 'site-plugins', pattern: 'site/plugins/**', mode: 'full' },
         { type: 'site', pattern: 'site/**' },
         // platform.config.js is the one root file the site (and its composition root) may read (spec 4.7).
         { type: 'platform-config', pattern: 'platform.config.js', mode: 'full' },
@@ -56,6 +58,7 @@ export default tseslint.config(
           { from: ['site'], allow: ['site', 'site-composition', 'contracts', 'viewers', 'platform-config'] },
           { from: ['site-composition'], allow: ['site', 'site-composition', 'contracts', 'okf-core', 'viewers', 'auth', 'content', 'platform-config'] },
           { from: ['site-scripts'], allow: ['site-scripts', 'contracts', 'okf-core', 'content', 'platform-config'] },
+          { from: ['site-plugins'], allow: ['site-plugins', 'contracts', 'okf-core', 'content', 'platform-config'] },
           { from: ['root'], allow: ['root', 'platform-config', 'contracts', 'okf-core', 'content'] },
         ],
       }],
@@ -70,6 +73,7 @@ export default tseslint.config(
           { from: ['content'], disallow: ['@platform/auth', '@platform/viewers', '@platform/editor', '@platform/site'] },
           { from: ['editor'], disallow: ['@platform/auth', '@platform/content', '@platform/site'] },
           { from: ['site'], disallow: ['@platform/auth', '@platform/content', '@platform/editor'] },
+          { from: ['site-plugins'], disallow: ['@platform/auth', '@platform/editor', '@platform/viewers'] },
         ],
       }],
       '@typescript-eslint/no-unused-vars': ['error', { argsIgnorePattern: '^_' }],
