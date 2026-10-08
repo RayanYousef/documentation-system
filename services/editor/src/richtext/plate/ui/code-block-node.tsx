@@ -100,7 +100,7 @@ export function CodeBlockElement({
   );
 }
 
-function CodeBlockCombobox({
+export function CodeBlockCombobox({
   showLanguageLabel,
 }: {
   showLanguageLabel: boolean;
@@ -204,7 +204,7 @@ function CodeBlockLanguageLabel({ lang }: { lang?: string | null }) {
   );
 }
 
-function CopyButton({
+export function CopyButton({
   value,
   ...props
 }: { value: (() => string) | string } & Omit<
