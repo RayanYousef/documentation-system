@@ -13,12 +13,12 @@ export function PublishDialog({ existing, onPublish, onClose }: { existing: stri
   return (
     <Modal title="Publish a frozen version" onClose={busy ? undefined : onClose}>
       <p>Snapshots the Latest docs into a read-only version, pins every code resource to the current commit of its repository, and tags the docs repo <code>docs-v&lt;version&gt;</code>.</p>
-      <label className="row"><span>version</span><input aria-label="Version" placeholder="1.1.0" value={version} onChange={(e) => setVersion(e.target.value)} /></label>
+      <label className="ped-row"><span>version</span><input aria-label="Version" placeholder="1.1.0" value={version} onChange={(e) => setVersion(e.target.value)} /></label>
       {version && !valid && <p style={{ opacity: 0.8 }}>{existing.includes(version) ? `Version ${version} already exists.` : 'Use the form major.minor.patch, for example 1.1.0.'}</p>}
-      {error && <p className="problems" role="alert">{error}</p>}
-      <div style={{ display: 'flex', gap: '0.5rem' }}>
-        <button className="btn" disabled={!valid || busy} onClick={publish}>{busy ? 'Publishing...' : 'Publish'}</button>
-        <button className="btn secondary" onClick={onClose} disabled={busy}>Cancel</button>
+      {error && <p className="ped-problems" role="alert">{error}</p>}
+      <div className="ped-actions">
+        <button className="ped-btn" disabled={!valid || busy} onClick={publish}>{busy ? 'Publishing...' : 'Publish'}</button>
+        <button className="ped-btn ped-btn--secondary" onClick={onClose} disabled={busy}>Cancel</button>
       </div>
     </Modal>
   );

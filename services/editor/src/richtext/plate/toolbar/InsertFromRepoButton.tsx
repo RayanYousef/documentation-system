@@ -37,8 +37,8 @@ export function InsertFromRepoButton() {
     </ToolbarButton>
     {open && createPortal(
       <Modal title="Insert from repo" onClose={() => setOpen(false)}>
-        {error ? <p className="problems" role="alert">{error}</p> : !assets ? <p>Loading...</p> : assets.length === 0 ? <p>No assets committed yet.</p> : <ul className="filelist">{assets.map((a) => <li key={a.path}><button onClick={() => pick(a)}>{a.kind}: {a.path}</button></li>)}</ul>}
-        <button className="btn secondary" onClick={() => setOpen(false)}>Close</button>
+        {error ? <p className="ped-problems" role="alert">{error}</p> : !assets ? <p>Loading...</p> : assets.length === 0 ? <p>No assets committed yet.</p> : <ul className="ped-filelist">{assets.map((a) => <li key={a.path}><button onClick={() => pick(a)}>{a.kind}: {a.path}</button></li>)}</ul>}
+        <div className="ped-actions"><button className="ped-btn ped-btn--secondary" onClick={() => setOpen(false)}>Close</button></div>
       </Modal>,
       document.body,
     )}
