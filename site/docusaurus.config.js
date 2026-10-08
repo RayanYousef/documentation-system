@@ -18,7 +18,9 @@ const config = {
   markdown: { hooks: { onBrokenMarkdownLinks: 'warn' } },
   i18n: { defaultLocale: 'en', locales: ['en'] },
 
-  plugins: platform.features.search
+  plugins: [
+    ['./plugins/platform-inplace-edit/index.mjs', { enabled: platform.features.editor }],
+    ...(platform.features.search
     ? [[
         '@orama/plugin-docusaurus-v3',
         {
@@ -32,7 +34,8 @@ const config = {
           },
         },
       ]]
-    : [],
+    : []),
+  ],
 
   presets: [[
     'classic',

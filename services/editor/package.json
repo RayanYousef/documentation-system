@@ -3,6 +3,10 @@
   "version": "0.1.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./inplace": "./src/inplace/index.ts",
+    "./inplace/styles.pcss": "./src/theme-inpage/inplace.pcss"
+  },
   "scripts": {
     "dev": "vite",
     "build": "tsc --noEmit -p tsconfig.json && vite build",
@@ -12,6 +16,11 @@
   },
   "dependencies": {
     "@ariakit/react": "^0.4.40",
+    "@codemirror/commands": "^6.11.1",
+    "@codemirror/lang-markdown": "^6.5.2",
+    "@codemirror/language": "^6.13.1",
+    "@codemirror/state": "^6.7.6",
+    "@codemirror/view": "^6.43.14",
     "@platejs/basic-nodes": "53.0.0",
     "@platejs/callout": "53.0.0",
     "@platejs/code-block": "53.0.0",
