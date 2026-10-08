@@ -3,9 +3,9 @@ title: Combat
 description: Describes the damage pipeline, hit resolution and critical rolls used whenever an airship, turret or crew member takes damage.
 type: system
 tags: [combat, damage, gameplay]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Combat
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Combat
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Combat/DamagePipeline.cs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Combat/DamagePipeline.cs
 sidebar_position: 2
 ---
 

@@ -3,7 +3,7 @@ title: Getting Started
 description: Read this first if you need to clone, open and run the Skyforge Unity project locally for the first time.
 type: guide
 tags: [onboarding, setup, unity]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/README.md
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/README.md
 sidebar_position: 2
 ---
 

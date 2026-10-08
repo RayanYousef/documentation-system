@@ -3,10 +3,10 @@ title: Inventory
 description: Explains how items are stacked, stored and moved between containers, and which service API you call to change a player's inventory.
 type: system
 tags: [inventory, items, gameplay, service]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/9c52fd7232043d5eb3e24cb7ef5e53acc4c4b9b7/examples/unity-project/Assets/Scripts/Inventory
+resource: https://github.com/RayanYousef/documentation-system/blob/9c52fd7232043d5eb3e24cb7ef5e53acc4c4b9b7/examples/unity-project/Assets/Scripts/Inventory
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/9c52fd7232043d5eb3e24cb7ef5e53acc4c4b9b7/examples/unity-project/Assets/Scripts/Inventory/InventoryService.cs
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/9c52fd7232043d5eb3e24cb7ef5e53acc4c4b9b7/examples/unity-project/Assets/Scripts/Inventory/ItemStack.cs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/9c52fd7232043d5eb3e24cb7ef5e53acc4c4b9b7/examples/unity-project/Assets/Scripts/Inventory/InventoryService.cs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/9c52fd7232043d5eb3e24cb7ef5e53acc4c4b9b7/examples/unity-project/Assets/Scripts/Inventory/ItemStack.cs
 sidebar_position: 1
 ---
 

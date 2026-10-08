@@ -3,14 +3,14 @@ title: Add a new service module
 description: "General recipe for a brand-new workspace under services/ or packages/ (for example the Phase 2 gate or the Hono shell): package layout, tsconfig and Vitest wiring, the ESLint boundary element to declare, and which scripts and workflows must know about it."
 type: guide
 tags: [platform, extending, workspace, boundaries, eslint, monorepo]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/eslint.config.js
+resource: https://github.com/RayanYousef/documentation-system/blob/main/eslint.config.js
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/package.json
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/tsconfig.base.json
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/vitest.workspace.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/package.json
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/lint-boundaries.test.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.github/workflows/okf-validate.yml
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/package.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/tsconfig.base.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/vitest.workspace.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth/package.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/lint-boundaries.test.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.github/workflows/okf-validate.yml
 sidebar_position: 3
 ---
 

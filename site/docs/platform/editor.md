@@ -3,21 +3,21 @@ title: Editor service
 description: "Describes the in-browser editor (Vite + React + MDXEditor): how it is composed from platform.config.js, what each screen and dialog does, how frontmatter edits preserve YAML, how the arcade theme is applied, and how it is built and deployed under /editor/; open it when changing editor behaviour or debugging a save from the UI."
 type: system
 tags: [platform, editor, vite, react, mdxeditor, frontmatter, theme]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor
+resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/composition/createPlatform.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/App.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/components/FrontmatterForm.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/frontmatter/yamlDoc.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/mdx/descriptors.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/mdx/componentsManifest.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/session/SessionStore.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/theme/index.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/theme/tokens.css
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/vite.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/e2e/editor.spec.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/e2e/theme.spec.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/copy-editor.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/App.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/FrontmatterForm.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/frontmatter/yamlDoc.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/descriptors.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/componentsManifest.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/session/SessionStore.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/index.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/tokens.css
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vite.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/editor.spec.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/theme.spec.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs
 sidebar_position: 6
 ---
 
@@ -55,7 +55,7 @@ The look of the editor lives in one module, `src/theme/`, imported once from `sr
 
 ## Build and deploy
 
-`vite.config.ts` sets `base` to `<baseUrl>editor/` from `platform.config.js`. `npm run build -w @platform/editor` type-checks and builds `services/editor/dist`; `scripts/copy-editor.mjs` copies it into `site/build/editor/` so GitHub Pages serves the editor at `https://RayanYousef.github.io/CloudDocumentationPersonal/editor/`. The site navbar links there when `features.editor` is true.
+`vite.config.ts` sets `base` to `<baseUrl>editor/` from `platform.config.js`. `npm run build -w @platform/editor` type-checks and builds `services/editor/dist`; `scripts/copy-editor.mjs` copies it into `site/build/editor/` so GitHub Pages serves the editor at `https://RayanYousef.github.io/documentation-system/editor/`. The site navbar links there when `features.editor` is true.
 
 Development: `npm run dev -w @platform/editor` with `VITE_PLATFORM_AUTH=mock` and `VITE_PLATFORM_CONTENT=http://127.0.0.1:4321` against `node services/editor/e2e/content-server.mjs` (a `serveContentBackend` over a `LocalFolderBackend`).
 

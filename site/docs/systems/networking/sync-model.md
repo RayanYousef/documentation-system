@@ -3,9 +3,9 @@ title: Sync Model
 description: Explains the host-authoritative replication model, what state is replicated at which rate, and how client intents become confirmed changes.
 type: system
 tags: [networking, replication, authority]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Net
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Net
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Net/ReplicationService.cs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Net/ReplicationService.cs
 sidebar_position: 1
 ---
 

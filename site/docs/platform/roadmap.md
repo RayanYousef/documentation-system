@@ -3,11 +3,11 @@ title: Roadmap
 description: Lists what Phase 2 adds (password provider from GitHub secrets, server-side content service behind a Hono shell, a gate for private viewing, Docker or Node deployment, the push-triggered documentation updater) and the editor's known minor issues; open it to see what is planned versus shipped before proposing a change.
 type: reference
 tags: [platform, roadmap, phase-2, hono, gate, docker, updater]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/docs/design/2026-09-06-documentation-platform-design.md
+resource: https://github.com/RayanYousef/documentation-system/blob/main/docs/design/2026-09-06-documentation-platform-design.md
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/http/serveContentBackend.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/src/GithubTokenProvider.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/src/codemap.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/serveContentBackend.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth/src/GithubTokenProvider.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core/src/codemap.ts
 sidebar_position: 12
 ---
 

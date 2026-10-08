@@ -3,18 +3,18 @@ title: Content service
 description: Describes the three ContentBackend implementations (local folder, GitHub-in-browser, HTTP bridge), the shared write and publish pipelines, the LFS-aware asset fetch and the Orama search; open it when a save, publish or asset load misbehaves or when you are writing a new backend.
 type: system
 tags: [platform, content, github, git-data, publish, assets, search]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content
+resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/writePipeline.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/publishPipeline.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/layout.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/local/LocalFolderBackend.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/github/GithubBrowserBackend.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/github/gitData.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/http/HttpContentBackend.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/http/serveContentBackend.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/assets/getAsset.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/search/index.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/writePipeline.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/publishPipeline.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/layout.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/local/LocalFolderBackend.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/github/GithubBrowserBackend.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/github/gitData.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/HttpContentBackend.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/serveContentBackend.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/assets/getAsset.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/search/index.ts
 sidebar_position: 5
 ---
 
