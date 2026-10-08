@@ -3,7 +3,7 @@ title: Lag Compensation
 description: Reference for how the host rewinds hit checks for late client input, including the rewind cap and the tunables exposed to designers.
 type: reference
 tags: [networking, latency, combat, tuning]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Net/LagCompensator.cs
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Net/LagCompensator.cs
 sidebar_position: 2
 ---
 

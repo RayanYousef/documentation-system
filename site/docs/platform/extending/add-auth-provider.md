@@ -3,13 +3,13 @@ title: Add an auth provider
 description: "Step-by-step recipe for a new AuthProvider (for example the Phase 2 password provider): the interface and credentials union to extend, the contract suite to pass, where the editor's composition root selects it and which config field switches it on."
 type: guide
 tags: [platform, extending, auth, provider, contract-test]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/src
+resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth/src
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/auth.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/platform-config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/testing/authProviderContract.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/test/MockAuthProvider.test.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/composition/createPlatform.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/auth.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/platform-config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/authProviderContract.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth/test/MockAuthProvider.test.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts
 sidebar_position: 1
 ---
 

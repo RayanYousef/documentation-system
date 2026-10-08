@@ -3,7 +3,7 @@ title: "Save Format: JSON over Binary"
 description: Records the choice of gzipped JSON for save files instead of a custom binary format, and the size and compatibility trade-offs accepted.
 type: decision
 tags: [save, serialization, decision, format]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Persistence/SaveService.cs
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Persistence/SaveService.cs
 sidebar_position: 2
 ---
 

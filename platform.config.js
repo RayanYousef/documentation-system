@@ -10,12 +10,12 @@ const platformConfig = {
   siteUrl: 'https://RayanYousef.github.io',
   // Path under siteUrl where the site lives (Docusaurus `baseUrl`, Vite `base` for the editor at
   // `<baseUrl>editor/`, and the prefix for `<baseUrl>platform/*.json`). Must start and end with `/`.
-  baseUrl: '/CloudDocumentationPersonal/',
+  baseUrl: '/documentation-system/',
   // GitHub owner of the repository that holds this site. Used for the GitHub link, the edit URL,
   // the token provider's collaborator check and the browser content backend's commits.
   organizationName: 'RayanYousef',
   // GitHub repository name that holds this site (same uses as organizationName).
-  projectName: 'CloudDocumentationPersonal',
+  projectName: 'documentation-system',
   // Branch the editor commits to and the edit URL points at; the push to it triggers deploy-pages.yml.
   deployBranch: 'main',
   // Folder of the Docusaurus site relative to the repository root. The docs bundle is `<sitePath>/docs`,
@@ -52,7 +52,7 @@ const platformConfig = {
       // GitHub owner of the code repository.
       owner: 'RayanYousef',
       // GitHub repository name.
-      repo: 'CloudDocumentationPersonal',
+      repo: 'documentation-system',
       // Branch that Latest docs pin to; publishVersion resolves it to a commit sha for frozen versions.
       defaultRef: 'main',
       // Human-readable name shown in the editor (insert-from-repo, new page dialog).

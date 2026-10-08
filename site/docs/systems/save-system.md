@@ -3,10 +3,10 @@ title: Save System
 description: Covers how game state is serialised to disk, the save slot layout, and how older save files are migrated when the schema changes.
 type: system
 tags: [save, persistence, serialization, migration]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Persistence
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Persistence
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Persistence/SaveService.cs
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Persistence/Migrations
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Persistence/SaveService.cs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Persistence/Migrations
 sidebar_position: 3
 ---
 

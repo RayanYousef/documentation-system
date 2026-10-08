@@ -3,15 +3,15 @@ title: Contracts
 description: Lists every interface, type and error code in @platform/contracts and the two contract test suites that any new auth provider or content backend must pass; open it when you need the exact signature a service has to implement.
 type: system
 tags: [platform, contracts, typescript, testing, auth, content]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts
+resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/auth.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/content.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/platform-config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/components-manifest.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/testing/authProviderContract.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/testing/contentBackendContract.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/testing/fixtures/miniBundle.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/auth.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/content.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/platform-config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/components-manifest.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/authProviderContract.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/contentBackendContract.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/fixtures/miniBundle.ts
 sidebar_position: 2
 ---
 

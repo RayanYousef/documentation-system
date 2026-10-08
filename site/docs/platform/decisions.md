@@ -3,11 +3,11 @@ title: Platform decisions
 description: Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each; read it before reopening any of them.
 type: decision
 tags: [platform, decisions, adr, design]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/docs/design/2026-09-06-documentation-platform-design.md
+resource: https://github.com/RayanYousef/documentation-system/blob/main/docs/design/2026-09-06-documentation-platform-design.md
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/eslint.config.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/platform.config.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/versions.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/eslint.config.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/platform.config.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/versions.json
 sidebar_position: 13
 ---
 

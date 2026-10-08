@@ -3,9 +3,9 @@ title: Airship Model
 description: Documents the player airship mesh, its LOD and texture budgets, and the socket naming that gameplay code relies on for turrets and sails.
 type: asset
 tags: [art, model, airship, lod]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Models
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Models
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Models/Airship.fbx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Models/Airship.fbx
 sidebar_position: 1
 ---
 
@@ -35,7 +35,7 @@ Scale factor 1, no animation import, mesh compression off for LOD0 only. Read/Wr
 
 The mesh below is fetched from the sample code repository at the pinned ref, so a frozen version always shows the model that shipped.
 
-<FbxViewer repo="RayanYousef/CloudDocumentationPersonal" ref="main" path="examples/unity-project/Assets/Models/Airship.fbx" alt="Airship" height={400} />
+<FbxViewer repo="RayanYousef/documentation-system" ref="main" path="examples/unity-project/Assets/Models/Airship.fbx" alt="Airship" height={400} />
 
 A glTF asset committed to the site itself is referenced by `src` instead:
 

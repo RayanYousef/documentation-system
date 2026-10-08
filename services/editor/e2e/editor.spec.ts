@@ -59,7 +59,7 @@ test('edit, create and publish through the editor against LocalFolderBackend', a
   await page.getByLabel('New page title').fill('Status Effects');
   await page.getByLabel('New page description').fill('Lists every status effect, its duration rules and which combat stage applies it.');
   await page.getByLabel('New page type').fill('system');
-  await page.getByLabel('New page resource').fill('https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Combat');
+  await page.getByLabel('New page resource').fill('https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Combat');
   await page.getByRole('button', { name: 'Create', exact: true }).click();
   await expect(page.getByRole('status')).toContainText('Created systems/status-effects.md');
   expect(await readFile(path.join(repo, 'site/docs/systems/index.md'), 'utf8')).toContain('* [Status Effects](status-effects.md) - Lists every status effect');
@@ -93,7 +93,7 @@ test('edit, create and publish through the editor against LocalFolderBackend', a
   const frozen = await readFile(path.join(repo, 'site/versioned_docs/version-1.1.0/systems/inventory.md'), 'utf8');
   expect(frozen).toContain(`/blob/${'e'.repeat(40)}/examples/unity-project/Assets/Scripts/Inventory`);
   expect(frozen).not.toContain('/blob/main/');
-  expect(JSON.parse(await readFile(path.join(repo, 'site/docs/versions/1.1.0.json'), 'utf8')).pins['RayanYousef/CloudDocumentationPersonal']).toBe('e'.repeat(40));
+  expect(JSON.parse(await readFile(path.join(repo, 'site/docs/versions/1.1.0.json'), 'utf8')).pins['RayanYousef/documentation-system']).toBe('e'.repeat(40));
   expect((await git('tag', '--list')).split('\n')).toContain('docs-v1.1.0');
 
   // Frozen versions are read-only in the UI.

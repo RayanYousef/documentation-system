@@ -3,14 +3,14 @@ title: Agent skill
 description: Explains the docs-platform agent skill (the only platform agent skill), its user-level registry that maps a code repository to its docs bundle, the navigation walk it prescribes and its relationship to the ray-okf-core format skill; open it when setting up an agent to work on this documentation or when a repo is "not registered".
 type: system
 tags: [platform, agents, skill, registry, navigation]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform
+resource: https://github.com/RayanYousef/documentation-system/blob/main/.agents/skills/docs-platform
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform/SKILL.md
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform/references/registry.md
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform/references/navigation.md
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform/references/authoring.md
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform/scripts/resolve-bundle.mjs
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/docs/AGENTS.md
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.agents/skills/docs-platform/SKILL.md
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.agents/skills/docs-platform/references/registry.md
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.agents/skills/docs-platform/references/navigation.md
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.agents/skills/docs-platform/references/authoring.md
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.agents/skills/docs-platform/scripts/resolve-bundle.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/docs/AGENTS.md
 sidebar_position: 9
 ---
 

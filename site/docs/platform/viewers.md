@@ -3,15 +3,15 @@ title: Viewers package
 description: Explains the two React 3D rendering cores (glTF/GLB through model-viewer, FBX through three.js), why they live in their own package, and how the site wraps them with BrowserOnly and asset resolution; open it when a model does not render or when adding a new viewer.
 type: system
 tags: [platform, viewers, 3d, three, model-viewer, react]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/viewers
+resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/viewers
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/viewers/src/ModelViewerCore.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/viewers/src/FbxViewerCore.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/components/ModelViewer/index.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/components/FbxViewer/index.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/platform/useAssetUrl.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/theme/MDXComponents.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/components.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/viewers/src/ModelViewerCore.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/viewers/src/FbxViewerCore.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/components/ModelViewer/index.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/components/FbxViewer/index.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/useAssetUrl.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/MDXComponents.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/components.json
 sidebar_position: 7
 ---
 

@@ -5,7 +5,7 @@ sidebar_position: 10
 
 How the documentation platform itself is built: the packages and services behind this site, the contracts they implement, the rules that keep them apart, and the steps for adding a new auth provider, content backend, service, viewer or deploy target. Read this folder when you are changing the platform rather than writing project documentation; every page pins the code it describes so agents can jump from a page into the source.
 
-Start with [Architecture](architecture.md) for the map, then the component page that matches the folder you are editing. The [Extending](extending/) guides list the contract, test, composition root, config field and boundary rule involved in each kind of change. The normative source for all of this is the design specification at [`docs/design/2026-09-06-documentation-platform-design.md`](https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/docs/design/2026-09-06-documentation-platform-design.md).
+Start with [Architecture](architecture.md) for the map, then the component page that matches the folder you are editing. The [Extending](extending/) guides list the contract, test, composition root, config field and boundary rule involved in each kind of change. The normative source for all of this is the design specification at [`docs/design/2026-09-06-documentation-platform-design.md`](https://github.com/RayanYousef/documentation-system/blob/main/docs/design/2026-09-06-documentation-platform-design.md).
 
 <!-- okf:index -->
 ## Pages

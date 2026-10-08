@@ -3,26 +3,26 @@ title: Workflows and scripts
 description: Lists the GitHub Actions workflows (validate on every push, deploy Pages on main) and the root npm scripts with what each one runs; open it when CI fails, when reproducing CI locally, or when adding a build step or deploy target.
 type: system
 tags: [platform, ci, github-actions, deploy, scripts, testing]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.github/workflows
+resource: https://github.com/RayanYousef/documentation-system/blob/main/.github/workflows
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.github/workflows/okf-validate.yml
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.github/workflows/deploy-pages.yml
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/package.json
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/okf.mjs
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/copy-editor.mjs
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/lint-boundaries.test.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/vitest.workspace.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/viewers/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.agents/skills/docs-platform/vitest.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.gitattributes
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.gitignore
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.github/workflows/okf-validate.yml
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.github/workflows/deploy-pages.yml
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/package.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/okf.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/lint-boundaries.test.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/vitest.workspace.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/viewers/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.agents/skills/docs-platform/vitest.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.gitattributes
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/.gitignore
 sidebar_position: 10
 ---
 
@@ -33,7 +33,7 @@ sidebar_position: 10
 | `okf-validate.yml` | every push and pull request | `npm ci`; build `contracts`, `okf-core`, `viewers`, `auth`, `content`; `npm run okf:check` (validator and stale check over Latest and every frozen version); `npm run lint`; `npm test` |
 | `deploy-pages.yml` | push to `main`, manual dispatch | same install and build; `npm run okf:check`; `npm run site:build`; publish `site/build` to `gh-pages` with `peaceiris/actions-gh-pages` (concurrency group `deploy-pages`, `contents: write`) |
 
-Both run on Node 22 (`engines.node` stays at 20 or newer). The site is served from the `gh-pages` branch at `https://RayanYousef.github.io/CloudDocumentationPersonal/`, the editor under `/editor/`. The repository is public so Pages can serve it; the spec (section 4.9) records the `gh` commands used to change visibility and enable Pages.
+Both run on Node 22 (`engines.node` stays at 20 or newer). The site is served from the `gh-pages` branch at `https://RayanYousef.github.io/documentation-system/`, the editor under `/editor/`. The repository is public so Pages can serve it; the spec (section 4.9) records the `gh` commands used to change visibility and enable Pages.
 
 ## Root npm scripts
 
