@@ -7,14 +7,21 @@ import {
 } from '@platform/contracts';
 import { analyzeBundle } from '@platform/okf-core';
 import { readBundle, writeFiles } from '@platform/okf-core/node';
-import { versionDir, isFrozen, assetKind, STATIC_DIR, ASSET_DIRS, assertPagePath } from '../layout.js';
+import { versionDir, isFrozen, assetKind, STATIC_DIR, ASSET_DIRS, assertPagePath, assertAssetPath } from '../layout.js';
 import { planPageChanges, contentEtag, type PageChange } from '../writePipeline.js';
 import { planPublish } from '../publishPipeline.js';
 import { buildSearchIndex, searchRaw } from '../search/index.js';
 import { fetchAsset } from '../assets/getAsset.js';
-import { commitAll, createTag } from './git.js';
+import { GitCommitter, type Committer } from './committer.js';
 
-export interface LocalFolderBackendOptions { siteDir: string; codeRepos: CodeRepoRef[]; resolveRef?: (repo: CodeRepoRef) => Promise<string>; fetch?: typeof fetch }
+export interface LocalFolderBackendOptions {
+  siteDir: string;
+  codeRepos: CodeRepoRef[];
+  resolveRef?: (repo: CodeRepoRef) => Promise<string>;
+  fetch?: typeof fetch;
+  /** How changes are recorded after the files are written. Default: a git commit (GitCommitter). */
+  committer?: Committer;
+}
 
 const exists = (p: string): Promise<boolean> => access(p).then(() => true, () => false);
 const today = (): string => new Date().toISOString().slice(0, 10);
@@ -23,7 +30,10 @@ const today = (): string => new Date().toISOString().slice(0, 10);
 export class LocalFolderBackend implements ContentBackend {
   readonly id = 'local-folder';
   private searchCache = new Map<VersionId, unknown>();
-  constructor(private readonly opts: LocalFolderBackendOptions) {}
+  private readonly committer: Committer;
+  constructor(private readonly opts: LocalFolderBackendOptions) {
+    this.committer = opts.committer ?? new GitCommitter();
+  }
 
   private abs(...segs: string[]): string { return path.join(this.opts.siteDir, ...segs); }
   private bundleDir(version: VersionId): string { return this.abs(...versionDir(version).split('/')); }
@@ -57,7 +67,7 @@ export class LocalFolderBackend implements ContentBackend {
     const cs = planPageChanges(files, changes, { codeRepos: this.opts.codeRepos, author: opts.author.name, message: opts.message, date: today() });
     await writeFiles(dir, cs.writes);
     for (const d of cs.deletes) await rm(path.join(dir, ...d.split('/')), { force: true });
-    const sha = await commitAll(this.opts.siteDir, opts.message, opts.author);
+    const sha = await this.committer.commit(this.opts.siteDir, opts.message, opts.author);
     this.searchCache.delete(version);
     const last = changes.filter((c) => c.text !== null).at(-1);
     return { commitSha: sha, commitUrl: null, etag: last?.text ? contentEtag(last.text) : '', regenerated: cs.regenerated };
@@ -90,11 +100,11 @@ export class LocalFolderBackend implements ContentBackend {
   }
 
   async uploadAsset(assetPath: string, bytes: Uint8Array, opts: MutationOptions): Promise<WriteResult & { asset: AssetInfo }> {
-    if (assetPath.split('/').some((s) => s === '..' || s === '')) throw new ContentError('VALIDATION', `Invalid asset path ${assetPath}`);
+    assertAssetPath(assetPath);
     const abs = this.abs(STATIC_DIR, ...assetPath.split('/'));
     await mkdir(path.dirname(abs), { recursive: true });
     await writeFile(abs, bytes);
-    const sha = await commitAll(this.opts.siteDir, opts.message, opts.author);
+    const sha = await this.committer.commit(this.opts.siteDir, opts.message, opts.author);
     const asset: AssetInfo = { path: assetPath, url: `/${assetPath}`, size: bytes.byteLength, kind: assetKind(assetPath) };
     return { commitSha: sha, commitUrl: null, etag: '', regenerated: [], asset };
   }
@@ -123,13 +133,14 @@ export class LocalFolderBackend implements ContentBackend {
   }
 
   async publishVersion(version: string, opts: MutationOptions): Promise<PublishResult> {
+    if (!this.committer.createsCommits) throw new ContentError('FORBIDDEN', 'Publishing needs a git commit; run it from the CLI');
     const pins: Record<string, string> = {};
     for (const r of this.opts.codeRepos) pins[repoKey(r)] = await (this.opts.resolveRef ?? defaultResolveRef(this.opts.fetch))(r);
     const latest = await readBundle(this.bundleDir(CURRENT_VERSION));
     const plan = planPublish(latest, version, await this.versionsJson(), this.opts.codeRepos, pins, new Date().toISOString());
     await writeFiles(this.opts.siteDir, plan.writes);
-    const sha = await commitAll(this.opts.siteDir, opts.message, opts.author);
-    await createTag(this.opts.siteDir, plan.tag, sha);
+    const sha = await this.committer.commit(this.opts.siteDir, opts.message, opts.author);
+    await this.committer.tag(this.opts.siteDir, plan.tag, sha);
     return { version, tag: plan.tag, commitSha: sha, pins };
   }
 

@@ -4,16 +4,21 @@ import {
   type PageSummary, type PublishResult, type SearchHit, type VersionId, type VersionInfo, type WriteOptions, type WriteResult,
 } from '@platform/contracts';
 import { analyzeBundle } from '@platform/okf-core';
-import { versionDir, isFrozen, assetKind, STATIC_DIR, ASSET_DIRS, assertPagePath } from '../layout.js';
+import { versionDir, isFrozen, assetKind, STATIC_DIR, ASSET_DIRS, assertPagePath, assertAssetPath } from '../layout.js';
 import { planPageChanges, type PageChange } from '../writePipeline.js';
 import { planPublish } from '../publishPipeline.js';
 import { buildSearchIndex, searchRaw } from '../search/index.js';
 import { fetchAsset } from '../assets/getAsset.js';
-import { GitDataClient, type TreeEntry } from './gitData.js';
+import { GitDataClient, type Head, type TreeEntry } from './gitData.js';
 
 export interface GithubBrowserBackendOptions { owner: string; repo: string; branch: string; sitePath: string; codeRepos: CodeRepoRef[]; token: string | null; fetch?: typeof fetch; apiRoot?: string }
 
 const today = (): string => new Date().toISOString().slice(0, 10);
+/** Retries after a branch-moved rejection (another commit landed between snapshot and commit). */
+const BRANCH_MOVED_RETRIES = 2;
+const isBranchMoved = (e: unknown): boolean => e instanceof ContentError && e.code === 'CONFLICT' && (e.details as { reason?: string } | undefined)?.reason === 'branch-moved';
+
+interface Snapshot { head: Head; treeSha: string; entries: TreeEntry[] }
 
 /** Runs in the browser with the editor's token. Reads via the tree + blobs, writes via one Git Data commit per operation. */
 export class GithubBrowserBackend implements ContentBackend {
@@ -27,9 +32,21 @@ export class GithubBrowserBackend implements ContentBackend {
   private sitePrefix(): string { return this.opts.sitePath ? `${this.opts.sitePath}/` : ''; }
   private bundlePrefix(version: VersionId): string { return `${this.sitePrefix()}${versionDir(version)}/`; }
 
-  private async snapshot(): Promise<{ treeSha: string; entries: TreeEntry[] }> {
+  private async snapshot(): Promise<Snapshot> {
     const head = await this.git.getHead(this.opts.branch);
-    return { treeSha: head.treeSha, entries: (await this.git.getTree(head.treeSha)).filter((e) => e.type === 'blob') };
+    return { head, treeSha: head.treeSha, entries: (await this.git.getTree(head.treeSha)).filter((e) => e.type === 'blob') };
+  }
+
+  /**
+   * Runs a snapshot -> plan -> commit operation; when the branch moved in between, starts over from a new
+   * snapshot (which re-checks etags and re-plans the generated files), at most BRANCH_MOVED_RETRIES times.
+   */
+  private async withRetry<T>(op: () => Promise<T>): Promise<T> {
+    for (let attempt = 0; ; attempt++) {
+      try { return await op(); } catch (e) {
+        if (!isBranchMoved(e) || attempt >= BRANCH_MOVED_RETRIES) throw e;
+      }
+    }
   }
 
   /** Bundle-relative markdown + manifest for a version, from a tree snapshot. */
@@ -68,14 +85,14 @@ export class GithubBrowserBackend implements ContentBackend {
     return { path: pagePath, text: await this.git.getBlobText(e.sha), etag: e.sha };
   }
 
-  private async commitChanges(version: VersionId, changes: PageChange[], opts: MutationOptions, entries: TreeEntry[]): Promise<WriteResult> {
+  private async commitChanges(version: VersionId, changes: PageChange[], opts: MutationOptions, { head, entries }: Snapshot): Promise<WriteResult> {
     if (isFrozen(version)) throw new ContentError('FROZEN', `Version ${version} is frozen; edit the Latest docs instead`);
     const files = await this.loadBundle(version, entries);
     const cs = planPageChanges(files, changes, { codeRepos: this.opts.codeRepos, author: opts.author.name, message: opts.message, date: today() });
     const prefix = this.bundlePrefix(version);
     const writes: Record<string, string> = {};
     for (const [p, t] of Object.entries(cs.writes)) writes[`${prefix}${p}`] = t;
-    const sha = await this.git.commitFiles(this.opts.branch, writes, cs.deletes.map((d) => `${prefix}${d}`), opts.message, opts.author);
+    const sha = await this.git.commitFiles(this.opts.branch, writes, cs.deletes.map((d) => `${prefix}${d}`), opts.message, opts.author, { expectedParent: head });
     const last = changes.filter((c) => c.text !== null).at(-1);
     const etag = last ? (await this.snapshot()).entries.find((x) => x.path === `${prefix}${last.path}`)?.sha ?? '' : '';
     return { commitSha: sha, commitUrl: `https://github.com/${this.opts.owner}/${this.opts.repo}/commit/${sha}`, etag, regenerated: cs.regenerated };
@@ -84,37 +101,44 @@ export class GithubBrowserBackend implements ContentBackend {
   async writePage(version: VersionId, pagePath: string, text: string, opts: WriteOptions): Promise<WriteResult> {
     if (isFrozen(version)) throw new ContentError('FROZEN', `Version ${version} is frozen; edit the Latest docs instead`);
     assertPagePath(pagePath);
-    const { entries } = await this.snapshot();
-    const e = entries.find((x) => x.path === `${this.bundlePrefix(version)}${pagePath}`);
-    if (!e) throw new ContentError('NOT_FOUND', `No page at ${pagePath} in ${version}`);
-    if (opts.expectedEtag && opts.expectedEtag !== e.sha) throw new ContentError('CONFLICT', `${pagePath} changed on ${this.opts.branch} since you loaded it; reload and re-apply your edits`);
-    return this.commitChanges(version, [{ path: pagePath, text }], opts, entries);
+    return this.withRetry(async () => {
+      const snap = await this.snapshot();
+      const e = snap.entries.find((x) => x.path === `${this.bundlePrefix(version)}${pagePath}`);
+      if (!e) throw new ContentError('NOT_FOUND', `No page at ${pagePath} in ${version}`);
+      if (opts.expectedEtag && opts.expectedEtag !== e.sha) throw new ContentError('CONFLICT', `${pagePath} changed on ${this.opts.branch} since you loaded it; reload and re-apply your edits`);
+      return this.commitChanges(version, [{ path: pagePath, text }], opts, snap);
+    });
   }
 
   async createPage(version: VersionId, pagePath: string, text: string, opts: MutationOptions): Promise<WriteResult> {
     if (isFrozen(version)) throw new ContentError('FROZEN', `Version ${version} is frozen`);
     assertPagePath(pagePath);
-    const { entries } = await this.snapshot();
-    if (entries.some((x) => x.path === `${this.bundlePrefix(version)}${pagePath}`)) throw new ContentError('EXISTS', `${pagePath} already exists`);
-    return this.commitChanges(version, [{ path: pagePath, text }], opts, entries);
+    return this.withRetry(async () => {
+      const snap = await this.snapshot();
+      if (snap.entries.some((x) => x.path === `${this.bundlePrefix(version)}${pagePath}`)) throw new ContentError('EXISTS', `${pagePath} already exists`);
+      return this.commitChanges(version, [{ path: pagePath, text }], opts, snap);
+    });
   }
 
   async deletePage(version: VersionId, pagePath: string, opts: MutationOptions): Promise<WriteResult> {
-    await this.readPage(version, pagePath);
-    const { entries } = await this.snapshot();
-    return this.commitChanges(version, [{ path: pagePath, text: null }], opts, entries);
+    return this.withRetry(async () => {
+      await this.readPage(version, pagePath);
+      return this.commitChanges(version, [{ path: pagePath, text: null }], opts, await this.snapshot());
+    });
   }
 
   async renamePage(version: VersionId, from: string, to: string, opts: MutationOptions): Promise<WriteResult> {
-    const page = await this.readPage(version, from);
     assertPagePath(to);
-    const { entries } = await this.snapshot();
-    if (entries.some((x) => x.path === `${this.bundlePrefix(version)}${to}`)) throw new ContentError('EXISTS', `${to} already exists`);
-    return this.commitChanges(version, [{ path: from, text: null }, { path: to, text: page.text }], opts, entries);
+    return this.withRetry(async () => {
+      const page = await this.readPage(version, from);
+      const snap = await this.snapshot();
+      if (snap.entries.some((x) => x.path === `${this.bundlePrefix(version)}${to}`)) throw new ContentError('EXISTS', `${to} already exists`);
+      return this.commitChanges(version, [{ path: from, text: null }, { path: to, text: page.text }], opts, snap);
+    });
   }
 
   async uploadAsset(assetPath: string, bytes: Uint8Array, opts: MutationOptions): Promise<WriteResult & { asset: AssetInfo }> {
-    if (assetPath.split('/').some((s) => s === '..' || s === '')) throw new ContentError('VALIDATION', `Invalid asset path ${assetPath}`);
+    assertAssetPath(assetPath);
     const sha = await this.git.commitFiles(this.opts.branch, { [`${this.sitePrefix()}${STATIC_DIR}/${assetPath}`]: bytes }, [], opts.message, opts.author);
     const asset: AssetInfo = { path: assetPath, url: `/${assetPath}`, size: bytes.byteLength, kind: assetKind(assetPath) };
     return { commitSha: sha, commitUrl: `https://github.com/${this.opts.owner}/${this.opts.repo}/commit/${sha}`, etag: '', regenerated: [], asset };

@@ -43,7 +43,14 @@ export class FakeGitHub {
     const p = url.pathname.slice(base.length);
     let m: RegExpMatchArray | null;
     if ((m = p.match(/^\/git\/ref\/heads\/(.+)$/))) { const s = this.refs.get(`heads/${m[1]}`); return s ? json(200, { object: { sha: s } }) : json(404, {}); }
-    if ((m = p.match(/^\/git\/refs\/heads\/(.+)$/)) && method === 'PATCH') { this.refs.set(`heads/${m[1]}`, body['sha'] as string); return json(200, {}); }
+    if ((m = p.match(/^\/git\/refs\/heads\/(.+)$/)) && method === 'PATCH') {
+      // Like GitHub: without force, the new commit must have the current tip as a parent (fast-forward).
+      const current = this.refs.get(`heads/${m[1]}`);
+      const next = this.commits.get(body['sha'] as string);
+      if (body['force'] !== true && current && !next?.parents.includes(current)) return json(422, { message: 'Update is not a fast forward' });
+      this.refs.set(`heads/${m[1]}`, body['sha'] as string);
+      return json(200, {});
+    }
     if (p === '/git/refs' && method === 'POST') { this.refs.set(String(body['ref']).replace(/^refs\//, ''), body['sha'] as string); return json(201, {}); }
     if ((m = p.match(/^\/git\/commits\/([0-9a-f]+)$/))) { const c = this.commits.get(m[1]!); return c ? json(200, { sha: m[1], tree: { sha: c.tree }, parents: c.parents.map((s) => ({ sha: s })) }) : json(404, {}); }
     if (p === '/git/commits' && method === 'POST') { const s = this.sha(); this.commits.set(s, { tree: body['tree'] as string, parents: body['parents'] as string[], message: body['message'] as string, author: { name: (body['author'] as { name: string }).name, email: (body['author'] as { email: string }).email } }); return json(201, { sha: s }); }
