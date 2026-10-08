@@ -163,7 +163,7 @@ test('inserts from the toolbar: image by URL, code block with a language, divide
   await dialog.getByRole('button', { name: 'Insert' }).click();
   await expect(dialog).toHaveCount(0);
   const img = richBody(page).getByRole('img', { name: 'Site logo' });
-  await expect(img).toHaveAttribute('src', '/CloudDocumentationPersonal/img/logo.png');
+  await expect(img).toHaveAttribute('src', '/documentation-system/img/logo.png');
   await expect.poll(() => img.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
 
   // Code block: starts as ```text; the language picker sets bash.

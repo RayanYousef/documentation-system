@@ -3,15 +3,15 @@ title: Add a content backend
 description: "Step-by-step recipe for a new ContentBackend (for example a server-side backend or a different git host): the operations to implement, the shared pipelines to reuse, the contract suite that proves substitutability, and where the editor and site composition roots pick it."
 type: guide
 tags: [platform, extending, content, backend, contract-test]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src
+resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/content.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/testing/contentBackendContract.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/writePipeline.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/publishPipeline.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/test/localHarness.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/composition/createPlatform.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/platform/createContentBackend.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/content.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/contentBackendContract.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/writePipeline.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/publishPipeline.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/test/localHarness.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/createContentBackend.ts
 sidebar_position: 2
 ---
 

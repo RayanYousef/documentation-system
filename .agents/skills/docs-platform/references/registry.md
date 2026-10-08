@@ -7,7 +7,7 @@ Location: `~/.docs-platform/registry.json` (`%USERPROFILE%\.docs-platform\regist
   "version": 1,
   "bundles": [
     {
-      "remote": "https://github.com/RayanYousef/CloudDocumentationPersonal",
+      "remote": "https://github.com/RayanYousef/documentation-system",
       "docs": { "kind": "local", "sitePath": "C:/path/to/repo/site" }
     },
     {

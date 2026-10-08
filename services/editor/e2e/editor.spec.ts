@@ -144,7 +144,7 @@ test('create a page in the New page dialog, then rename it and delete it', async
   await dialog.getByLabel('New page title').fill('Status Effects');
   await dialog.getByLabel('New page description').fill('Lists every status effect, its duration rules and which combat stage applies it.');
   await dialog.getByLabel('New page type').fill('system');
-  await expect(dialog.getByLabel('New page resource')).toHaveValue(/^https:\/\/github\.com\/RayanYousef\/CloudDocumentationPersonal\/blob\/main\//);
+  await expect(dialog.getByLabel('New page resource')).toHaveValue(/^https:\/\/github\.com\/RayanYousef\/documentation-system\/blob\/main\//);
   await dialog.getByLabel('New page resource').fill(RESOURCE);
   await dialog.getByRole('button', { name: 'Create', exact: true }).click();
   await expect(appStatus(page)).toContainText(`Created ${created}`);
@@ -207,7 +207,7 @@ test('publish a frozen version from the dialog; the frozen version is read-only'
   const frozen = await readFile(path.join(repo, 'site/versioned_docs/version-1.1.0/systems/inventory.md'), 'utf8');
   expect(frozen).toContain(`/blob/${'e'.repeat(40)}/examples/unity-project/Assets/Scripts/Inventory`);
   expect(frozen).not.toContain('/blob/main/');
-  expect(JSON.parse(await siteFile('docs/versions/1.1.0.json')).pins['RayanYousef/CloudDocumentationPersonal']).toBe('e'.repeat(40));
+  expect(JSON.parse(await siteFile('docs/versions/1.1.0.json')).pins['RayanYousef/documentation-system']).toBe('e'.repeat(40));
   expect((await git('tag', '--list')).split('\n')).toContain('docs-v1.1.0');
   expect(JSON.parse(await siteFile('versions.json'))).toContain('1.1.0');
 

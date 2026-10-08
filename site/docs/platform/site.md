@@ -3,16 +3,16 @@ title: Site
 description: "Describes the Docusaurus site: how docusaurus.config.js derives everything from platform.config.js, which files are excluded from rendering, what the prebuild writes to static/platform, how versions and the composition root work; open it when the rendered site differs from the docs folder or when wiring a new site feature."
 type: system
 tags: [platform, site, docusaurus, versioning, search, build]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site
+resource: https://github.com/RayanYousef/documentation-system/blob/main/site
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/docusaurus.config.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/sidebars.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/scripts/build-platform-artifacts.mjs
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/platform/createContentBackend.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/theme/MDXComponents.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/css/custom.css
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/versions.json
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/docs/AGENTS.md
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/docusaurus.config.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/sidebars.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/scripts/build-platform-artifacts.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/createContentBackend.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/MDXComponents.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/css/custom.css
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/versions.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/docs/AGENTS.md
 sidebar_position: 8
 ---
 

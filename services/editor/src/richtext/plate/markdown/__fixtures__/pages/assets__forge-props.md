@@ -3,9 +3,9 @@ title: Forge Props
 description: Lists the forge and workshop prop models (anvils, chests, crucibles) with their budgets and which ones are interactable containers.
 type: asset
 tags: [art, model, props, forge]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Models
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Models
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Models/Chest.fbx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Models/Chest.fbx
 sidebar_position: 2
 ---
 
@@ -35,4 +35,4 @@ Pivot at the floor contact point, forward along +Z, unit scale. Collision is a h
 
 ## Preview
 
-<FbxViewer repo="RayanYousef/CloudDocumentationPersonal" ref="main" path="examples/unity-project/Assets/Models/Chest.fbx" alt="Chest" height={360} />
+<FbxViewer repo="RayanYousef/documentation-system" ref="main" path="examples/unity-project/Assets/Models/Chest.fbx" alt="Chest" height={360} />

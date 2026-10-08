@@ -29,7 +29,7 @@ export function InsertImageUrlButton() {
       <DialogContent aria-describedby={undefined}>
         <DialogHeader><DialogTitle>Insert image by URL</DialogTitle></DialogHeader>
         <form className="grid gap-3" onSubmit={submit}>
-          <label className="grid gap-1 text-xs">URL<Input autoFocus value={src} onChange={(e) => setSrc(e.target.value)} placeholder="/CloudDocumentationPersonal/uploads/picture.png" /></label>
+          <label className="grid gap-1 text-xs">URL<Input autoFocus value={src} onChange={(e) => setSrc(e.target.value)} placeholder="/documentation-system/uploads/picture.png" /></label>
           <label className="grid gap-1 text-xs">Alt text<Input value={alt} onChange={(e) => setAlt(e.target.value)} /></label>
           <DialogFooter><Button type="submit" disabled={!src.trim()}>Insert</Button></DialogFooter>
         </form>

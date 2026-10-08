@@ -3,16 +3,16 @@ title: Add a site plugin or viewer component
 description: "Recipe for a new MDX component (a viewer for another asset format, or any block the editor should insert) and for a Docusaurus plugin: where the rendering core lives, how the site registers it globally, how components.json exposes it to the editor, and which lint elements are involved."
 type: guide
 tags: [platform, extending, viewers, mdx, docusaurus, components]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src
+resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/viewers/src/index.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/components/ModelViewer/index.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/src/theme/MDXComponents.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/components.json
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/contracts/src/components-manifest.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/richtext/plate/markdown/componentRules.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/richtext/plate/nodes/docsNodesKit.tsx
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/docusaurus.config.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/viewers/src/index.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/components/ModelViewer/index.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/MDXComponents.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/components.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/components-manifest.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/componentRules.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/nodes/docsNodesKit.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/docusaurus.config.js
 sidebar_position: 4
 ---
 

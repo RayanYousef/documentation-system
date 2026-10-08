@@ -1,12 +1,12 @@
 import { describe, it, expect } from 'vitest';
 import { fetchAsset, assetUrls } from '../src/index.js';
 
-const ref = { repo: 'RayanYousef/CloudDocumentationPersonal', ref: 'main', path: 'examples/unity-project/Assets/Models/Airship.fbx' };
+const ref = { repo: 'RayanYousef/documentation-system', ref: 'main', path: 'examples/unity-project/Assets/Models/Airship.fbx' };
 
 describe('fetchAsset', () => {
   it('builds media and raw URLs', () => {
-    expect(assetUrls(ref).media).toBe('https://media.githubusercontent.com/media/RayanYousef/CloudDocumentationPersonal/main/examples/unity-project/Assets/Models/Airship.fbx');
-    expect(assetUrls(ref).raw).toBe('https://raw.githubusercontent.com/RayanYousef/CloudDocumentationPersonal/main/examples/unity-project/Assets/Models/Airship.fbx');
+    expect(assetUrls(ref).media).toBe('https://media.githubusercontent.com/media/RayanYousef/documentation-system/main/examples/unity-project/Assets/Models/Airship.fbx');
+    expect(assetUrls(ref).raw).toBe('https://raw.githubusercontent.com/RayanYousef/documentation-system/main/examples/unity-project/Assets/Models/Airship.fbx');
   });
   it('tries media first, falls back to raw, and sends the token header', async () => {
     const calls: { url: string; auth?: string }[] = [];

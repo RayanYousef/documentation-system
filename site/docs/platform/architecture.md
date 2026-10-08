@@ -3,11 +3,11 @@ title: Architecture
 description: Explains which packages and services make up the platform, which may import which, and the exact sequence of calls behind a login, a save, a version publish and a 3D asset fetch; read this before touching more than one workspace.
 type: system
 tags: [platform, architecture, boundaries, data-flow, monorepo]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/docs/design/2026-09-06-documentation-platform-design.md
+resource: https://github.com/RayanYousef/documentation-system/blob/main/docs/design/2026-09-06-documentation-platform-design.md
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/eslint.config.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/package.json
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/platform.config.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/eslint.config.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/package.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/platform.config.js
 sidebar_position: 1
 ---
 

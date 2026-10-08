@@ -57,7 +57,7 @@ test('image upload, and a model and an image picked from the repo, keep the old 
   // Upload an image: committed under uploads/, inserted with the base url and the file name as alt.
   await upload(page, 'Upload image', { name: shot, mimeType: 'image/png', buffer: await staticFile('img/logo.png') });
   const uploaded = richBody(page).getByRole('img', { name: shot });
-  await expect(uploaded).toHaveAttribute('src', `/CloudDocumentationPersonal/uploads/${shot}`);
+  await expect(uploaded).toHaveAttribute('src', `/documentation-system/uploads/${shot}`);
   await expect.poll(() => uploaded.evaluate((el: HTMLImageElement) => el.naturalWidth)).toBeGreaterThan(0);
   expect(await git('log', '-1', '--format=%s')).toBe(`Add image ${shot} for ${pagePath}`);
 
@@ -71,13 +71,13 @@ test('image upload, and a model and an image picked from the repo, keep the old 
   await tool(page, 'Insert from repo (existing models and images)').click();
   await expect(dialog.getByRole('button', { name: `image: uploads/${shot}` })).toBeVisible();
   await dialog.getByRole('button', { name: 'image: img/logo.png' }).click();
-  await expect(richBody(page).getByRole('img', { name: 'img/logo.png' })).toHaveAttribute('src', '/CloudDocumentationPersonal/img/logo.png');
+  await expect(richBody(page).getByRole('img', { name: 'img/logo.png' })).toHaveAttribute('src', '/documentation-system/img/logo.png');
 
   expect(await saveAndRead(page, pagePath, 'Add assets')).toBe([
     '', 'Intro.', '',
-    `![${shot}](/CloudDocumentationPersonal/uploads/${shot})`, '',
+    `![${shot}](/documentation-system/uploads/${shot})`, '',
     '<ModelViewer src="/models/cube.gltf" alt="cube.gltf" />', '',
-    '![img/logo.png](/CloudDocumentationPersonal/img/logo.png)', '',
+    '![img/logo.png](/documentation-system/img/logo.png)', '',
   ].join('\n'));
 });
 
@@ -89,7 +89,7 @@ test('a ModelViewer block shows its preview, its props can be edited, and typing
   const viewer = block.locator('model-viewer');
   // React sets src and alt on <model-viewer> as properties, so read the properties.
   const prop = (name: 'src' | 'alt') => viewer.evaluate((el, n) => (el as HTMLElement & Record<string, unknown>)[n], name);
-  await expect.poll(() => prop('src')).toBe('/CloudDocumentationPersonal/models/cube.gltf');
+  await expect.poll(() => prop('src')).toBe('/documentation-system/models/cube.gltf');
   await expect(viewer).toHaveCSS('height', '320px');
   await viewer.scrollIntoViewIfNeeded(); // model-viewer loads once it is on screen
   await expect.poll(() => viewer.evaluate((el) => (el as HTMLElement & { loaded?: boolean }).loaded === true)).toBe(true);
@@ -113,7 +113,7 @@ test('a ModelViewer block shows its preview, its props can be edited, and typing
   await height.fill('240');
   await expect(viewer).toHaveCSS('height', '240px');
   await page.getByLabel('ModelViewer src').fill('/models/sphere.gltf');
-  await expect.poll(() => prop('src')).toBe('/CloudDocumentationPersonal/models/sphere.gltf');
+  await expect.poll(() => prop('src')).toBe('/documentation-system/models/sphere.gltf');
   await expect(unsaved(page)).toBeVisible();
 
   expect(await saveAndRead(page, pagePath, 'Edit viewer props')).toBe(
@@ -130,11 +130,11 @@ test('an FbxViewer block renders its preview, and clearing its src shows the emp
 
   await page.getByLabel('FbxViewer src').fill('');
   await expect(block.getByText('Set src, or repo + path, to preview.')).toBeVisible();
-  await page.getByLabel('FbxViewer repo').fill('RayanYousef/CloudDocumentationPersonal');
+  await page.getByLabel('FbxViewer repo').fill('RayanYousef/documentation-system');
   await page.getByLabel('FbxViewer path').fill('examples/unity-project/Assets/Models/Airship.fbx');
 
   expect(await saveAndRead(page, pagePath, 'Point viewer at the code repo')).toBe(
-    '\n<FbxViewer repo="RayanYousef/CloudDocumentationPersonal" path="examples/unity-project/Assets/Models/Airship.fbx" alt="Pyramid" height={300} />\n',
+    '\n<FbxViewer repo="RayanYousef/documentation-system" path="examples/unity-project/Assets/Models/Airship.fbx" alt="Pyramid" height={300} />\n',
   );
 });
 

@@ -3,15 +3,15 @@ title: OKF Core package
 description: Describes the zero-dependency generator and validator that turns page frontmatter into index blocks, manifest.json, code maps and log entries, including its public API, validator rules and the browser/Node split; open it when a validation report or a stale-content error needs explaining.
 type: system
 tags: [platform, okf, generator, validator, manifest, code-maps]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core
+resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/src/generate.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/src/validate.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/src/codemap.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/src/log.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/src/model.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/packages/okf-core/src/node/cli.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/okf.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core/src/generate.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core/src/validate.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core/src/codemap.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core/src/log.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core/src/model.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/okf-core/src/node/cli.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/okf.mjs
 sidebar_position: 3
 ---
 

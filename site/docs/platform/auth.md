@@ -3,12 +3,12 @@ title: Auth service
 description: Explains how the GitHub token provider decides who may edit (repository push permission), how the mock provider serves tests, and where sessions live in the browser; open it when a login fails or when you need the provider behaviour a new AuthProvider has to match.
 type: system
 tags: [platform, auth, github, session, security]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth
+resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/src/GithubTokenProvider.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/src/MockAuthProvider.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/auth/test/GithubTokenProvider.test.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/src/session/SessionStore.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth/src/GithubTokenProvider.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth/src/MockAuthProvider.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/auth/test/GithubTokenProvider.test.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/session/SessionStore.ts
 sidebar_position: 4
 ---
 

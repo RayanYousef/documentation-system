@@ -3,7 +3,7 @@ title: Tabs Fixture
 description: Synthetic page for the Plate spike, because no real page in site/docs uses Tabs or TabItem yet.
 type: reference
 tags: [spike, tabs]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/components.json
+resource: https://github.com/RayanYousef/documentation-system/blob/main/site/components.json
 ---
 
 ## Short form (Docusaurus docs style)

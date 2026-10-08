@@ -17,7 +17,7 @@ export interface RichTextParseError { error: string; source: string }
 
 /** Platform services the editor needs. Built by createRichTextServices; editors never call usePlatform(). */
 export interface RichTextServices {
-  /** Site base URL, for example "/CloudDocumentationPersonal/". */
+  /** Site base URL, for example "/documentation-system/". */
   baseUrl: string;
   /** Commits uploads/<name>. Resolves { src: `${baseUrl}${asset.url.slice(1)}`, alt: name }. */
   uploadImage(file: File): Promise<{ src: string; alt: string }>;

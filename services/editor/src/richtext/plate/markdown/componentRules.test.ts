@@ -86,10 +86,10 @@ describe('componentRules', () => {
   });
 
   it('changing a viewer height and alt keeps the other props and their order', () => {
-    const input = '<FbxViewer repo="RayanYousef/CloudDocumentationPersonal" ref="main" path="examples/unity-project/Assets/Models/Airship.fbx" alt="Airship" height={400} />\n';
+    const input = '<FbxViewer repo="RayanYousef/documentation-system" ref="main" path="examples/unity-project/Assets/Models/Airship.fbx" alt="Airship" height={400} />\n';
     const { editor, out } = load(input);
     editor.tf.setNodes({ height: 500, alt: 'Airship (big)' } as Partial<TElement>, { at: [0] });
-    expect(out()).toBe('<FbxViewer repo="RayanYousef/CloudDocumentationPersonal" ref="main" path="examples/unity-project/Assets/Models/Airship.fbx" alt="Airship (big)" height={500} />\n');
+    expect(out()).toBe('<FbxViewer repo="RayanYousef/documentation-system" ref="main" path="examples/unity-project/Assets/Models/Airship.fbx" alt="Airship (big)" height={500} />\n');
   });
 
   it('adds new known props after the ones read from the file, in manifest order', () => {

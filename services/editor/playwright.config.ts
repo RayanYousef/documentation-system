@@ -8,7 +8,7 @@ export default defineConfig({
   // Each test seeds the pages it changes, so the order does not matter, but writes must not overlap.
   workers: 1,
   fullyParallel: false,
-  use: { baseURL: 'http://127.0.0.1:5173/CloudDocumentationPersonal/editor/', headless: true },
+  use: { baseURL: 'http://127.0.0.1:5173/documentation-system/editor/', headless: true },
   webServer: [
     { command: 'node e2e/content-server.mjs', port: 4321, reuseExistingServer: false, timeout: 60_000 },
     { command: 'npx vite --port 5173 --host 127.0.0.1', port: 5173, reuseExistingServer: false, timeout: 60_000, env: { VITE_PLATFORM_AUTH: 'mock', VITE_PLATFORM_CONTENT: 'http://127.0.0.1:4321' } },

@@ -150,7 +150,7 @@ describe('PlateDocument', () => {
     const model = m.host.querySelector('[data-testid="model-preview"]');
     expect(model?.getAttribute('data-src')).toBe('/Base/models/cube.gltf');
     expect(model?.getAttribute('data-height')).toBe('320');
-    expect(services.getAsset).toHaveBeenCalledWith({ repo: 'RayanYousef/CloudDocumentationPersonal', ref: 'main', path: 'examples/unity-project/Assets/Models/Airship.fbx' });
+    expect(services.getAsset).toHaveBeenCalledWith({ repo: 'RayanYousef/documentation-system', ref: 'main', path: 'examples/unity-project/Assets/Models/Airship.fbx' });
     expect(m.host.querySelector('[data-testid="fbx-preview"]')?.getAttribute('data-src')).toBe('blob:airship');
     expect(m.onChange).not.toHaveBeenCalled();
   });

@@ -3,7 +3,7 @@ title: Constructs Fixture
 description: Synthetic page for the Plate spike. It holds Markdown constructs that no real page uses yet.
 type: reference
 tags: [spike]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/site/components.json
+resource: https://github.com/RayanYousef/documentation-system/blob/main/site/components.json
 ---
 
 ## Marks

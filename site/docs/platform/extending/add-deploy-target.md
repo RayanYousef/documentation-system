@@ -3,13 +3,13 @@ title: Add a deploy target
 description: "Recipe for hosting the site somewhere other than GitHub Pages (another static host, Docker, a Node process): what site:build produces, which config fields fix the URLs, how the editor and Phase 2 server are mounted, and the workflow to add without touching deploy-pages.yml."
 type: guide
 tags: [platform, extending, deploy, github-actions, docker, hosting]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/.github/workflows/deploy-pages.yml
+resource: https://github.com/RayanYousef/documentation-system/blob/main/.github/workflows/deploy-pages.yml
 sources:
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/package.json
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/platform.config.js
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/scripts/copy-editor.mjs
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/editor/vite.config.ts
-  - resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/services/content/src/http/serveContentBackend.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/package.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/platform.config.js
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vite.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/serveContentBackend.ts
 sidebar_position: 5
 ---
 

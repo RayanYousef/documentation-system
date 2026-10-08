@@ -7,7 +7,7 @@ const users = {
   'ghp_writer': { login: 'rayan', name: 'Rayan Yousef', email: null, push: true },
   'ghp_reader': { login: 'guest', name: 'Guest', email: 'g@example.com', push: false },
 };
-const make = () => new GithubTokenProvider({ owner: 'RayanYousef', repo: 'CloudDocumentationPersonal', fetch: fakeGithubFetch(users) });
+const make = () => new GithubTokenProvider({ owner: 'RayanYousef', repo: 'documentation-system', fetch: fakeGithubFetch(users) });
 
 describeAuthProviderContract('GithubTokenProvider', async () => ({
   provider: make(),
@@ -19,7 +19,7 @@ describeAuthProviderContract('GithubTokenProvider', async () => ({
 describe('GithubTokenProvider specifics', () => {
   it('names the repo in the NOT_COLLABORATOR message and sets role editor for writers', async () => {
     const p = make();
-    await expect(p.login({ kind: 'github-token', token: 'ghp_reader' })).rejects.toThrow('You are not a write collaborator of RayanYousef/CloudDocumentationPersonal');
+    await expect(p.login({ kind: 'github-token', token: 'ghp_reader' })).rejects.toThrow('You are not a write collaborator of RayanYousef/documentation-system');
     const id = await p.verify(await p.login({ kind: 'github-token', token: 'ghp_writer' }));
     expect(id).toEqual({ name: 'Rayan Yousef', login: 'rayan', email: null, role: 'editor' });
   });

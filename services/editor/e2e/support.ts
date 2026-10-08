@@ -18,8 +18,8 @@ const run = promisify(execFile);
 const here = path.dirname(fileURLToPath(import.meta.url));
 
 export const CONTENT_URL = 'http://127.0.0.1:4321';
-export const BASE_PATH = '/CloudDocumentationPersonal/';
-export const RESOURCE = 'https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Combat';
+export const BASE_PATH = '/documentation-system/';
+export const RESOURCE = 'https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Combat';
 export const SEED_AUTHOR = { name: 'Seed Bot', email: 'seed@example.com' };
 
 /** The content server's backend, for seeding pages and for changes made behind the editor's back. */

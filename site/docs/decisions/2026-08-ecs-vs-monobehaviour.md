@@ -3,7 +3,7 @@ title: ECS vs MonoBehaviour
 description: Records why the gameplay layer stays on plain C# services plus MonoBehaviour views for 1.0 instead of migrating to Unity ECS.
 type: decision
 tags: [architecture, ecs, decision, performance]
-resource: https://github.com/RayanYousef/CloudDocumentationPersonal/blob/main/examples/unity-project/Assets/Scripts/Bootstrap.cs
+resource: https://github.com/RayanYousef/documentation-system/blob/main/examples/unity-project/Assets/Scripts/Bootstrap.cs
 sidebar_position: 1
 ---
 

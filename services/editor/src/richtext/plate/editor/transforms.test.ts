@@ -63,8 +63,8 @@ describe('insert transforms', () => {
 
   it('inserts an uploaded image as a Markdown image with its alt', () => {
     const editor = setup();
-    insertImage(editor, { src: '/CloudDocumentationPersonal/uploads/x.png', alt: 'x.png' });
-    expect(stable(out(editor))).toBe('Intro.\n\n![x.png](/CloudDocumentationPersonal/uploads/x.png)\n');
+    insertImage(editor, { src: '/documentation-system/uploads/x.png', alt: 'x.png' });
+    expect(stable(out(editor))).toBe('Intro.\n\n![x.png](/documentation-system/uploads/x.png)\n');
   });
 
   it('inserts repo assets the old way: models site-relative, images with the base url', () => {
