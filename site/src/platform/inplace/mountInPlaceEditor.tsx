@@ -3,37 +3,18 @@
 // mounts the editor library with the site's skin. The editor stylesheet is injected while anything from
 // this chunk is mounted and removed afterwards. The server build replaces this module with a stub
 // (site/plugins/platform-inplace-edit/serverStub.tsx).
-import React, { useEffect, useLayoutEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { useHistory } from '@docusaurus/router';
 import useDocusaurusContext from '@docusaurus/useDocusaurusContext';
 import { usePluginData } from '@docusaurus/useGlobalData';
 import type { PlatformConfig } from '@platform/contracts';
-import { InPlaceEditor, SavedPreview, inplaceCss, pendingEdits, type EditablePage, type InPlaceExit, type InPlaceHost } from '@platform/editor/inplace';
+import { InPlaceEditor, SavedPreview, pendingEdits, type EditablePage, type InPlaceExit, type InPlaceHost } from '@platform/editor/inplace';
 import platform from '../../../../platform.config.js';
 import { resetContentBackend } from '../createContentBackend';
 import { createInPlaceHost, type InPlaceGlobalData } from './createInPlaceHost';
+import { useEditorStylesheet } from './editorStylesheet';
 import { createNavigationGuard } from './navigationGuard';
 import { siteSkin } from './skin';
-
-let styleUsers = 0;
-let styleEl: HTMLStyleElement | null = null;
-
-/** Adds <style data-platform-editor> before the first paint of an editor view; the last unmount removes it. */
-function useEditorStylesheet(): void {
-  useLayoutEffect(() => {
-    styleUsers += 1;
-    if (!styleEl) {
-      styleEl = document.createElement('style');
-      styleEl.setAttribute('data-platform-editor', '');
-      styleEl.textContent = inplaceCss;
-      document.head.appendChild(styleEl);
-    }
-    return () => {
-      styleUsers -= 1;
-      if (styleUsers === 0) { styleEl?.remove(); styleEl = null; }
-    };
-  }, []);
-}
 
 function useInPlaceHost(): InPlaceHost | null {
   const history = useHistory();

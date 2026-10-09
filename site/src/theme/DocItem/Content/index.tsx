@@ -10,12 +10,15 @@ import useIsBrowser from '@docusaurus/useIsBrowser';
 import { EditButton } from '@site/src/components/InPlaceEdit/EditButton';
 import { onEditRequest, setFlashNotice, takeFlashNotice } from '@site/src/components/InPlaceEdit/editRequest';
 import { useEditablePage } from '@site/src/components/InPlaceEdit/useEditablePage';
+import { useCommentsEnabled } from '@site/src/components/Comments/useCommentsEnabled';
 
 type Props = WrapperProps<typeof ContentType>;
 
 const loadEditor = () => import(/* webpackChunkName: "inplace-editor" */ '@site/src/platform/inplace/mountInPlaceEditor');
 const InPlaceEditorMount = lazy(loadEditor);
 const SavedPreviewMount = lazy(() => loadEditor().then((m) => ({ default: m.SavedPreviewMount })));
+// Comments: a small chunk of its own, loaded after the page is shown; it never loads the editor.
+const CommentsMount = lazy(() => import(/* webpackChunkName: "comments" */ '@site/src/platform/comments/mountComments'));
 
 /** Same key the editor's pendingEdits uses; only checked for presence here (the editor checks expiry). */
 const PENDING_EDITS_KEY = 'docs-platform.pending-edits';
@@ -34,6 +37,7 @@ const contentTypeOf = (children: ReactNode): unknown => (React.isValidElement(ch
 export default function ContentWrapper(props: Props) {
   const isBrowser = useIsBrowser();
   const { page } = useEditablePage();
+  const commentsOn = useCommentsEnabled();
   const [view, setView] = useState<View>({ kind: 'read' });
   const [notice, setNotice] = useState<string | null>(null);
   // A notice from an editor exit that navigated here (delete -> folder page, rename -> new address).
@@ -57,6 +61,9 @@ export default function ContentWrapper(props: Props) {
 
   if (!isBrowser || !page) return <Content {...props} />;
 
+  // Not while editing: the highlights go away with the layer and come back after the save.
+  const comments = commentsOn && view.kind !== 'edit' ? <Suspense fallback={null}><CommentsMount page={page} /></Suspense> : null;
+
   if (view.kind === 'edit') {
     return (
       <Suspense fallback={<><p className="margin-bottom--sm" role="status"><em>Loading editor...</em></p><Content {...props} /></>}>
@@ -74,7 +81,7 @@ export default function ContentWrapper(props: Props) {
     return (
       <>
         {noticeEl}
-        <EditButton onEdit={startEdit} onPrefetch={() => void loadEditor()} />
+        <EditButton onEdit={startEdit} onPrefetch={() => void loadEditor()} before={comments} />
         <Suspense fallback={<Content {...props} />}>
           <SavedPreviewMount page={page} saved={view.saved} onGone={backToRead} />
         </Suspense>
@@ -85,7 +92,7 @@ export default function ContentWrapper(props: Props) {
   return (
     <>
       {noticeEl}
-      <EditButton onEdit={startEdit} onPrefetch={() => void loadEditor()} />
+      <EditButton onEdit={startEdit} onPrefetch={() => void loadEditor()} before={comments} />
       <Content {...props} />
     </>
   );

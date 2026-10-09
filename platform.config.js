@@ -31,8 +31,9 @@ const platformConfig = {
   // Footer copyright line (any string; evaluated at build time).
   footerCopyright: `Copyright ${new Date().getFullYear()} Skyforge. Built with the Documentation Platform.`,
   // Feature switches. editor: show the in-place Edit button on Latest doc pages. viewers: 3D viewer UI.
-  // search: mount the Orama search plugin in the site.
-  features: { editor: true, viewers: true, search: true },
+  // search: mount the Orama search plugin in the site. comments: comments on the text of Latest doc pages
+  // (stored in <sitePath>/comments/, published into the build; signing in to comment needs editor).
+  features: { editor: true, viewers: true, search: true, comments: true },
   // AuthProvider for in-place editing on the live site: 'github-token' (fine-grained PAT with push
   // permission on organizationName/projectName). On `npm start` the editor uses a display-name sign-in
   // ('mock') automatically, because saves go to the dev server's disk endpoint instead of GitHub.

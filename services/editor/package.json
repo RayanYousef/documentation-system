@@ -6,7 +6,8 @@
   "exports": {
     "./inplace": "./src/inplace/index.ts",
     "./inplace/styles.pcss": "./src/theme-inpage/inplace.pcss",
-    "./session": "./src/session/SessionStore.ts"
+    "./session": "./src/session/SessionStore.ts",
+    "./signin": "./src/signin/index.ts"
   },
   "scripts": {
     "test": "vitest run"
