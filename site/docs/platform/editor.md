@@ -56,6 +56,28 @@ Pages are edited where they are read. Every Latest page of the docs site has an 
 
 **Page actions**: "New page in this folder..." (path prefilled with the current folder), "Rename...", "Delete..." (both in dialogs; not offered for folder intros), "Publish version..." (live site, role `editor`) and "Sign out". Frozen versions have no Edit button and no edit link; `log.md` and `code-maps/` are generated and not editable.
 
+## Create your token
+
+Saving on the live site needs a GitHub token that is allowed to write to this repository. A fine-grained token is the right kind:
+
+1. Open GitHub, then Settings, Developer settings, Personal access tokens, Fine-grained tokens, **Generate new token**.
+2. Give it a name and an expiry date you can live with.
+3. **Repository access**: choose **Only select repositories** and pick `documentation-system`.
+4. **Repository permissions**: set **Contents** to **Read and write**. **Metadata: Read-only** is added automatically.
+5. Generate it, copy it once, and paste it into the sign-in dialog.
+
+Sign-in checks this for you. After the read checks, it makes one harmless write (a tiny Git blob that no branch points to, which GitHub cleans up by itself). A token that can read the repository but cannot write is refused with "This token can read the repo but cannot write to it. Give it Repository permissions → Contents: Read and write." This matters because, for a fine-grained token, GitHub's `permissions.push` flag shows your role in the repository, not what the token may do, so a token without Contents write used to sign in fine and fail only at the first save. A lost connection during the check is reported as such, never as "cannot write". A remembered session is not re-checked this way.
+
+When a save fails, the editor says why and keeps your edits on the page, so you can fix the cause and press **Save** again:
+
+| What GitHub said | What you see |
+|---|---|
+| 401 | "Your GitHub token has expired or was revoked." Sign out from Page actions and sign in with a new token. |
+| 403 on a write | "This token can read the repo but cannot write to it." Give the token Contents: Read and write. |
+| Rate limit (403 or 429 with `retry-after` or `x-ratelimit-remaining: 0`, or the text "secondary rate limit") | "GitHub is limiting how fast this token can make requests." with how long to wait. |
+| Protected branch (403 or 422 with "Protected branch update failed") | 'The branch "main" is protected.' Ask a repository admin to allow the push. |
+| Someone else saved first | The conflict screen described under Saving. |
+
 ## Saving
 
 Every save goes through `ContentBackend.writePage` with the etag the page was loaded with, so the page, its regenerated folder index, `manifest.json`, code maps and a `log.md` entry land together (see [Content service](content.md)).

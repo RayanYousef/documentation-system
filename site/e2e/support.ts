@@ -15,12 +15,43 @@ export const REPO_ROOT = path.resolve(__dirname, '..', '..');
 export const OWNER = 'RayanYousef';
 export const REPO = 'documentation-system';
 
-/** Tokens the fake accepts: a write collaborator and a read-only user. Anything else is rejected (401). */
-export const TOKENS = { writer: 'good-token', reader: 'reader-token' } as const;
-const USERS: Record<string, { login: string; name: string; email: string; push: boolean }> = {
-  [TOKENS.writer]: { login: 'mira', name: 'Mira Okonkwo', email: 'mira@example.com', push: true },
-  [TOKENS.reader]: { login: 'rita', name: 'Rita Reader', email: 'rita@example.com', push: false },
+/**
+ * Tokens the fake accepts. `writer` can do everything, `reader` is not a collaborator, and `noContents` is a
+ * fine-grained token of the repository owner that lacks "Contents: Read and write": GitHub shows the owner's
+ * role (push: true) but refuses every write with 403. Anything else is rejected (401).
+ */
+export const TOKENS = { writer: 'good-token', reader: 'reader-token', noContents: 'no-contents-token' } as const;
+const USERS: Record<string, { login: string; name: string; email: string; push: boolean; write: boolean }> = {
+  [TOKENS.writer]: { login: 'mira', name: 'Mira Okonkwo', email: 'mira@example.com', push: true, write: true },
+  [TOKENS.reader]: { login: 'rita', name: 'Rita Reader', email: 'rita@example.com', push: false, write: false },
+  [TOKENS.noContents]: { login: 'mira', name: 'Mira Okonkwo', email: 'mira@example.com', push: true, write: false },
 };
+
+/** A refusal GitHub gives for a write (real GitHub wording and headers). */
+export interface WriteFault { status: number; message: string; headers?: Record<string, string>; when?: (method: string, pathname: string) => boolean }
+
+/**
+ * Things that go wrong on the fake GitHub, switched on and off by a test while the page is open: tokens that
+ * stop working (expired or revoked), a rate limit, a protected branch, or a network that is down for writes.
+ */
+export class GitHubFaults {
+  /** Tokens GitHub now answers with 401 (Bad credentials). */
+  readonly revoked = new Set<string>();
+  /** Every write (POST, PATCH, PUT, DELETE) is answered with this, until cleared with `null`. */
+  writeFault: WriteFault | null = null;
+  /** Writes never reach GitHub (the request fails like a lost connection). */
+  writesOffline = false;
+
+  /** Secondary rate limit: 403 with retry-after, as GitHub sends it for bursts of writes. */
+  rateLimit(retryAfterSeconds = 120): void {
+    this.writeFault = { status: 403, message: 'You have exceeded a secondary rate limit. Please wait a few minutes before you try again.', headers: { 'retry-after': String(retryAfterSeconds) } };
+  }
+  /** A branch rule on `main`: the final ref update is refused. */
+  protectBranch(branch = 'main'): void {
+    this.writeFault = { status: 403, message: `Protected branch update failed for refs/heads/${branch}.`, when: (method) => method === 'PATCH' };
+  }
+  clear(): void { this.revoked.clear(); this.writeFault = null; this.writesOffline = false; }
+}
 
 function walk(rel: string, out: Record<string, Uint8Array>, skip: (rel: string) => boolean = () => false): void {
   const abs = path.join(REPO_ROOT, rel);
@@ -46,7 +77,7 @@ function seed(): Record<string, Uint8Array> {
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', 'access-control-expose-headers': '*' };
 
 /** Routes api.github.com (auth checks + FakeGitHub) and raw/media.githubusercontent.com (working tree). */
-export async function installGitHub(page: Page, gh: FakeGitHub): Promise<void> {
+export async function installGitHub(page: Page, gh: FakeGitHub, faults: GitHubFaults = new GitHubFaults()): Promise<void> {
   await page.route('https://api.github.com/**', async (route) => {
     const req = route.request();
     if (req.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: cors }); return; }
@@ -54,7 +85,14 @@ export async function installGitHub(page: Page, gh: FakeGitHub): Promise<void> {
     const token = (req.headers()['authorization'] ?? '').replace(/^(Bearer|token) /, '');
     const user = token ? USERS[token] : undefined;
     const json = (status: number, body: unknown) => route.fulfill({ status, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(body) });
-    if (token && !user) { await json(401, { message: 'Bad credentials' }); return; }
+    if (token && (!user || faults.revoked.has(token))) { await json(401, { message: 'Bad credentials' }); return; }
+    const isWrite = req.method() !== 'GET' && req.method() !== 'HEAD';
+    if (isWrite && faults.writesOffline) { await route.abort('connectionfailed'); return; }
+    if (isWrite && user && !user.write) { await json(403, { message: 'Resource not accessible by personal access token' }); return; }
+    if (isWrite && faults.writeFault && (faults.writeFault.when?.(req.method(), url.pathname) ?? true)) {
+      await route.fulfill({ status: faults.writeFault.status, headers: { ...cors, 'content-type': 'application/json', ...faults.writeFault.headers }, body: JSON.stringify({ message: faults.writeFault.message }) });
+      return;
+    }
     if (url.pathname === `/repos/${OWNER}/${REPO}` && req.method() === 'GET') { await json(200, { full_name: `${OWNER}/${REPO}`, permissions: { pull: true, push: !!user?.push } }); return; }
     if (url.pathname === '/user') { if (!user) await json(401, { message: 'Requires authentication' }); else await json(200, { login: user.login, name: user.name, email: user.email }); return; }
     const res = await gh.fetch(req.url(), { method: req.method(), body: req.postData() ?? undefined });
@@ -72,11 +110,13 @@ export async function installGitHub(page: Page, gh: FakeGitHub): Promise<void> {
 
 export interface ConsoleGuard { allow(pattern: RegExp): void }
 
-export const test = base.extend<{ gh: FakeGitHub; consoleGuard: ConsoleGuard }>({
-  gh: async ({ page }, use) => {
+export const test = base.extend<{ gh: FakeGitHub; faults: GitHubFaults; consoleGuard: ConsoleGuard }>({
+  // eslint-disable-next-line no-empty-pattern -- Playwright requires a destructuring pattern for fixture parameters
+  faults: async ({}, use) => { await use(new GitHubFaults()); },
+  gh: async ({ page, faults }, use) => {
     const gh = new FakeGitHub(OWNER, REPO);
     gh.seed('main', seed());
-    await installGitHub(page, gh);
+    await installGitHub(page, gh, faults);
     await use(gh);
   },
   consoleGuard: [async ({ page }, use) => {
