@@ -200,14 +200,17 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/assets/getAsset.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/search/index.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/local/committer.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/contentRpcHandler.ts"
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/contentRpcHandler.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/comments/GithubCommentStore.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/local/LocalCommentStore.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/commentRpcHandler.ts"
     ]
   },
   {
     "route": "/platform/contracts",
     "file": "platform/contracts.md",
     "title": "Contracts",
-    "description": "Lists every interface, type and error code in @platform/contracts and the two contract test suites that any new auth provider or content backend must pass; open it when you need the exact signature a service has to implement.",
+    "description": "Lists every interface, type and error code in @platform/contracts and the three contract test suites that any new auth provider, content backend or comment store must pass; open it when you need the exact signature a service has to implement.",
     "type": "system",
     "tags": [
       "platform",
@@ -223,8 +226,10 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/content.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/platform-config.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/components-manifest.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/comments.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/authProviderContract.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/contentBackendContract.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/commentStoreContract.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/fixtures/miniBundle.ts"
     ]
   },
@@ -232,7 +237,7 @@
     "route": "/platform/decisions",
     "file": "platform/decisions.md",
     "title": "Platform decisions",
-    "description": "Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each, plus later decisions such as Plate replacing MDXEditor and in-place editing replacing the standalone editor app; read it before reopening any of them.",
+    "description": "Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each, plus later decisions such as Plate replacing MDXEditor, in-place editing replacing the standalone editor app and how comments are stored and shown; read it before reopening any of them.",
     "type": "decision",
     "tags": [
       "platform",
@@ -277,6 +282,8 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/pendingEdits.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/SavedPreview.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/folderIntroGuard.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/pageTemplates.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/signin/index.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/frontmatter/yamlDoc.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/componentsManifest.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/rawtext/RawTextEditor.ts",
@@ -299,6 +306,10 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/components.json",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/mountInPlaceEditor.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/editAccess.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/sessionStores.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/page/PageTabsElement.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/tabs-editing.spec.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/DocItem/Content/index.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/devContentMiddleware.mjs",
@@ -507,7 +518,9 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/EditThisPage/index.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/versions.json",
-      "https://github.com/RayanYousef/documentation-system/blob/main/site/docs/AGENTS.md"
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/docs/AGENTS.md",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-comments/index.mjs",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/Tabs/index.tsx"
     ]
   },
   {

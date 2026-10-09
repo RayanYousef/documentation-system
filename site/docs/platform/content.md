@@ -17,6 +17,9 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/search/index.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/local/committer.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/contentRpcHandler.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/comments/GithubCommentStore.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/local/LocalCommentStore.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/commentRpcHandler.ts
 sidebar_position: 5
 ---
 
@@ -40,6 +43,16 @@ Every backend follows the same write rules: reject frozen versions with `FROZEN`
 
 `GithubBrowserBackend` is what the live site and editor use (`content.backend: 'github-browser'` in `platform.config.js`). In-place editing on `npm start` uses `HttpContentBackend` against the dev server's same-origin endpoint; in Phase 2 it becomes the client of the server-side backend that holds the GitHub token as a secret.
 
+## Comment stores
+
+The same package holds the `CommentStore` implementations ([Comments](comments.md)); the browser ones are exported from `@platform/content/comments`, so a page that only needs comments does not load the docs pipeline and search. `src/comments/commentsFile.ts` maps a page to `comments/<page>.json` (after `assertPagePath`), checks a file (`assertCommentsFile`) and writes it as two-space JSON with a final newline.
+
+| Class | Id | Runs in | Storage |
+|---|---|---|---|
+| `GithubCommentStore({ owner, repo, branch, sitePath, token, fetch?, apiRoot? })` | `github-comments` | browser | the file in the tree of `branch`, etag = blob sha; a write is one Git Data commit with the expected parent, recomputed on `branch-moved` at most twice, refusals mapped by `apiErrors.ts` like page saves |
+| `LocalCommentStore({ siteDir, committer? })` | `local-comments` | Node | `<siteDir>/comments/`, etag = `contentEtag`, writes one at a time, then the `Committer` (the dev server passes `WorkingTreeCommitter`) |
+| `HttpCommentStore(baseUrl, fetch?)` | `http-comments` | browser | `POST <baseUrl>/comments` with `{ method: 'read' or 'write', args }`; the server side is `createCommentRpcHandler(store, { maxBodyBytes? })` (1 MB, transport only), mounted by the dev server's endpoint |
+
 ## Assets
 
 `fetchAsset(ref, { token?, fetch?, cache? })` in `src/assets/getAsset.ts` builds two URLs from `AssetRef { repo, ref, path }`: `raw.githubusercontent.com` first, and `media.githubusercontent.com` (which serves the real bytes) only when raw returns a Git LFS pointer or refuses. Reading media first logged a 404 on every page with a viewer of a non-LFS file. A token adds `Authorization: token ...`. Responses are cached in the Cache API store `docs-platform-assets` (immutable for a 40-hex sha, ten-minute TTL for a branch); `MAX_ASSET_BYTES` is 100 MB and larger files throw `TOO_LARGE`.
@@ -52,4 +65,4 @@ Every backend follows the same write rules: reject frozen versions with `FROZEN`
 
 ## Tests
 
-`test/LocalFolderBackend.test.ts` runs the contract suite against a temporary git repository; `test/GithubBrowserBackend.test.ts` runs it against `test/FakeGitHub.ts`, an in-memory implementation of the Git Data, Contents, repos and user endpoints; `test/HttpContentBackend.test.ts` runs it through `serveContentBackend` over a `LocalFolderBackend`; `test/committer.test.ts` runs it again with `WorkingTreeCommitter`. `test/GithubBrowserBackend.race.test.ts` lands a commit between snapshot and commit and checks that the generated files on `main` cover both changes; `test/contentRpcHandler.test.ts` covers the allow-list, the body limit, error mapping and the absence of CORS headers. Pipeline and asset tests are unit tests.
+`test/LocalFolderBackend.test.ts` runs the contract suite against a temporary git repository; `test/GithubBrowserBackend.test.ts` runs it against `test/FakeGitHub.ts`, an in-memory implementation of the Git Data, Contents, repos and user endpoints; `test/HttpContentBackend.test.ts` runs it through `serveContentBackend` over a `LocalFolderBackend`; `test/committer.test.ts` runs it again with `WorkingTreeCommitter`. `test/GithubBrowserBackend.race.test.ts` lands a commit between snapshot and commit and checks that the generated files on `main` cover both changes; `test/contentRpcHandler.test.ts` covers the allow-list, the body limit, error mapping and the absence of CORS headers. `test/commentStores.test.ts` runs the comment store contract against `GithubCommentStore` (FakeGitHub), `LocalCommentStore` (with and without commits) and `HttpCommentStore`, plus a branch-moved race and the comment RPC refusals. Pipeline and asset tests are unit tests.

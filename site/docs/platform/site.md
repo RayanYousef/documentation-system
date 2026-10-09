@@ -17,6 +17,8 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/versions.json
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/docs/AGENTS.md
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-comments/index.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/Tabs/index.tsx
 sidebar_position: 8
 ---
 
@@ -44,16 +46,21 @@ This script is the `site-scripts` lint element: it may import `@platform/okf-cor
 - `site/src/theme/MDXComponents.js` is the global MDX registry: it registers `Tabs`, `TabItem`, `ModelViewer` and `FbxViewer`, so pages need no import lines. The editor relies on this registry: its Markdown rules write these components as plain JSX tags with no import lines. See [Viewers](viewers.md) and [Add a site plugin or viewer](extending/add-site-plugin-or-viewer.md).
 - `site/src/css/custom.css` holds the arcade light and dark palette, a few brand rules, the round navbar logo and the navbar GitHub icon. The editor brings its own stylesheet only while editing and maps it onto these variables, so the site needs no editor overrides.
 - `site/src/theme/DocItem/Content` and `site/src/theme/EditThisPage` are swizzle wrappers (no eject): the first adds the Edit button and swaps the content for the lazily loaded editor (or the saved version after a save), the second turns the footer "Edit this page" link into the same action, hides it on frozen versions and keeps the GitHub link for generated pages. Neither imports the editor.
+- `site/src/theme/Tabs` is a swizzle wrapper of the theme's Tabs: it puts `data-tab-value` on every tab label and, while the page has open comments in a tab, `data-comment-count` (drawn as a badge by the comments stylesheet). `custom.css` makes tab labels read like a heading on the site and in the editor; `--platform-tab-label-size` (1.5rem, the size of a page's H3) is the one value to change.
 - `site/static/editor/index.html` redirects the retired `/editor/` URL to the docs.
 - `site/static/` holds `img`, `models`, `uploads` and the generated, git-ignored `platform` folder.
 
 ## Composition root
 
-`site/src/platform/` is the `site-composition` element, the only site code allowed to import service implementations. `createContentBackend()` builds one cached `GithubBrowserBackend` for `organizationName/projectName` with the token from the editor's stored session (`docs-platform.session` in `localStorage`) when present (`resetContentBackend()` drops the cache after a sign-in); `defaultRefFor(repo)` looks up `defaultRef` in `codeRepos`; `useAssetUrl` turns a `{ repo, ref, path }` into an object URL through `getAsset`. Everything else under `site/src` sees only `@platform/contracts` and `@platform/viewers`. `site/src/platform/inplace/` is the composition root of in-place editing (see [Editor service](editor.md)).
+`site/src/platform/` is the `site-composition` element, the only site code allowed to import service implementations. `createContentBackend()` builds one cached `GithubBrowserBackend` for `organizationName/projectName` with the token from the editor's stored session (`docs-platform.session` in `localStorage`) when present (`resetContentBackend()` drops the cache after a sign-in); `defaultRefFor(repo)` looks up `defaultRef` in `codeRepos`; `useAssetUrl` turns a `{ repo, ref, path }` into an object URL through `getAsset`. Everything else under `site/src` sees only `@platform/contracts` and `@platform/viewers`. `site/src/platform/inplace/` is the composition root of in-place editing (see [Editor service](editor.md)) and `site/src/platform/comments/` the composition root of comments (see [Comments](comments.md)).
 
 ## In-place editing plugin
 
 `site/plugins/platform-inplace-edit/` is a local Docusaurus plugin (the `site-plugins` lint element). It lets webpack compile the editor's TypeScript sources (`resolve.extensionAlias`, the `@/` alias), compiles the editor stylesheet `inplace.pcss` to a string with `postcss-loader` and `@tailwindcss/postcss` (kept out of the global `styles.css`), replaces the editor mount module with a stub in the server build, and publishes global data `{ enabled, mode }`. On `docusaurus start` it also mounts the dev disk endpoint `<baseUrl>__platform/content/{ping,rpc}` (loopback only, token-guarded, no commits; `PLATFORM_EDIT_BACKEND=github` turns it off) and adds `endpoint` and the per-process `devToken` to the global data.
+
+## Comments plugin
+
+`site/plugins/platform-comments/` publishes comments to readers without the GitHub API. `postBuild` writes `platform/comments/<page>.json` into the build for every Latest doc page, from `site/comments/<page>.json` or an empty file (so a reader's request never fails; a file that does not pass the check is reported and published empty). On `docusaurus start` the dev server answers the same addresses from the disk on every request. Its global data is `{ enabled }` (`features.editor` and `features.comments`). Writing comments on the dev server goes through the in-place editing plugin's endpoint (`POST <baseUrl>__platform/content/comments`).
 
 ## Versioning on the site
 
