@@ -84,6 +84,24 @@ describe('GithubBrowserBackend concurrent saves', () => {
     await expect(a.writePage('current', 'systems/inventory.md', page.text + '\nSecond.\n', { message: 'second', author, expectedEtag: page.etag })).rejects.toMatchObject({ code: 'CONFLICT' });
   });
 
+  it('uploads an asset even when another commit lands between reading the head and moving the branch', async () => {
+    const gh = setup();
+    const other = new GitDataClient({ owner: 'acme', repo: 'docs', token: 't', fetch: gh.fetch });
+    let injected = false;
+    const racingFetch: typeof fetch = async (input, init) => {
+      if (!injected && init?.method === 'PATCH' && urlOf(input).includes('/git/refs/heads/')) {
+        injected = true;
+        await other.commitFiles('main', { 'other.txt': 'x' }, [], 'someone else', author);
+      }
+      return gh.fetch(input, init);
+    };
+    const res = await backend(racingFetch).uploadAsset('models/ship.glb', new Uint8Array([1, 2, 3]), { message: 'Upload ship', author });
+    expect(injected).toBe(true);
+    expect(res.asset.path).toBe('models/ship.glb');
+    expect(gh.fileAt('main', 'other.txt')).toBe('x');
+    expect(gh.fileAt('main', 'site/static/models/ship.glb')).not.toBeNull();
+  });
+
   it('gives up with CONFLICT after two retries when the branch keeps moving', async () => {
     const gh = setup();
     const other = new GitDataClient({ owner: 'acme', repo: 'docs', token: 't', fetch: gh.fetch });

@@ -139,7 +139,8 @@ export class GithubBrowserBackend implements ContentBackend {
 
   async uploadAsset(assetPath: string, bytes: Uint8Array, opts: MutationOptions): Promise<WriteResult & { asset: AssetInfo }> {
     assertAssetPath(assetPath);
-    const sha = await this.git.commitFiles(this.opts.branch, { [`${this.sitePrefix()}${STATIC_DIR}/${assetPath}`]: bytes }, [], opts.message, opts.author);
+    // One added file on top of whatever main is: when another commit lands meanwhile, simply try again.
+    const sha = await this.withRetry(() => this.git.commitFiles(this.opts.branch, { [`${this.sitePrefix()}${STATIC_DIR}/${assetPath}`]: bytes }, [], opts.message, opts.author));
     const asset: AssetInfo = { path: assetPath, url: `/${assetPath}`, size: bytes.byteLength, kind: assetKind(assetPath) };
     return { commitSha: sha, commitUrl: `https://github.com/${this.opts.owner}/${this.opts.repo}/commit/${sha}`, etag: '', regenerated: [], asset };
   }
