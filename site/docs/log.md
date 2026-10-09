@@ -7,6 +7,8 @@ Newest first. Each entry names the page that changed and who changed it.
 
 ## 2026-10-09
 
+* **Update**: [Editor service](/platform/editor.md) - review fixes: keys typed right after a toolbar menu pick are kept, a closing menu no longer closes a popover opened after it, and a failed live e2e run cannot write the token to disk; removed the menu focus known issue. (by Rayan Yousef)
+* **Update**: [Auth service](/platform/auth.md) - a GitHub rate limit at sign-in or on a remembered session is `NETWORK`, not "cannot write" or a bad token. (by Rayan Yousef)
 * **Update**: [Editor service](/platform/editor.md) - added "Create your token" (the exact fine-grained token settings), the plain-language save errors, the end-to-end coverage (every editor feature, save errors, repeated saves, dev-mode saving, the live test), the upload fallback after a reload and two new known issues. (by Rayan Yousef)
 * **Update**: [Platform decisions](/platform/decisions.md) - added decisions 29 and 30 (the sign-in write check and plain save errors; failed saves keep the edits and undeployed uploads are read from GitHub). (by Rayan Yousef)
 * **Update**: [Auth service](/platform/auth.md) - login now proves the token can write with one unreferenced blob (`CANNOT_WRITE`). (by Rayan Yousef)
