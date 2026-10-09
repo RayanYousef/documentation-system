@@ -135,6 +135,9 @@ export const editButton = (page: Page) => page.getByTestId('inplace-edit-button'
 export const body = (page: Page) => page.locator('[data-platform-editing] [data-slate-editor]');
 export const editStatus = (page: Page) => page.getByTestId('edit-status');
 export const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
+/** The editable region (the edited page) and a button of the formatting toolbar by its accessible name. */
+export const editing = (page: Page) => page.locator('[data-platform-editing]');
+export const toolbarButton = (page: Page, label: string) => page.getByRole('toolbar', { name: 'Formatting', exact: true }).getByLabel(label, { exact: true });
 
 /** Opens a page and clicks Edit (the sign-in dialog or the editor follows). */
 export async function clickEdit(page: Page, route: string): Promise<void> {
@@ -156,6 +159,19 @@ export async function openEditor(page: Page, route: string): Promise<void> {
 
 export async function save(page: Page): Promise<void> {
   await button(page, 'Save').click();
+}
+
+/**
+ * Saves, checks the saved banner, reloads (the tab keeps the saved copy until the next deploy) and opens the
+ * editor again, so what the editor shows afterwards was read back from the saved file on the fake `main`.
+ */
+export async function saveReloadAndEdit(page: Page): Promise<void> {
+  await save(page);
+  await expect(page.getByTestId('saved-banner')).toBeVisible();
+  await page.reload();
+  await expect(page.getByTestId('saved-banner')).toBeVisible();
+  await editButton(page).click();
+  await expect(body(page)).toBeVisible();
 }
 
 /** Text of a repo file on the fake `main` (null when absent). */
@@ -184,9 +200,19 @@ export function bundleOnMain(gh: FakeGitHub): Record<string, string> {
   return out;
 }
 
-/** Puts the caret at the end of the first paragraph of the editor that contains `text`. */
+/**
+ * Puts the caret at the very end of the first paragraph of the editor that contains `text`. (The End key only
+ * goes to the end of the visual line, which is the middle of a paragraph that wraps.)
+ */
 export async function caretAfter(page: Page, text: string): Promise<void> {
   const p = body(page).locator('p', { hasText: text }).first();
   await p.click();
-  await page.keyboard.press('End');
+  await p.evaluate((el) => {
+    const range = document.createRange();
+    range.selectNodeContents(el);
+    range.collapse(false);
+    const selection = window.getSelection()!;
+    selection.removeAllRanges();
+    selection.addRange(range);
+  });
 }

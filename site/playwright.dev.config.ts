@@ -1,16 +1,16 @@
-// End-to-end tests of in-place editing against the built Docusaurus site (served by `docusaurus serve`).
-// GitHub is mocked in the browser (site/e2e/support.ts): no network, no real credentials.
+// End-to-end tests against the Docusaurus DEV server (`npm start`), where in-place editing writes to the working
+// tree instead of committing. Kept apart from playwright.config.ts (built site, GitHub mocked) because the dev
+// server is slow to start and its tests touch real files; they snapshot site/docs first and put it back after.
 import { defineConfig, devices } from '@playwright/test';
 
-const PORT = 3210;
+const PORT = 3211;
 
 export default defineConfig({
-  testDir: './e2e',
-  testIgnore: '**/live/**', // real-GitHub tests: `npm run e2e:live`, run by a person with their own token
+  testDir: './e2e-dev',
   workers: 1,
-  timeout: 90_000,
-  expect: { timeout: 15_000 },
-  retries: process.env.CI ? 1 : 0,
+  timeout: 240_000,
+  expect: { timeout: 30_000 },
+  retries: 0,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: `http://127.0.0.1:${PORT}/documentation-system/`,
@@ -20,8 +20,7 @@ export default defineConfig({
     launchOptions: { args: ['--use-angle=swiftshader', '--enable-unsafe-swiftshader'] },
   },
   webServer: {
-    command: `npm run build && npx docusaurus serve --port ${PORT} --host 127.0.0.1 --no-open`,
-    env: { PLATFORM_BUILD_SHA: 'e2e-build-1' },
+    command: `npm run start -- --port ${PORT} --host 127.0.0.1 --no-open`,
     url: `http://127.0.0.1:${PORT}/documentation-system/`,
     timeout: 600_000,
     reuseExistingServer: !process.env.CI,
