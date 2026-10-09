@@ -62,7 +62,8 @@ export function InPlaceEditor({ host, page, skin, onExit }: InPlaceEditorProps) 
   const defaultMessage = page.isIndex ? `Update ${page.path} intro` : `Update ${page.title}`;
 
   useEffect(() => { void loadComponentsManifest(host.componentsUrl).then(setComponents); }, [host.componentsUrl]);
-  useUnsavedGuard(state.dirty, host.navigation);
+  // Leaving with "discard" confirmed: the unmount that follows must not keep the edits as a draft.
+  useUnsavedGuard(state.dirty, host.navigation, () => { exited.current = true; drafts.delete(page.path); });
 
   const exit = useCallback((result: InPlaceExit) => {
     exited.current = true;

@@ -1,4 +1,4 @@
-import { test, expect, openEditor, button, caretAfter, commitMessages, editButton } from './support';
+import { test, expect, openEditor, button, caretAfter, commitMessages, editButton, body } from './support';
 
 test('Cancel with unsaved edits asks; No keeps editing, Yes restores the page and commits nothing', async ({ page, gh }) => {
   const before = commitMessages(gh).length;
@@ -33,6 +33,33 @@ test('leaving through a site link with unsaved edits asks first', async ({ page,
   await page.locator('.theme-doc-sidebar-menu a', { hasText: 'Combat' }).click();
   await expect(page).toHaveURL(/systems\/combat$/);
   await expect(page.locator('article h1').first()).toHaveText('Combat');
+});
+
+test('edits discarded by leaving through a site link do not come back on the next Edit', async ({ page, gh: _gh }) => {
+  await openEditor(page, 'systems/inventory');
+  await page.getByLabel('Page title').fill('Inventory (draft)');
+  page.once('dialog', (d) => void d.accept());
+  await page.locator('.theme-doc-sidebar-menu a', { hasText: 'Combat' }).click();
+  await expect(page).toHaveURL(/systems\/combat$/);
+
+  await page.locator('.theme-doc-sidebar-menu a', { hasText: /^Inventory$/ }).click();
+  await expect(page).toHaveURL(/systems\/inventory$/);
+  await editButton(page).click();
+  await expect(body(page)).toBeVisible();
+  await expect(page.getByLabel('Page title')).toHaveValue('Inventory');
+  await expect(page.getByText('Restored your unsaved edits')).toHaveCount(0);
+});
+
+test('jumping to a heading of the page being edited does not ask', async ({ page, gh: _gh }) => {
+  let asked = false;
+  page.on('dialog', (d) => { asked = true; void d.dismiss(); });
+  await openEditor(page, 'systems/inventory');
+  await page.getByLabel('Page title').fill('Inventory (draft)');
+  await page.locator('.table-of-contents a', { hasText: 'Service API' }).click();
+  await expect(page).toHaveURL(/systems\/inventory#service-api$/);
+  await expect(page.locator('[data-platform-editing]')).toBeVisible();
+  await expect(page.getByLabel('Page title')).toHaveValue('Inventory (draft)');
+  expect(asked).toBe(false);
 });
 
 test('closing or reloading the tab with unsaved edits triggers the browser prompt', async ({ page, gh: _gh }) => {

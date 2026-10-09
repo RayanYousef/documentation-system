@@ -262,7 +262,7 @@ describe('InPlaceEditor: editing and saving', () => {
     const { navigation, releases } = await signedIn({ 'systems/inventory.md': PAGE });
     expect(navigation.block).not.toHaveBeenCalled();
     await type(byLabel('Page title'), 'Changed');
-    expect(navigation.block).toHaveBeenCalledWith(DISCARD_PROMPT);
+    expect(navigation.block).toHaveBeenCalledWith(DISCARD_PROMPT, expect.any(Function));
     await click(button('Save'));
     expect(releases[0]).toHaveBeenCalled();
   });
@@ -282,6 +282,22 @@ describe('InPlaceEditor: editing and saving', () => {
     await signedIn({ 'systems/inventory.md': PAGE.replace('Items stack.', 'import X from "y";\n\nItems stack.') });
     expect(container.querySelector('.cm-editor')).not.toBeNull();
     expect(q('[data-testid="edit-status"]')!.textContent).toContain('could not be opened in the visual editor');
+  });
+
+  it('leaving the page with "discard" confirmed keeps no draft for the next Edit', async () => {
+    const backend = fakeBackend({ 'systems/inventory.md': PAGE });
+    const h = makeHost(backend);
+    h.sessionStore.preset(SESSION);
+    const first = await mount(h.host, inventory);
+    await type(byLabel('Page title'), 'Draft title');
+    // The host's router asked "Discard them?" and the user said yes: the guard reports the leave, then the page unmounts.
+    const onLeave = (h.navigation.block.mock.calls.at(-1) as unknown as [string, () => void])[1];
+    await act(async () => onLeave());
+    await act(async () => first.root.unmount());
+    roots.splice(roots.indexOf(first.root), 1);
+    await mount(h.host, inventory);
+    expect(byLabel('Page title').value).toBe('Inventory');
+    expect(q('[data-testid="edit-status"]')?.textContent ?? '').not.toContain('Restored your unsaved edits');
   });
 
   it('restores an unsaved draft after a remount', async () => {

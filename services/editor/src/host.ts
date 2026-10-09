@@ -8,7 +8,11 @@ export type EditMode = 'github' | 'local-disk';
 
 /** Blocks in-site navigation while there are unsaved edits. Returns the release function. */
 export interface NavigationGuard {
-  block(message: string): () => void;
+  /**
+   * Asks `message` before the site navigates to another page. `onLeave` runs when the user confirmed
+   * (the edits are discarded), before the page goes away. Jumps within the same page do not ask.
+   */
+  block(message: string, onLeave?: () => void): () => void;
 }
 
 /** Holds the signed-in session (BrowserSessionStore implements it). */
