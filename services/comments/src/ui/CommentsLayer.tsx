@@ -4,7 +4,7 @@
 // delete. The site mounts this next to its Edit button on Latest pages and unmounts it while editing.
 import { useCallback, useEffect, useMemo, useReducer, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
-import { emptyCommentsFile, type CommentAnchor, type CommentAuthor, type CommentThread, type CommentsFile, type Identity } from '@platform/contracts';
+import { ContentError, emptyCommentsFile, type CommentAnchor, type CommentAuthor, type CommentThread, type CommentsFile, type Identity } from '@platform/contracts';
 import { anchorForRange, anchorThreads, type Anchoring } from '../anchor/anchor.js';
 import { tabElementFor } from '../anchor/tabs.js';
 import type { CommentEditor, CommentsHost, TabCounts } from '../host.js';
@@ -27,6 +27,7 @@ type Where = 'draft' | 'card' | `panel:${string}`;
 
 const NO_ANCHORING: Anchoring = { attached: new Map(), unattached: [] };
 const MESSAGE_PREFIX = 'Could not save the comment: ';
+const GONE_NOTICE = 'This comment no longer exists; someone may have deleted it. The comments on this page now show the latest version.';
 
 /** Below a client rect, in document coordinates, kept inside the viewport horizontally. */
 function below(r: DOMRect | { left: number; bottom: number }, width = 340): Spot {
@@ -53,17 +54,34 @@ export function CommentsLayer({ host, page }: CommentsLayerProps) {
   const [panelOpen, setPanelOpen] = useState(false);
   const [busy, setBusy] = useState<Where | null>(null);
   const [error, setError] = useState<{ where: Where; message: string } | null>(null);
+  const [notice, setNotice] = useState<string | null>(null);
   const editor = useRef<CommentEditor | null>(null);
+  /** Counts the times the file was set from the store (a read or an action): an older answer never replaces it. */
+  const fromStore = useRef(0);
   const signedIn = host.hasSession();
 
   const root = useCallback((): Element | null => buttonRef.current?.closest('article')?.querySelector('.theme-doc-markdown') ?? null, []);
 
-  // ----- load: the tab's pending copy (the author's own recent change), else the published file -----
+  // ----- load: the tab's pending copy (the author's own recent change), else the published file; then, for an
+  // editor signed in on this device, the current file from the store, which wins over both (the published file
+  // can be older than the branch for minutes while a deploy is pending, or longer in the browser's cache) -----
   useEffect(() => {
     let alive = true;
+    const started = fromStore.current;
+    const current = () => alive && fromStore.current === started; // nothing newer came from the store meanwhile
     const pending = host.pending?.get(page, host.buildSha);
-    if (pending) { setFile(pending); return undefined; }
-    host.loadPublished(page).then((f) => { if (alive) setFile(f); }, () => { if (alive) setFile(emptyCommentsFile(page)); });
+    if (pending) setFile(pending);
+    else host.loadPublished(page).then((f) => { if (current()) setFile(f); }, () => { if (current()) setFile((had) => had ?? emptyCommentsFile(page)); });
+    if (host.hasSession()) {
+      void host.signedInEditor().then(async (ed) => {
+        if (!ed || !alive) return;
+        editor.current = ed;
+        const { file: latest } = await ed.store.read(page);
+        if (!current()) return;
+        fromStore.current++;
+        setFile(latest);
+      }).catch(() => { /* the store cannot be read now (network, rate limit): keep what is shown */ });
+    }
     return () => { alive = false; };
   }, [host, page]);
 
@@ -191,7 +209,7 @@ export function CommentsLayer({ host, page }: CommentsLayerProps) {
 
   // Escape closes the card and the new-comment box.
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setCard(null); setDraft(null); } };
+    const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setCard(null); setDraft(null); setNotice(null); } };
     document.addEventListener('keydown', onKey);
     return () => document.removeEventListener('keydown', onKey);
   }, []);
@@ -205,23 +223,45 @@ export function CommentsLayer({ host, page }: CommentsLayerProps) {
     return e;
   }, [host]);
 
+  /** Shows the store's current comments (and keeps them for reloads); false when they cannot be read. */
+  const refresh = useCallback(async (ed: CommentEditor): Promise<boolean> => {
+    try {
+      const { file: latest } = await ed.store.read(page);
+      fromStore.current++;
+      setFile(latest);
+      host.pending?.save(page, latest, '');
+      return true;
+    } catch { return false; }
+  }, [host, page]);
+
   const run = useCallback(async (where: Where, make: (author: CommentAuthor) => CommentOp): Promise<boolean> => {
     setBusy(where);
     setError(null);
+    setNotice(null);
     try {
       const ed = await getEditor();
       if (!ed) return false;
       const res = await changeComments(ed.store, page, make(authorOf(ed.identity)), commitAuthor(ed.identity));
+      fromStore.current++;
       setFile(res.file);
-      host.pending?.save(page, res.file, host.buildSha);
+      host.pending?.save(page, res.file, res.commitSha);
       return true;
     } catch (e) {
-      setError({ where, message: `${MESSAGE_PREFIX}${(e as Error).message}` });
+      // The page showed an older copy than the store (someone else changed or deleted the comment, or the
+      // published file was behind): show the store's current comments instead of leaving a stale card open.
+      const code = e instanceof ContentError ? e.code : null;
+      const stale = code === 'NOT_FOUND' || code === 'CONFLICT';
+      if (stale && editor.current && (await refresh(editor.current)) && code === 'NOT_FOUND') {
+        if (where === 'card') setCard(null);
+        setNotice(GONE_NOTICE);
+      } else {
+        setError({ where, message: `${MESSAGE_PREFIX}${(e as Error).message}` });
+      }
       return false;
     } finally {
       setBusy(null);
     }
-  }, [getEditor, host, page]);
+  }, [getEditor, host, page, refresh]);
 
   const now = () => new Date().toISOString();
   const threadActions = (t: CommentThread, where: Where) => (signedIn ? {
@@ -293,6 +333,11 @@ export function CommentsLayer({ host, page }: CommentsLayerProps) {
               onMouseDown={(e) => e.preventDefault()} onClick={() => void startComment()}>
               {signedIn ? 'Comment' : 'Sign in to comment'}
             </button>
+          )}
+          {notice && (
+            <div className="pc-pop pc-notice" role="status" data-testid="comments-notice">
+              <div style={{ display: 'flex', gap: '0.5rem' }}><span>{notice}</span><button type="button" className="pc-x" aria-label="Close message" onClick={() => setNotice(null)}>×</button></div>
+            </div>
           )}
           {selectionError && !draft && <div className="pc-pop pc-pop--hover" role="status" style={{ position: 'fixed', top: 'calc(var(--ifm-navbar-height) + 8px)', right: 8, left: 'auto' }}>{selectionError}</div>}
           {draft && (

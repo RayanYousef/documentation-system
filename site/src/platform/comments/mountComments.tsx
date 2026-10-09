@@ -26,6 +26,7 @@ export default function CommentsMount({ page }: { page: EditablePage }) {
       const session = await loadSession();
       return session.obtainCommentEditor({ config: platform as PlatformConfig, global, onSignedIn: session.resetContentBackend });
     },
+    signedInEditor: async () => (await loadSession()).currentCommentEditor({ config: platform as PlatformConfig, global }),
     setTabCounts: setTabCommentCounts,
   }), [global, buildSha]);
   return <CommentsLayer host={host} page={page.path} />;

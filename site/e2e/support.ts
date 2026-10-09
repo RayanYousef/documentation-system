@@ -201,6 +201,11 @@ export async function commitOnMain(gh: FakeGitHub, repoPath: string, text: strin
   await new GitDataClient({ owner: OWNER, repo: REPO, token: null, fetch: gh.fetch }).commitFiles('main', { [repoPath]: text }, [], message, { name: 'Other', email: 'other@example.com' });
 }
 
+/** Deletes a file on main as someone else (through the fake's own Git Data API). */
+export async function deleteOnMain(gh: FakeGitHub, repoPath: string, message = 'Someone else'): Promise<void> {
+  await new GitDataClient({ owner: OWNER, repo: REPO, token: null, fetch: gh.fetch }).commitFiles('main', {}, [repoPath], message, { name: 'Other', email: 'other@example.com' });
+}
+
 /** The docs bundle on main as bundle-relative text files (for okf-core checks). */
 export function bundleOnMain(gh: FakeGitHub): Record<string, string> {
   const head = gh.commits.get(gh.refs.get('heads/main')!)!;
