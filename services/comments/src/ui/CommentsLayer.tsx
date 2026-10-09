@@ -312,7 +312,7 @@ export function CommentsLayer({ host, page }: CommentsLayerProps) {
             <CommentsPanel threads={file?.threads ?? []} anchoring={anchoring} signedIn={signedIn}
               actionsFor={(t) => threadActions(t, `panel:${t.id}`)} busyId={busy?.startsWith('panel:') ? busy.slice(6) : null}
               errorFor={(id) => (error?.where === `panel:${id}` ? error.message : null)}
-              onReveal={reveal} onClose={() => setPanelOpen(false)} />
+              onReveal={reveal} onClose={() => { setPanelOpen(false); buttonRef.current?.focus({ preventScroll: true }); }} />
           )}
         </div>,
         document.body,

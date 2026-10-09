@@ -330,6 +330,10 @@ test('keyboard: a panel entry opens its card with the focus in it, and Escape gi
   await page.keyboard.press('Escape');
   await expect(card(page)).toHaveCount(0);
   await expect(entry).toBeFocused();
+  // Escape again closes the panel and puts the focus back on the Comments button.
+  await page.keyboard.press('Escape');
+  await expect(panel(page)).toHaveCount(0);
+  await expect(commentsButton(page)).toBeFocused();
 });
 
 test('without the CSS Highlight API, comments are drawn as boxes over the text and still hover and open', async ({ page, gh }) => {
