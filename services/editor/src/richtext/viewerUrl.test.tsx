@@ -2,6 +2,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from 'vitest';
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
+import { forgetLocalAssets, rememberLocalAsset } from './localAssets.js';
 import { useViewerUrl, viewerSource, type ViewerSourceProps, type ViewerUrlServices } from './viewerUrl.js';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
@@ -17,6 +18,14 @@ describe('viewerSource', () => {
   it('reads repo + path from the backend, with the ref or the repo default ref', () => {
     expect(viewerSource({ repo: 'o/r', path: 'a.fbx' }, '/', defaultRef)).toEqual({ kind: 'asset', ref: { repo: 'o/r', ref: 'dev', path: 'a.fbx' } });
     expect(viewerSource({ repo: 'o/r', gitRef: 'v1', path: 'a.fbx' }, '/', defaultRef)).toEqual({ kind: 'asset', ref: { repo: 'o/r', ref: 'v1', path: 'a.fbx' } });
+  });
+
+  it('prefers the browser copy of a model uploaded from this tab', () => {
+    URL.createObjectURL = vi.fn(() => 'blob:uploaded');
+    rememberLocalAsset('/models/new.glb', new Blob(['x']));
+    expect(viewerSource({ src: '/models/new.glb' }, '/Base/', defaultRef)).toEqual({ kind: 'url', url: 'blob:uploaded' });
+    expect(viewerSource({ src: '/models/other.glb' }, '/Base/', defaultRef)).toEqual({ kind: 'url', url: '/Base/models/other.glb' });
+    forgetLocalAssets();
   });
 
   it('has nothing to show without src or repo + path', () => {

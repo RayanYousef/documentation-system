@@ -4,6 +4,7 @@ import type { AssetInfo } from '@platform/contracts';
 import type { InPlaceSession } from '../inplace/InPlaceContext.js';
 import { readFileBytes } from '../mdx/uploadHelpers.js';
 import { imageUploadPath, modelUploadPath } from './assets.js';
+import { rememberLocalAsset } from './localAssets.js';
 import type { RichTextServices } from './RichTextEditor.js';
 
 /** The parts of the session the services use. Memoize on these (the session object itself may change every render). */
@@ -18,11 +19,14 @@ export function createRichTextServices({ host, backend, identity }: RichTextSess
     async uploadImage(file) {
       const { name, path } = imageUploadPath(file.name);
       const res = await backend.uploadAsset(path, await readFileBytes(file), { message: `Add image ${name} for ${fileLabel}`, author });
-      return { src: `${baseUrl}${res.asset.url.slice(1)}`, alt: name };
+      const src = `${baseUrl}${res.asset.url.slice(1)}`;
+      rememberLocalAsset(src, file); // shown from the browser until the site serves it
+      return { src, alt: name };
     },
     async uploadModel(file) {
       const { name, path, component } = modelUploadPath(file.name);
       await backend.uploadAsset(path, await readFileBytes(file), { message: `Add 3D model ${name} for ${fileLabel}`, author });
+      rememberLocalAsset(`/${path}`, file); // shown from the browser until the site serves it
       return { component, src: `/${path}`, alt: name };
     },
     listAssets() {
