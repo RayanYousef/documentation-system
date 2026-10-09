@@ -2,7 +2,7 @@
 // to an in-memory FakeGitHub seeded from this repository's own site/ files, so each test starts from a
 // copy of `main` and can inspect the commits it produced. Raw file downloads (3D models referenced by
 // repo + path) are served from the working tree. Every test fails on console errors unless it allows them.
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type Locator, type Page } from '@playwright/test';
 import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { GitDataClient } from '@platform/content';
@@ -216,13 +216,19 @@ export function bundleOnMain(gh: FakeGitHub): Record<string, string> {
  * goes to the end of the visual line, which is the middle of a paragraph that wraps.)
  */
 export async function caretAfter(page: Page, text: string): Promise<void> {
-  // One real click on the right half of the last character. (A click followed by a scripted DOM selection was a
-  // race: the editor reads DOM selection changes at most every 100 ms, so an Enter pressed right after it could
-  // still split the paragraph where the first click landed.)
-  const p = body(page).locator('p', { hasText: text }).first();
-  await p.scrollIntoViewIfNeeded();
-  const point = await p.evaluate((el) => {
-    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+  await caretAtEnd(page, body(page).locator('p', { hasText: text }).first());
+}
+
+/**
+ * Puts the caret at the very end of `el` (a paragraph or a code line of the editor) with one real click on the right
+ * half of its last character, then waits until the editor has read that caret. The editor reads DOM selection
+ * changes at most every 100 ms, so an Enter pressed right after a click and End (or a scripted selection) could
+ * still split the line where the click landed.
+ */
+export async function caretAtEnd(page: Page, el: Locator): Promise<void> {
+  await el.scrollIntoViewIfNeeded();
+  const point = await el.evaluate((node) => {
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
     let last: Text | null = null;
     for (let n = walker.nextNode(); n; n = walker.nextNode()) if ((n.textContent ?? '').replace(/\uFEFF/g, '').length) last = n as Text;
     if (!last) return null;
@@ -234,13 +240,14 @@ export async function caretAfter(page: Page, text: string): Promise<void> {
     return { x: r.right - Math.min(1, r.width / 4), y: r.top + r.height / 2 };
   });
   if (point) await page.mouse.click(point.x, point.y);
-  else await p.click();
-  await expect.poll(() => p.evaluate((el) => {
+  else await el.click();
+  await expect.poll(() => el.evaluate((node) => {
     const s = window.getSelection();
-    if (!s || !s.isCollapsed || !s.focusNode || !el.contains(s.focusNode)) return false;
+    if (!s || !s.isCollapsed || !s.focusNode || !node.contains(s.focusNode)) return false;
     const after = document.createRange();
     after.setStart(s.focusNode, s.focusOffset);
-    after.setEnd(el, el.childNodes.length);
+    after.setEnd(node, node.childNodes.length);
     return after.toString().replace(/\uFEFF/g, '') === '';
   })).toBe(true);
+  await page.waitForTimeout(150); // one throttle window of the editor's selection reading
 }

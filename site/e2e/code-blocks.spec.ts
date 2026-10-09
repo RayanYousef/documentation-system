@@ -1,7 +1,7 @@
 // Code blocks: insert, several lines, the language picker, typing the ``` shortcut, and editing a block that is
 // already on the page. Saved, reloaded, and checked on the page and in the saved MDX.
 import type { Locator, Page } from '@playwright/test';
-import { test, expect, openEditor, body, caretAfter, fileOnMain, toolbarButton, saveReloadAndEdit } from './support';
+import { test, expect, openEditor, body, caretAfter, caretAtEnd, fileOnMain, toolbarButton, saveReloadAndEdit } from './support';
 
 const PAGE = 'site/docs/getting-started.md';
 
@@ -77,8 +77,7 @@ test('an existing code block can be edited: a line is added and its fence stays'
   await openEditor(page, 'getting-started');
   const block = blocks(page).filter({ hasText: 'git clone https://github.com' });
   await expect(block).toHaveCount(1);
-  await block.getByText('cd documentation-system/examples/unity-project').click();
-  await page.keyboard.press('End');
+  await caretAtEnd(page, block.getByText('cd documentation-system/examples/unity-project'));
   await page.keyboard.press('Enter');
   await page.keyboard.type('git status');
   await expect(block).toContainText('git status');
