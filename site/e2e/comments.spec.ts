@@ -205,12 +205,24 @@ test('replying to a comment someone else deleted meanwhile: the page updates to 
 });
 
 test('a reader\'s browser asks the server for the published comments every time (no stale cached copy)', async ({ page, gh: _gh }) => {
-  const requests: { url: string; cacheControl: string | undefined }[] = [];
-  page.on('request', (r) => { if (r.url().includes('/platform/comments/platform/comments.json')) requests.push({ url: r.url(), cacheControl: r.headers()['cache-control'] }); });
+  // Playwright turns the HTTP cache off while it routes requests, so the test records how the page asks for the
+  // file: fetch(url, { cache: 'no-cache' }) makes a real browser revalidate with the server every time.
+  await page.addInitScript(() => {
+    const calls: { url: string; cache: string | null }[] = [];
+    (window as unknown as { __commentFetches: typeof calls }).__commentFetches = calls;
+    const original = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/platform/comments/platform/comments.json')) calls.push({ url, cache: init?.cache ?? null });
+      return original(input, init);
+    };
+  });
   await open(page);
-  await expect.poll(() => requests.length).toBeGreaterThan(0);
-  expect(requests[0]!.url).toContain('?v=e2e-build-1');
-  expect(requests[0]!.cacheControl).toBe('no-cache');
+  const fetches = () => page.evaluate(() => (window as unknown as { __commentFetches: { url: string; cache: string | null }[] }).__commentFetches);
+  await expect.poll(async () => (await fetches()).length).toBeGreaterThan(0);
+  const [first] = await fetches();
+  expect(first!.url).toContain('?v=e2e-build-1');
+  expect(first!.cache).toBe('no-cache');
 });
 
 test('a comment in a non-first tab remembers the tab, shows with it, and the tab label counts it', async ({ page, gh }) => {

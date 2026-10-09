@@ -7,6 +7,7 @@ Newest first. Each entry names the page that changed and who changed it.
 
 ## 2026-10-09
 
+* **Update**: [Comments](/platform/comments.md) - signed-in editors read the current comments from the store, so a resolved or deleted comment no longer comes back as open while a deploy is pending; the pending copy lasts until the site is built from its commit; readers fetch the published file with no-cache; an action on a gone comment refreshes the page. (by Rayan Yousef)
 * **Add**: [Comments](/platform/comments.md) - comments on the text of Latest pages: highlights for every reader, hover and thread cards, the Comments panel (Open, Unattached, Resolved), reply, resolve, reopen and delete, comments inside tabs, storage in site/comments, publishing into the build, anchoring and tests. (by Rayan Yousef)
 * **Update**: [Editor service](/platform/editor.md) - tabs: rename by clicking the shown tab, move and remove buttons, Tab settings, heading-size labels; the Feature page template; the shared sign-in for comments; removed the tabs known issue. (by Rayan Yousef)
 * **Update**: [Platform decisions](/platform/decisions.md) - added decisions 31 to 35 (comment storage, published comment files, text-quote anchoring and highlights, the comments service, tab editing and label size). (by Rayan Yousef)
