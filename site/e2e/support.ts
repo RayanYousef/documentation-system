@@ -76,6 +76,13 @@ function seed(): Record<string, Uint8Array> {
 
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', 'access-control-expose-headers': '*' };
 
+/** Bytes of a repo file on a fake branch (null when absent). */
+export function fileBytesAt(gh: FakeGitHub, branch: string, repoPath: string): Uint8Array | null {
+  const commit = gh.commits.get(gh.refs.get(`heads/${branch}`)!);
+  const sha = commit ? gh.trees.get(commit.tree)?.[repoPath] : undefined;
+  return sha ? gh.blobs.get(sha) ?? null : null;
+}
+
 /** Routes api.github.com (auth checks + FakeGitHub) and raw/media.githubusercontent.com (working tree). */
 export async function installGitHub(page: Page, gh: FakeGitHub, faults: GitHubFaults = new GitHubFaults()): Promise<void> {
   await page.route('https://api.github.com/**', async (route) => {
@@ -103,7 +110,11 @@ export async function installGitHub(page: Page, gh: FakeGitHub, faults: GitHubFa
     const parts = url.pathname.split('/').filter(Boolean);
     const rest = url.hostname.startsWith('media') ? parts.slice(4) : parts.slice(3); // media/<o>/<r>/<ref>/... | <o>/<r>/<ref>/...
     const file = path.join(REPO_ROOT, ...rest.map(decodeURIComponent));
-    if (existsSync(file) && statSync(file).isFile()) await route.fulfill({ status: 200, headers: cors, body: readFileSync(file) });
+    if (existsSync(file) && statSync(file).isFile()) { await route.fulfill({ status: 200, headers: cors, body: readFileSync(file) }); return; }
+    // Not in the working tree: a file that was committed during the test (an upload), as raw.githubusercontent.com would serve it.
+    const from = url.hostname.startsWith('media') ? 1 : 0;
+    const committed = parts[from] === OWNER && parts[from + 1] === REPO ? fileBytesAt(gh, 'main', rest.slice(0).map(decodeURIComponent).join('/')) : null;
+    if (committed) await route.fulfill({ status: 200, headers: cors, body: Buffer.from(committed) });
     else await route.fulfill({ status: 404, headers: cors, body: 'Not Found' });
   });
 }

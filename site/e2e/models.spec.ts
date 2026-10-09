@@ -47,7 +47,9 @@ async function setProp(page: Page, block: Locator, tag: string, prop: string, va
   await page.keyboard.press('Escape');
 }
 
-test('upload a .glb model: committed as models/<name>.glb, shown at once, saved as a ModelViewer and read back', async ({ page, gh }) => {
+test('upload a .glb model: committed as models/<name>.glb, shown at once, saved as a ModelViewer and read back', async ({ page, gh, consoleGuard }) => {
+  // After the reload the site (not deployed yet) answers 404 for the new file; the editor then reads it from GitHub.
+  consoleGuard.allow(/Failed to load resource: the server responded with a status of 404|fetch for .*\/models\/cargo-bay\.glb.* responded with 404/);
   await openEditor(page, 'getting-started');
   await newParagraph(page);
   const chooser = page.waitForEvent('filechooser');
@@ -63,7 +65,8 @@ test('upload a .glb model: committed as models/<name>.glb, shown at once, saved 
   await saveReloadAndEdit(page);
   expect(fileOnMain(gh, PAGE)).toContain('<ModelViewer src="/models/cargo-bay.glb" alt="cargo-bay.glb" />');
   await expect(viewerBlock(page, 'ModelViewer')).toHaveCount(1);
-  await expect(page.locator('[data-platform-editing] [data-docs-block="ModelViewer"] model-viewer')).toHaveCount(1);
+  // Not deployed yet, so the site has no copy: the viewer must still load the model (from GitHub).
+  await expectModelLoaded(viewerBlock(page, 'ModelViewer').locator('model-viewer'));
 });
 
 test('size and text settings of a ModelViewer: height and alt are written, and clearing the height removes it', async ({ page, gh }) => {

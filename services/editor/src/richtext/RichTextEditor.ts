@@ -27,6 +27,11 @@ export interface RichTextServices {
   listAssets(): Promise<AssetInfo[]>;
   /** File from a code repo, for viewer previews. */
   getAsset(ref: { repo: string; ref: string; path: string }): Promise<Blob>;
+  /**
+   * A file of this site (a site address such as "/models/a.glb"), read from the deploy branch on GitHub. For uploads
+   * the deploy has not published yet, so the site itself still answers 404 for them. Absent in read-only contexts.
+   */
+  getSiteAsset?(src: string): Promise<Blob>;
   /** codeRepos[].defaultRef for "owner/repo", else 'main'. */
   defaultRef(repo: string): string;
 }

@@ -41,6 +41,17 @@ export function repoAssetInsert(a: AssetInfo, baseUrl: string): AssetInsert {
 }
 
 /**
+ * The file under the site's static/ folder that a site address points to ("/Base/uploads/a.png" or
+ * "/models/a.glb" -> "uploads/a.png" / "models/a.glb"), or null for an address that is not a file of this site.
+ * Used to read an upload from GitHub while the deploy has not published it yet.
+ */
+export function siteAssetPath(src: string, baseUrl: string): string | null {
+  if (!src.startsWith('/') || src.startsWith('//')) return null;
+  const rest = src.startsWith(baseUrl) ? src.slice(baseUrl.length) : src.slice(1);
+  return rest && !rest.split('/').some((part) => part === '..' || part === '') ? rest : null;
+}
+
+/**
  * Where the editor loads an image from to show it. A site-relative src ("/img/logo.png") is served under
  * the site's base url, as the built site does; a src that already has the base url (uploads) or is absolute stays.
  * Display only: the Markdown keeps the src as written.
