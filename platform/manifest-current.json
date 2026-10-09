@@ -167,7 +167,9 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/HttpContentBackend.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/serveContentBackend.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/assets/getAsset.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/search/index.ts"
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/search/index.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/local/committer.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/contentRpcHandler.ts"
     ]
   },
   {
@@ -199,7 +201,7 @@
     "route": "/platform/decisions",
     "file": "platform/decisions.md",
     "title": "Platform decisions",
-    "description": "Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each, plus later decisions such as Plate replacing MDXEditor in the editor; read it before reopening any of them.",
+    "description": "Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each, plus later decisions such as Plate replacing MDXEditor and in-place editing replacing the standalone editor app; read it before reopening any of them.",
     "type": "decision",
     "tags": [
       "platform",
@@ -211,66 +213,73 @@
     "sources": [
       "https://github.com/RayanYousef/documentation-system/blob/main/eslint.config.js",
       "https://github.com/RayanYousef/documentation-system/blob/main/platform.config.js",
-      "https://github.com/RayanYousef/documentation-system/blob/main/site/versions.json"
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/versions.json",
+      "https://github.com/RayanYousef/documentation-system/blob/main/docs/design/2026-10-09-inplace-editing-plan.md"
     ]
   },
   {
     "route": "/platform/editor",
     "file": "platform/editor.md",
     "title": "Editor service",
-    "description": "Describes the in-browser editor (Vite + React, page body in Plate behind the RichTextEditor interface): how it is composed from platform.config.js, what each screen, toolbar and dialog does, how Markdown is imported and written back, when a page opens in Raw mode, how frontmatter edits preserve YAML, how the Tailwind and arcade theme is applied, and how it is built, tested and deployed under /editor/; open it when changing editor behaviour or debugging a save from the UI.",
+    "description": "Describes in-place editing of the docs pages (Edit button, lazily loaded editor library, sign-in, Visual and Raw modes, page settings, page actions, saving to GitHub or to disk on the dev server, pending previews), how the editor library is composed by the site, how Markdown is imported and written back, how the page look and the isolated stylesheet work, and how it is tested; open it when changing editing behaviour or debugging a save.",
     "type": "system",
     "tags": [
       "platform",
       "editor",
-      "vite",
+      "inplace",
       "react",
       "plate",
+      "codemirror",
       "markdown",
       "tailwind",
-      "shadcn",
       "frontmatter",
       "theme"
     ],
     "resource": "https://github.com/RayanYousef/documentation-system/blob/main/services/editor",
     "sources": [
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/App.tsx",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/BodyEditor.tsx",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/FrontmatterForm.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/host.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/index.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/InPlaceEditor.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/editSessionReducer.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/composeDocument.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/signInPanels.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/pendingEdits.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/SavedPreview.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/folderIntroGuard.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/frontmatter/yamlDoc.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/componentsManifest.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/rawtext/RawTextEditor.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/RichTextEditor.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/index.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/skin.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/createRichTextServices.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/localAssets.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/assets.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/PlateDocument.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/docsMarkdown.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/supportedSyntax.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/componentRules.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/nodes/docsNodesKit.tsx",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/kits/editor-kit.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/kits/page-look-kit.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/kits/page-editor-kit.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/toolbar/FixedToolbarButtons.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/slash/SlashInputElement.tsx",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/session/SessionStore.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/index.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/tokens.css",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/tailwind.css",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme-inpage/inplace.pcss",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/components.json",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vite.config.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/playwright.config.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/body.spec.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/formatting.spec.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/components.spec.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/theme.spec.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs"
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/mountInPlaceEditor.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/DocItem/Content/index.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/devContentMiddleware.mjs",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.config.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/support.ts"
     ]
   },
   {
     "route": "/platform/extending/add-auth-provider",
     "file": "platform/extending/add-auth-provider.md",
     "title": "Add an auth provider",
-    "description": "Step-by-step recipe for a new AuthProvider (for example the Phase 2 password provider): the interface and credentials union to extend, the contract suite to pass, where the editor's composition root selects it and which config field switches it on.",
+    "description": "Step-by-step recipe for a new AuthProvider (for example the Phase 2 password provider): the interface and credentials union to extend, the contract suite to pass, where the site's in-place editing composition root selects it, the sign-in panel to register and which config field switches it on.",
     "type": "guide",
     "tags": [
       "platform",
@@ -285,7 +294,8 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/platform-config.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/authProviderContract.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/auth/test/MockAuthProvider.test.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts"
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/signInPanels.tsx"
     ]
   },
   {
@@ -308,7 +318,7 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/writePipeline.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/publishPipeline.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/test/localHarness.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/createContentBackend.ts"
     ]
   },
@@ -316,7 +326,7 @@
     "route": "/platform/extending/add-deploy-target",
     "file": "platform/extending/add-deploy-target.md",
     "title": "Add a deploy target",
-    "description": "Recipe for hosting the site somewhere other than GitHub Pages (another static host, Docker, a Node process): what site:build produces, which config fields fix the URLs, how the editor and Phase 2 server are mounted, and the workflow to add without touching deploy-pages.yml.",
+    "description": "Recipe for hosting the site somewhere other than GitHub Pages (another static host, Docker, a Node process): what site:build produces, which config fields fix the URLs, what in-place editing needs from the host and how the Phase 2 server is mounted, and the workflow to add without touching deploy-pages.yml.",
     "type": "guide",
     "tags": [
       "platform",
@@ -330,8 +340,7 @@
     "sources": [
       "https://github.com/RayanYousef/documentation-system/blob/main/package.json",
       "https://github.com/RayanYousef/documentation-system/blob/main/platform.config.js",
-      "https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vite.config.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/serveContentBackend.ts"
     ]
   },
@@ -382,6 +391,8 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/components-manifest.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/componentRules.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/nodes/docsNodesKit.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/kits/page-look-kit.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/docusaurus.config.js"
     ]
   },
@@ -436,7 +447,7 @@
     "route": "/platform/site",
     "file": "platform/site.md",
     "title": "Site",
-    "description": "Describes the Docusaurus site: how docusaurus.config.js derives everything from platform.config.js, which files are excluded from rendering, what the prebuild writes to static/platform, how versions and the composition root work; open it when the rendered site differs from the docs folder or when wiring a new site feature.",
+    "description": "Describes the Docusaurus site: how docusaurus.config.js derives everything from platform.config.js, which files are excluded from rendering, what the prebuild writes to static/platform, how the in-place editing plugin and theme wrappers hook in, and how versions and the composition root work; open it when the rendered site differs from the docs folder or when wiring a new site feature.",
     "type": "system",
     "tags": [
       "platform",
@@ -444,7 +455,9 @@
       "docusaurus",
       "versioning",
       "search",
-      "build"
+      "build",
+      "swizzle",
+      "plugin"
     ],
     "resource": "https://github.com/RayanYousef/documentation-system/blob/main/site",
     "sources": [
@@ -454,6 +467,10 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/createContentBackend.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/MDXComponents.js",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/css/custom.css",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/DocItem/Content/index.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/EditThisPage/index.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/versions.json",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/docs/AGENTS.md"
     ]
@@ -482,7 +499,9 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/MDXComponents.js",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/components.json",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/nodes/ViewerElement.tsx",
-      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/viewerUrl.ts"
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/viewerUrl.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/page/PageViewerElement.tsx",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/localAssets.ts"
     ]
   },
   {
@@ -505,7 +524,6 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/.github/workflows/deploy-pages.yml",
       "https://github.com/RayanYousef/documentation-system/blob/main/package.json",
       "https://github.com/RayanYousef/documentation-system/blob/main/scripts/okf.mjs",
-      "https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs",
       "https://github.com/RayanYousef/documentation-system/blob/main/scripts/lint-boundaries.test.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/vitest.workspace.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/scripts/vitest.config.ts",
@@ -516,6 +534,7 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/services/content/vitest.config.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vitest.config.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/vitest.config.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.config.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/.agents/skills/docs-platform/vitest.config.ts",
       "https://github.com/RayanYousef/documentation-system/blob/main/.gitattributes",
       "https://github.com/RayanYousef/documentation-system/blob/main/.gitignore"
