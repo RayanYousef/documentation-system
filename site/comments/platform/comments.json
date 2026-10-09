@@ -1,0 +1,27 @@
+{
+  "schema": 1,
+  "page": "platform/comments.md",
+  "threads": [
+    {
+      "id": "cmv165dle0u2k0x235w44",
+      "author": {
+        "login": "RayanYousef",
+        "name": "Rayan Yousef"
+      },
+      "createdAt": "2026-10-09T16:17:37.298Z",
+      "body": "This section here is horrible",
+      "anchor": {
+        "exact": "ize. Readers download the comments code as a lazy chunk of about 9 KB (gzip) after the page is shown, plus a small JSON file per page. Signing in and the stores load only on the first comment action.",
+        "prefix": "page is shown without comments.S",
+        "suffix": "Tests. Unit tests cover anchorin",
+        "tab": {
+          "group": 0,
+          "value": "misc",
+          "label": "Misc"
+        }
+      },
+      "status": "open",
+      "replies": []
+    }
+  ]
+}
