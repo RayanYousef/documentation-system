@@ -1,7 +1,7 @@
 // Drives the editing session's asynchronous steps (verify a remembered session, load the page) around
 // the pure editSessionReducer.
 import { useEffect, useMemo, useReducer } from 'react';
-import { CURRENT_VERSION, type ContentBackend, type Identity } from '@platform/contracts';
+import { AuthError, CURRENT_VERSION, type ContentBackend, type Identity } from '@platform/contracts';
 import type { EditablePage, InPlaceHost } from '../host.js';
 import { editSessionReducer, initialEditState, type Draft, type EditAction, type EditState } from './editSessionReducer.js';
 
@@ -26,7 +26,12 @@ export function useEditSession(host: InPlaceHost, page: EditablePage): { state: 
     if (known) { dispatch({ type: 'session-ok', session: stored, identity: known }); return undefined; }
     host.auth.verify(stored).then(
       (identity) => { verified.set(stored.token, identity); if (!cancelled) dispatch({ type: 'session-ok', session: stored, identity }); },
-      (e: Error) => { host.sessionStore.clear(); if (!cancelled) dispatch({ type: 'need-sign-in', notice: `Your saved session is no longer valid and was forgotten. ${e.message}` }); },
+      (e: Error) => {
+        // GitHub unreachable (offline, outage): the token may be fine; keep it for the next try.
+        if (e instanceof AuthError && e.code === 'NETWORK') { if (!cancelled) dispatch({ type: 'load-failed', error: `Could not check your saved sign-in. ${e.message}` }); return; }
+        host.sessionStore.clear();
+        if (!cancelled) dispatch({ type: 'need-sign-in', notice: `Your saved session is no longer valid and was forgotten. ${e.message}` });
+      },
     );
     return () => { cancelled = true; };
   }, [state.phase, host]);

@@ -186,7 +186,6 @@ export function InPlaceEditor({ host, page, skin, onExit }: InPlaceEditorProps) 
       </div>
     );
   }
-  if (state.phase === 'loading' || !session) return <div className="ped-ui"><p className="ped-loading">Loading the editor...</p></div>;
   if (state.phase === 'error') {
     return (
       <div className="ped-ui">
@@ -195,6 +194,7 @@ export function InPlaceEditor({ host, page, skin, onExit }: InPlaceEditorProps) 
       </div>
     );
   }
+  if (state.phase === 'loading' || !session) return <div className="ped-ui"><p className="ped-loading">Loading the editor...</p></div>;
 
   const saving = state.phase === 'saving';
   const fields = state.fields;

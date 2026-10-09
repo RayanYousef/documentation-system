@@ -3,7 +3,7 @@ import { describe, it, expect, afterEach, beforeAll, beforeEach, vi } from 'vite
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { EditorView } from '@codemirror/view';
-import { ContentError, type AuthProvider, type ContentBackend, type Identity, type PageContent, type PlatformConfig, type Session, type WriteOptions } from '@platform/contracts';
+import { AuthError, ContentError, type AuthProvider, type ContentBackend, type Identity, type PageContent, type PlatformConfig, type Session, type WriteOptions } from '@platform/contracts';
 import type { EditablePage, InPlaceHost, SessionStore } from '../host.js';
 import { InPlaceEditor, type InPlaceExit } from './InPlaceEditor.js';
 import { GENERATED_BLOCK_CHANGED } from './folderIntroGuard.js';
@@ -150,6 +150,18 @@ describe('InPlaceEditor: sign-in', () => {
     await mount(host, inventory);
     expect(sessionStore.clear).toHaveBeenCalled();
     expect(q('[role="dialog"] [role="alert"]')!.textContent).toContain('no longer valid and was forgotten. Token expired.');
+  });
+
+  it('a remembered session is kept when GitHub cannot be reached to check it', async () => {
+    const backend = fakeBackend({ 'systems/inventory.md': PAGE });
+    const { host, sessionStore } = makeHost(backend, {}, { verify: vi.fn(async () => { throw new AuthError('NETWORK', 'GitHub is unreachable: offline'); }) });
+    sessionStore.preset(SESSION);
+    const { onExit } = await mount(host, inventory);
+    expect(sessionStore.clear).not.toHaveBeenCalled();
+    expect(sessionStore.stored()).toEqual(SESSION);
+    expect(q('[role="alert"]')!.textContent).toContain('GitHub is unreachable: offline');
+    await click(button('Close'));
+    expect(onExit).toHaveBeenCalledWith({});
   });
 
   it('Cancel in the sign-in dialog leaves edit mode', async () => {
