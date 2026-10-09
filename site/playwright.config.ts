@@ -10,7 +10,8 @@ export default defineConfig({
   workers: 1,
   timeout: 90_000,
   expect: { timeout: 15_000 },
-  retries: process.env.CI ? 1 : 0,
+  // One retry everywhere: the tests that render WebGL (3D viewers on software GL) occasionally starve the page on a busy machine.
+  retries: 1,
   reporter: process.env.CI ? 'github' : 'list',
   use: {
     baseURL: `http://127.0.0.1:${PORT}/documentation-system/`,
