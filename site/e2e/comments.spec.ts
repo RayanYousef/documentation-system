@@ -309,6 +309,63 @@ test('comment text and author names are shown as text, never as HTML', async ({ 
   expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
 });
 
+test('keyboard: a panel entry opens its card with the focus in it, and Escape gives the focus back', async ({ page, gh }) => {
+  await seedComments(page, gh, PAGE, [{ id: 'c1', body: 'Is yellow readable in dark mode?', exact: 'yellow highlight', tab: HOW_TO_USE }]);
+  await open(page);
+  await signInThroughEdit(page);
+  await commentsButton(page).focus();
+  await page.keyboard.press('Enter');
+  const entry = panel(page).getByTestId('comment-item').getByRole('button');
+  await entry.focus();
+  await page.keyboard.press('Enter');
+  await expect(card(page)).toBeFocused();
+  await page.keyboard.press('Tab'); // the close button
+  await page.keyboard.press('Tab');
+  await expect(card(page).getByLabel('Reply')).toBeFocused();
+  await page.keyboard.type('Typed without a mouse.');
+  await page.keyboard.press('Tab');
+  await expect(card(page).getByRole('button', { name: 'Reply', exact: true })).toBeFocused();
+  await page.keyboard.press('Enter');
+  await expect.poll(() => stored(gh)!.threads[0]!.replies.map((r) => r.body)).toEqual(['Typed without a mouse.']);
+  await page.keyboard.press('Escape');
+  await expect(card(page)).toHaveCount(0);
+  await expect(entry).toBeFocused();
+});
+
+test('without the CSS Highlight API, comments are drawn as boxes over the text and still hover and open', async ({ page, gh }) => {
+  await page.addInitScript(() => {
+    delete (CSS as unknown as { highlights?: unknown }).highlights;
+    delete (window as unknown as { Highlight?: unknown }).Highlight;
+  });
+  await seedComments(page, gh, PAGE, [
+    { id: 'c1', body: 'Is yellow readable in dark mode?', exact: 'yellow highlight', tab: HOW_TO_USE },
+    { id: 'c2', body: 'Not even for private assets?', exact: 'never call the GitHub API', tab: API },
+  ]);
+  await open(page);
+  const marks = page.locator('.pc-mark');
+  await expect.poll(() => marks.count()).toBeGreaterThan(0);
+  expect(await highlighted(page)).toEqual([]); // nothing registered with the (missing) API
+
+  // A box sits on the commented text.
+  const boxOn = async (text: string) => {
+    const boxes = await marks.evaluateAll((els) => els.map((e) => e.getBoundingClientRect()).map((r) => ({ left: r.left, right: r.right, top: r.top, bottom: r.bottom })));
+    const q = await textPoint(pageContent(page), text);
+    return boxes.some((b) => q.x >= b.left && q.x <= b.right && q.y >= b.top && q.y <= b.bottom);
+  };
+  await expect.poll(() => boxOn('yellow highlight')).toBe(true);
+
+  const p = await textPoint(pageContent(page), 'yellow highlight');
+  await page.mouse.move(p.x, p.y);
+  await expect(page.getByRole('tooltip')).toContainText('Is yellow readable in dark mode?');
+  await openCard(page, 'yellow highlight');
+  await expect(card(page)).toContainText('Is yellow readable in dark mode?');
+  await page.keyboard.press('Escape');
+
+  // The comment in the API tab gets its box when that tab is shown.
+  await tabLabel(page, 'API').click();
+  await expect.poll(() => boxOn('never call the GitHub API')).toBe(true);
+});
+
 test('when the comments code cannot load, the page is still shown (only without comments)', async ({ page, gh: _gh, consoleGuard }) => {
   consoleGuard.allow(/Failed to load resource: net::ERR_FAILED|ChunkLoadError: Loading chunk \d+ failed[\s\S]*\/comments\.[0-9a-f]+\.js/);
   await page.route(/\/assets\/js\/comments\.[0-9a-f]+\.js$/, (route) => route.abort());

@@ -49,7 +49,11 @@ export function FallbackMarks({ ranges, active, version }: { ranges: Range[]; ac
     };
     draw();
     window.addEventListener('resize', draw);
-    return () => window.removeEventListener('resize', draw);
+    // The text also moves without a DOM change the layer hears of: web fonts and images loading, a <details>
+    // opening. Any of those changes the page's height, so redraw when the body is resized.
+    const observer = typeof ResizeObserver === 'function' ? new ResizeObserver(() => draw()) : null;
+    observer?.observe(document.body);
+    return () => { window.removeEventListener('resize', draw); observer?.disconnect(); };
   }, [ranges, active, version]);
   return createPortal(
     <div data-comments-ignore="" aria-hidden="true">
