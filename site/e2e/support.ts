@@ -216,14 +216,31 @@ export function bundleOnMain(gh: FakeGitHub): Record<string, string> {
  * goes to the end of the visual line, which is the middle of a paragraph that wraps.)
  */
 export async function caretAfter(page: Page, text: string): Promise<void> {
+  // One real click on the right half of the last character. (A click followed by a scripted DOM selection was a
+  // race: the editor reads DOM selection changes at most every 100 ms, so an Enter pressed right after it could
+  // still split the paragraph where the first click landed.)
   const p = body(page).locator('p', { hasText: text }).first();
-  await p.click();
-  await p.evaluate((el) => {
+  await p.scrollIntoViewIfNeeded();
+  const point = await p.evaluate((el) => {
+    const walker = document.createTreeWalker(el, NodeFilter.SHOW_TEXT);
+    let last: Text | null = null;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) if ((n.textContent ?? '').replace(/\uFEFF/g, '').length) last = n as Text;
+    if (!last) return null;
     const range = document.createRange();
-    range.selectNodeContents(el);
-    range.collapse(false);
-    const selection = window.getSelection()!;
-    selection.removeAllRanges();
-    selection.addRange(range);
+    range.setStart(last, last.length - 1);
+    range.setEnd(last, last.length);
+    const rects = range.getClientRects();
+    const r = rects[rects.length - 1] ?? range.getBoundingClientRect();
+    return { x: r.right - Math.min(1, r.width / 4), y: r.top + r.height / 2 };
   });
+  if (point) await page.mouse.click(point.x, point.y);
+  else await p.click();
+  await expect.poll(() => p.evaluate((el) => {
+    const s = window.getSelection();
+    if (!s || !s.isCollapsed || !s.focusNode || !el.contains(s.focusNode)) return false;
+    const after = document.createRange();
+    after.setStart(s.focusNode, s.focusOffset);
+    after.setEnd(el, el.childNodes.length);
+    return after.toString().replace(/\uFEFF/g, '') === '';
+  })).toBe(true);
 }
