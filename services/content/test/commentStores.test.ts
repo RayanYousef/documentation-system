@@ -98,6 +98,25 @@ describe('GithubCommentStore', () => {
     void store;
   });
 
+  it('returns the etag of the file it committed, also when another save lands right after it', async () => {
+    const { gh } = githubHarness();
+    let patched = false;
+    const racing: typeof fetch = async (input, init) => {
+      const res = await gh.fetch(input, init);
+      if (!patched && init?.method === 'PATCH') {
+        patched = true; // our commit is on main; another editor's comment follows before we read anything back
+        await new GitDataClient({ owner: 'acme', repo: 'docs', token: null, fetch: gh.fetch })
+          .commitFiles('main', { 'site/comments/systems/inventory.json': serializeCommentsFile(file('systems/inventory.md', 'Theirs')) }, [], 'Other comment', author);
+      }
+      return res;
+    };
+    const racy = new GithubCommentStore({ owner: 'acme', repo: 'docs', branch: 'main', sitePath: 'site', token: 't', fetch: racing });
+    const res = await racy.write('systems/inventory.md', file('systems/inventory.md', 'Mine'), { message: 'Comment', author, expectedEtag: null });
+    const ours = gh.trees.get(gh.commits.get(res.commitSha)!.tree)!['site/comments/systems/inventory.json'];
+    expect(res.etag).toBe(ours);
+    expect((await racy.read('systems/inventory.md')).etag).not.toBe(res.etag);
+  });
+
   it('reports a corrupt file as VALIDATION', async () => {
     const { store, writeBehind, gh } = githubHarness();
     await writeBehind('systems/inventory.md', file('systems/inventory.md', 'x'));
