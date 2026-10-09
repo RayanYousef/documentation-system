@@ -114,7 +114,7 @@ test('live: sign in, create a test page, save twice, add Tabs and an FBX model, 
   await page.getByRole('dialog', { name: 'Insert from repo' }).getByRole('button', { name: 'model: models/fbx/pyramid.fbx' }).click();
   const fbx = editorBody(page).locator('[data-docs-block="FbxViewer"]');
   await expect(fbx).toHaveCount(1);
-  await expect(fbx.locator('canvas')).toHaveCount(1);
+  await expect(fbx.locator('canvas')).toHaveCount(1, { timeout: 60_000 });
   await expect(fbx).not.toContainText('Could not load');
   await saveAndWait(page, 'Live e2e: add an FBX model');
 

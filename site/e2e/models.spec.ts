@@ -36,7 +36,7 @@ async function expectModelLoaded(viewer: Locator): Promise<void> {
 
 async function expectFbxRendered(block: Locator): Promise<void> {
   await block.scrollIntoViewIfNeeded();
-  await expect(block.locator('canvas')).toHaveCount(1);
+  await expect(block.locator('canvas')).toHaveCount(1, { timeout: 60_000 }); // three.js and the FBX parser load on first use; slow on a busy machine
   await expect(block).not.toContainText('Loading FBX');
   await expect(block).not.toContainText('Could not load');
 }

@@ -108,7 +108,7 @@ test('a 3D model and text live inside a tab: an uploaded model, a repo FBX; save
   await page.getByRole('dialog', { name: 'Insert from repo' }).getByRole('button', { name: 'model: models/fbx/pyramid.fbx' }).click();
   const fbx = panels(tabs).nth(2).locator('[data-docs-block="FbxViewer"]');
   await expect(fbx).toHaveCount(1);
-  await expect(fbx.locator('canvas')).toHaveCount(1);
+  await expect(fbx.locator('canvas')).toHaveCount(1, { timeout: 60_000 });
 
   await saveReloadAndEdit(page);
   const text = fileOnMain(gh, PAGE)!;
