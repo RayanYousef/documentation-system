@@ -14,7 +14,7 @@ async function newParagraph(page: Page): Promise<void> {
 async function blockType(page: Page, name: string): Promise<void> {
   await toolbarButton(page, 'Block type').click();
   await page.getByRole('menuitemradio', { name }).click();
-  // The menu hands the focus back to the editor when it has closed; typing before that is lost.
+  // The menu has closed and the editor has the focus (menu-focus.spec.ts types without this wait).
   await expect(page.getByRole('menuitemradio', { name })).toHaveCount(0);
   await expect(body(page)).toBeFocused();
 }

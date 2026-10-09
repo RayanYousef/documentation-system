@@ -21,7 +21,7 @@ export function InsertComponentMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" onCloseAutoFocus={(e) => { e.preventDefault(); editor.tf.focus(); }}>
         {manifest.components.map((c) => (
-          <DropdownMenuItem key={c.name} onSelect={() => insertComponent(editor, manifest, c)}>
+          <DropdownMenuItem key={c.name} onSelect={() => { editor.tf.focus(); insertComponent(editor, manifest, c); }}>
             <code className="font-mono text-xs">{`<${c.name}${c.hasChildren ? '>' : ' />'}`}</code>
           </DropdownMenuItem>
         ))}

@@ -149,6 +149,9 @@ export function TurnIntoToolbarButton(props: DropdownMenuProps) {
         <ToolbarMenuGroup
           value={value}
           onValueChange={(type) => {
+            // Focus first, at the pick: the menu keeps the focus through its close animation, so keys typed
+            // right after the pick would otherwise go to the closing menu and be lost.
+            editor.tf.focus();
             setBlockType(editor, type);
           }}
           label="Turn into"

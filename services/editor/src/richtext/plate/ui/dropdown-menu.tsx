@@ -3,6 +3,24 @@ import { cn } from "@/richtext/plate/lib/utils"
 import { DropdownMenu as DropdownMenuPrimitive } from "radix-ui"
 import { CheckIcon, ChevronRightIcon } from "lucide-react"
 
+type ItemPointerHandlers = { onPointerMove?: React.PointerEventHandler<HTMLDivElement>; onPointerLeave?: React.PointerEventHandler<HTMLDivElement> }
+
+/**
+ * A menu stays in the page for its close animation after a pick. Radix moves the focus into the menu when the mouse
+ * moves over or off one of its items, so a mouse move during that animation took the focus back from the editor and
+ * the next keys typed were lost. While the menu is closing, those pointer events are cancelled (Radix skips its own
+ * handler for a cancelled event).
+ */
+function guardWhileClosing({ onPointerMove, onPointerLeave }: ItemPointerHandlers): ItemPointerHandlers {
+  const closing = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.currentTarget.closest('[role="menu"][data-state="closed"]')) e.preventDefault()
+  }
+  return {
+    onPointerMove: (e) => { onPointerMove?.(e); closing(e) },
+    onPointerLeave: (e) => { onPointerLeave?.(e); closing(e) },
+  }
+}
+
 function DropdownMenu({
   ...props
 }: React.ComponentProps<typeof DropdownMenuPrimitive.Root>) {
@@ -74,6 +92,7 @@ function DropdownMenuItem({
         className
       )}
       {...props}
+      {...guardWhileClosing(props)}
     />
   )
 }
@@ -97,6 +116,7 @@ function DropdownMenuCheckboxItem({
       )}
       checked={checked}
       {...props}
+      {...guardWhileClosing(props)}
     >
       <span
         className="pointer-events-none absolute right-2 flex items-center justify-center"
@@ -140,6 +160,7 @@ function DropdownMenuRadioItem({
         className
       )}
       {...props}
+      {...guardWhileClosing(props)}
     >
       <span
         className="pointer-events-none absolute right-2 flex items-center justify-center"
@@ -227,6 +248,7 @@ function DropdownMenuSubTrigger({
         className
       )}
       {...props}
+      {...guardWhileClosing(props)}
     >
       {children}
       <ChevronRightIcon className="ml-auto" />

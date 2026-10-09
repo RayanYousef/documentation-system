@@ -20,7 +20,7 @@ export function InsertAdmonitionMenu() {
       </DropdownMenuTrigger>
       <DropdownMenuContent align="start" onCloseAutoFocus={(e) => { e.preventDefault(); editor.tf.focus(); }}>
         {ADMONITION_VARIANTS.map((v) => (
-          <DropdownMenuItem key={v} onSelect={() => insertCallout(editor, v)}>
+          <DropdownMenuItem key={v} onSelect={() => { editor.tf.focus(); insertCallout(editor, v); }}>
             <code className="font-mono text-xs">:::{v}</code>
           </DropdownMenuItem>
         ))}

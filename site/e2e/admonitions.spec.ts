@@ -11,7 +11,7 @@ async function newParagraph(page: Page): Promise<void> {
   await page.keyboard.press('Enter');
 }
 
-/** Inserts an admonition from the toolbar menu and waits until the caret is back in the editor (typing earlier is lost). */
+/** Inserts an admonition from the toolbar menu and checks that the menu closed and the editor has the focus. */
 async function insertAdmonition(page: Page, variant: string): Promise<void> {
   await toolbarButton(page, 'Insert admonition').click();
   await page.getByRole('menuitem', { name: `:::${variant}` }).click();
