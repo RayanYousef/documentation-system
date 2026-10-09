@@ -17,6 +17,7 @@ export const COMMENTS_CSS = `
 .pc-pop:focus:not(:focus-visible) { outline: none; }
 .pc-pop--hover { z-index: 196; pointer-events: none; width: 300px; }
 .pc-selbtn { position: absolute; z-index: 194; }
+.pc-notice { position: fixed; z-index: 196; top: calc(var(--ifm-navbar-height) + 8px); right: 8px; }
 .pc-entry + .pc-entry { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--ifm-color-emphasis-200); }
 .pc-meta { display: flex; gap: 0.4rem; align-items: baseline; flex-wrap: wrap; font-size: 0.78rem; color: var(--ifm-color-emphasis-700); }
 .pc-meta strong { color: var(--ifm-font-color-base); font-size: 0.85rem; }

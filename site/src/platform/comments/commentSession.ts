@@ -29,6 +29,26 @@ export function commentEditorFor(access: EditAccess, config: PlatformConfig, ses
   return { identity, store };
 }
 
+/**
+ * The editor of the session saved on this device, never asking to sign in: null when there is no session or
+ * it cannot be checked or used (the next comment action asks, through obtainCommentEditor).
+ */
+export async function currentCommentEditor(deps: CommentSessionDeps): Promise<CommentEditor | null> {
+  try {
+    const access = await resolveEditAccess(deps);
+    const stored = access.sessionStore.load();
+    if (!stored) return null;
+    let identity = verifiedIdentity(stored.token);
+    if (!identity) {
+      identity = await access.auth.verify(stored);
+      rememberVerified(stored.token, identity);
+    }
+    return commentEditorFor(access, deps.config, stored, identity, deps.fetch);
+  } catch {
+    return null;
+  }
+}
+
 /** The verified editor (asking to sign in when there is no working session), or null when cancelled. */
 export async function obtainCommentEditor(deps: CommentSessionDeps): Promise<CommentEditor | null> {
   const access = await resolveEditAccess(deps);

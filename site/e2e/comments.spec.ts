@@ -5,7 +5,7 @@ import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Page } from '@playwright/test';
 import {
-  test, expect, button, commitMessages, commentsButton, editButton, fileOnMain, highlightBoxes, highlighted, pageContent,
+  test, expect, button, commitMessages, commentsButton, deleteOnMain, editButton, fileOnMain, highlightBoxes, highlighted, pageContent,
   seedComments, selectText, signInThroughEdit, signInWithToken, textPoint, body, save, caretAfter, REPO_ROOT, type ThreadFixture,
 } from './support';
 
@@ -134,6 +134,95 @@ test('reply and resolve (the highlight goes, it is listed under Resolved), reope
     'Delete a comment on platform/comments.md', 'Resolve a comment on platform/comments.md', 'Reopen a comment on platform/comments.md',
     'Resolve a comment on platform/comments.md', 'Reply to a comment on platform/comments.md',
   ]);
+});
+
+// The reported bug: comment at commit A, then resolve and delete at B and C; the deploy of A finished after
+// them, so the site served a NEWER build whose published file still had the comment OPEN. The tab dropped its
+// pending copy (new build) and showed the comment open, with a tab badge and Reply / Resolve that then failed.
+test('resolve or delete, then reload while the published file is still the old one: the page shows the store\'s state, not the stale file', async ({ page, gh }) => {
+  await seedComments(page, gh, PAGE, [{ id: 'c1', body: 'This section here is horrible', exact: 'never call the GitHub API', tab: API }]);
+  await open(page);
+  await signInThroughEdit(page);
+  await expect(tabLabel(page, 'API')).toHaveAttribute('data-comment-count', '1');
+
+  // Resolve from the panel. The published file (still served by the route) keeps it open.
+  await commentsButton(page).click();
+  await panel(page).getByTestId('comment-item').getByRole('button').click();
+  await card(page).getByRole('button', { name: 'Resolve' }).click();
+  await expect(card(page)).toHaveCount(0);
+  await expect.poll(() => stored(gh)!.threads[0]!.status).toBe('resolved');
+
+  // A build that is not the resolve's commit is served and the tab lost its copy: the page must not fall back.
+  const reloadWithoutPendingCopy = async () => {
+    await page.evaluate(() => sessionStorage.removeItem('docs-platform.pending-comments'));
+    await page.reload();
+    await expect(commentsButton(page)).toBeVisible();
+  };
+  await reloadWithoutPendingCopy();
+  await expect(commentsButton(page)).toHaveAccessibleName('Comments');
+  await expect.poll(() => highlighted(page)).toEqual([]);
+  await expect(tabLabel(page, 'API')).not.toHaveAttribute('data-comment-count', /.*/);
+  await commentsButton(page).click();
+  await expect(panel(page).getByText('No open comments.')).toBeVisible();
+  await panel(page).getByRole('tab', { name: /^Resolved/ }).click();
+  await expect(panel(page).getByTestId('resolved-item')).toContainText('This section here is horrible');
+
+  // Delete it for good, and reload again: gone, not back as open.
+  await panel(page).getByTestId('resolved-item').getByRole('button', { name: 'Delete' }).click();
+  await panel(page).getByRole('alertdialog', { name: 'Delete this comment for good?' }).getByRole('button', { name: 'Delete for good' }).click();
+  await expect.poll(() => fileOnMain(gh, FILE)).toBeNull();
+  await reloadWithoutPendingCopy();
+  await expect(commentsButton(page)).toHaveAccessibleName('Comments');
+  await expect.poll(() => highlighted(page)).toEqual([]);
+  await commentsButton(page).click();
+  await panel(page).getByRole('tab', { name: /^Resolved/ }).click();
+  await expect(panel(page).getByText('No resolved comments.')).toBeVisible();
+
+  // The same tab with its pending copy (no API needed for that) shows the same after a reload.
+  await page.reload();
+  await expect(commentsButton(page)).toHaveAccessibleName('Comments');
+  await expect.poll(() => highlighted(page)).toEqual([]);
+});
+
+test('replying to a comment someone else deleted meanwhile: the page updates to the latest comments and says why', async ({ page, gh }) => {
+  await seedComments(page, gh, PAGE, [{ id: 'c1', body: 'This section here is horrible', exact: 'yellow highlight', tab: HOW_TO_USE }]);
+  await open(page);
+  await signInThroughEdit(page);
+  await expect.poll(() => highlighted(page)).toEqual(['yellow highlight']);
+  await deleteOnMain(gh, FILE, 'Delete a comment on platform/comments.md');
+
+  await openCard(page, 'yellow highlight');
+  await card(page).getByLabel('Reply').fill('I agree.');
+  await card(page).getByRole('button', { name: 'Reply', exact: true }).click();
+  const notice = page.getByTestId('comments-notice');
+  await expect(notice).toContainText('This comment no longer exists');
+  await expect(card(page)).toHaveCount(0); // no stale card with Reply and Resolve
+  await expect.poll(() => highlighted(page)).toEqual([]);
+  await expect(commentsButton(page)).toHaveAccessibleName('Comments');
+  expect(fileOnMain(gh, FILE)).toBeNull(); // nothing was written back
+  await notice.getByRole('button', { name: 'Close message' }).click();
+  await expect(notice).toHaveCount(0);
+});
+
+test('a reader\'s browser asks the server for the published comments every time (no stale cached copy)', async ({ page, gh: _gh }) => {
+  // Playwright turns the HTTP cache off while it routes requests, so the test records how the page asks for the
+  // file: fetch(url, { cache: 'no-cache' }) makes a real browser revalidate with the server every time.
+  await page.addInitScript(() => {
+    const calls: { url: string; cache: string | null }[] = [];
+    (window as unknown as { __commentFetches: typeof calls }).__commentFetches = calls;
+    const original = window.fetch.bind(window);
+    window.fetch = (input, init) => {
+      const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+      if (url.includes('/platform/comments/platform/comments.json')) calls.push({ url, cache: init?.cache ?? null });
+      return original(input, init);
+    };
+  });
+  await open(page);
+  const fetches = () => page.evaluate(() => (window as unknown as { __commentFetches: { url: string; cache: string | null }[] }).__commentFetches);
+  await expect.poll(async () => (await fetches()).length).toBeGreaterThan(0);
+  const [first] = await fetches();
+  expect(first!.url).toContain('?v=e2e-build-1');
+  expect(first!.cache).toBe('no-cache');
 });
 
 test('a comment in a non-first tab remembers the tab, shows with it, and the tab label counts it', async ({ page, gh }) => {

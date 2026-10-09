@@ -23,9 +23,15 @@ export interface CommentsHost {
    * sign-in dialog when needed. Null when the person cancelled.
    */
   signIn(): Promise<CommentEditor | null>;
+  /**
+   * The editor signed in on this device, never asking (no dialog): null when nobody is signed in or the saved
+   * session cannot be used. The page reads the current comments from its store, so an editor never sees the
+   * published file while a deploy is still pending. Readers who are not signed in never call it.
+   */
+  signedInEditor(): Promise<CommentEditor | null>;
   /** Keeps the author's changes until the deploy shows them; null where saves show at once (dev server). */
   pending: PendingComments | null;
-  /** Commit the served site was built from (pending changes expire when it changes). */
+  /** Commit the served site was built from (a pending change ends when the site is built from its commit). */
   buildSha: string;
   /** Shows the open-comment count on each tab label (the site's Tabs read it). */
   setTabCounts(counts: TabCounts): void;
