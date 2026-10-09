@@ -272,7 +272,11 @@
       "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/devContentMiddleware.mjs",
       "https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.config.ts",
-      "https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/support.ts"
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/support.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/github/apiErrors.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.dev.config.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.live.config.ts",
+      "https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/live/live-save.spec.ts"
     ]
   },
   {

@@ -7,6 +7,10 @@ Newest first. Each entry names the page that changed and who changed it.
 
 ## 2026-10-09
 
+* **Update**: [Editor service](/platform/editor.md) - added "Create your token" (the exact fine-grained token settings), the plain-language save errors, the end-to-end coverage (every editor feature, save errors, repeated saves, dev-mode saving, the live test), the upload fallback after a reload and two new known issues. (by Rayan Yousef)
+* **Update**: [Platform decisions](/platform/decisions.md) - added decisions 29 and 30 (the sign-in write check and plain save errors; failed saves keep the edits and undeployed uploads are read from GitHub). (by Rayan Yousef)
+* **Update**: [Auth service](/platform/auth.md) - login now proves the token can write with one unreferenced blob (`CANNOT_WRITE`). (by Rayan Yousef)
+* **Update**: [Contracts](/platform/contracts.md) - `AuthErrorCode` gained `CANNOT_WRITE`. (by Rayan Yousef)
 * **Update**: [Editor service](/platform/editor.md) - rewrote the page for in-place editing: Edit on every Latest page, sign-in, Visual and Raw (CodeMirror), page settings and actions, saving to GitHub or to disk on the dev server, pending previews, the site composition root, the isolated stylesheet and the new tests. (by Rayan Yousef)
 * **Update**: [Platform decisions](/platform/decisions.md) - added decisions 24 to 28 (in-place editing replaces the standalone app, dev disk endpoint, injected stylesheet, no editing of frozen or generated pages, expected-parent commits with retry) and updated decisions 6, 16 and 17. (by Rayan Yousef)
 * **Update**: [Architecture](/platform/architecture.md) - new composition diagram, lint table and save flow for in-place editing; raw-first asset fetch. (by Rayan Yousef)

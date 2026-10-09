@@ -41,6 +41,10 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/devContentMiddleware.mjs
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.config.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/support.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/github/apiErrors.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.dev.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.live.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/live/live-save.spec.ts
 sidebar_position: 6
 ---
 
@@ -86,7 +90,7 @@ Every save goes through `ContentBackend.writePage` with the etag the page was lo
 - After a live save the page shows the saved version, read-only, with "Saved as abc1234 (view commit). The public site updates after the deploy finishes". The tab keeps that copy (`pendingEdits`, sessionStorage) across reloads until the site is served from a newer build (`customFields.buildSha`, set from `PLATFORM_BUILD_SHA` in the deploy workflow) or 15 minutes pass, which covers the GitHub Pages cache.
 - **Dev server** (`local-disk` mode, `npm start`): the save goes to the dev server's own endpoint and the files land in the working tree with no commit; Docusaurus hot-reloads the page. The banner says "Saved to disk"; commit with your usual git flow. Publishing is not offered in this mode. `PLATFORM_EDIT_BACKEND=github npm start` uses the live path instead.
 - A folder intro (`index.md`) is edited like any page; its generated okf block is shown rendered and read-only, and a save that would change it is refused.
-- Images and 3D models uploaded from the editor are committed at once (`uploads/`, `models/`, `models/fbx/`) and shown from the browser's copy until the site serves them, so a new viewer renders immediately.
+- Images and 3D models uploaded from the editor are committed at once (`uploads/`, `models/`, `models/fbx/`) and shown from the browser's copy until the site serves them, so a new viewer renders immediately. After a reload that copy is gone, so while the site still answers 404 for the file the image or viewer reads it from the deploy branch on GitHub (`RichTextServices.getSiteAsset`).
 
 ## Composition
 
@@ -143,8 +147,16 @@ Vitest (`npm test`) covers the editor library: composing the saved file, the edi
 
 The Playwright suite runs against the built site (`npm run e2e -w @platform/site`, which builds and serves it); GitHub is mocked in the browser by `site/e2e/support.ts` (a `FakeGitHub` seeded from this repository), and every test fails on a console error. It covers the Edit entry points and that readers download no editor code or styles before Edit, token sign-in, saving and the pending preview, the unsaved-changes guards, Raw mode, conflicts and the branch-moved retry, folder intros, page actions, theme isolation and the sticky toolbar, existing and newly added blocks (uploaded and repo 3D models, the component and "/" menus, tabs with editable props), and that every 3D viewer on the doc pages renders.
 
+### Save errors and end-to-end coverage
+
+`GitDataClient` (`services/content/src/github/apiErrors.ts`) turns GitHub's refusals into messages a person can act on and keeps the reason in `ContentError.details.reason` (`token-expired`, `cannot-write`, `cannot-read`, `rate-limited` with `retryAfterSeconds`, `branch-protected`). A failed save leaves the page in the editor with its edits, so the next **Save** retries.
+
+The Playwright specs insert each editor feature, save, reload, open the editor again and check both the page and the saved MDX read back from the fake `main`: formatting, links, code blocks, images, tables, admonitions, Tabs, 3D models, Raw round trips (Visual to Raw and back leaves every character alone), repeated saves, and the save errors above (`FakeGitHub` in `support.ts` has read-only tokens, revoked tokens, a rate limit, a protected branch and a dead connection). `npm run e2e -w @platform/site` runs the built-site suite and then `playwright.dev.config.ts` (dev-mode saving on `npm start`: it creates a temporary page, checks that the file is written and no commit is made, and restores `site/docs` afterwards). `npm run e2e:live -w @platform/site` is for a person with a token: it needs `GITHUB_TOKEN` in the terminal (never a file; traces are off), builds the site, signs in against the real GitHub, and on one temporary page saves, saves again within a minute, adds Tabs and an FBX model, then deletes the page. Each step is a real commit to `main`. Without the token it stops with a short message.
+
 ## Known minor issues
 
+- The visual editor has no buttons to remove or reorder tabs yet (use Raw); renaming a tab is the tab's props dialog (double-click it). Only one tab of a group can be the default: ticking default on a tab clears it on the others.
+- After a menu choice (block type, admonition) the editor takes the focus back a moment after the menu closes; characters typed in that instant are lost.
 - While editing, code blocks have no title bar or copy button of the page's own code blocks, and headings have no anchor links.
 - Tables keep the editor's own table chrome (cell selection, borders) with the page's cell styling.
 - After creating a page on the live site there is no page to open until the deploy finishes; the status line says so.

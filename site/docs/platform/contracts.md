@@ -24,7 +24,7 @@ sidebar_position: 2
 - `Session { provider, token, createdAt }` (`createdAt` is ISO 8601).
 - `Credentials` is a discriminated union on `kind`: `GithubTokenCredentials { kind: 'github-token', token }` and `MockCredentials { kind: 'mock', name, role }`. A new provider adds a new member here.
 - `AuthProvider { readonly id; login(credentials): Promise<Session>; verify(session): Promise<Identity> }`.
-- `AuthError(code, message)` with `AuthErrorCode = 'INVALID_CREDENTIALS' | 'NOT_COLLABORATOR' | 'UNSUPPORTED_CREDENTIALS' | 'NETWORK'`.
+- `AuthError(code, message)` with `AuthErrorCode = 'INVALID_CREDENTIALS' | 'NOT_COLLABORATOR' | 'UNSUPPORTED_CREDENTIALS' | 'CANNOT_WRITE' | 'NETWORK'`.
 
 ## content.ts
 
