@@ -25,12 +25,16 @@ export class GitDataClient {
     this.root = opts.apiRoot ?? 'https://api.github.com';
   }
 
-  private async api<T>(method: string, path: string, body?: unknown): Promise<T> {
+  /**
+   * `cache`: the fetch cache mode. GitHub sends `Cache-Control: max-age=60` on GETs and browsers honour it,
+   * so reads of something that moves (a branch ref) pass 'no-store'; reads by sha may come from the cache.
+   */
+  private async api<T>(method: string, path: string, body?: unknown, cache?: RequestCache): Promise<T> {
     const headers: Record<string, string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
     if (this.opts.token) headers['Authorization'] = `Bearer ${this.opts.token}`;
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     let res: Response;
-    try { res = await this.f(`${this.root}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }); }
+    try { res = await this.f(`${this.root}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), ...(cache ? { cache } : {}) }); }
     catch (e) { throw new ContentError('NETWORK', `GitHub unreachable: ${(e as Error).message}`); }
     if (res.status === 404) throw new ContentError('NOT_FOUND', `GitHub: not found ${path}`);
     if (res.status === 401 || res.status === 403) throw new ContentError('FORBIDDEN', `GitHub refused ${method} ${path} (HTTP ${res.status})`);
@@ -42,7 +46,9 @@ export class GitDataClient {
   private repoPath(p: string): string { return `/repos/${this.opts.owner}/${this.opts.repo}${p}`; }
 
   async getHead(branch: string): Promise<Head> {
-    const ref = await this.api<{ object: { sha: string } }>('GET', this.repoPath(`/git/ref/heads/${encodeURIComponent(branch)}`));
+    // Never from the browser's HTTP cache: a ref read up to a minute old would load a page as it was before
+    // the last save, and make every retry of a save compute on the same stale head.
+    const ref = await this.api<{ object: { sha: string } }>('GET', this.repoPath(`/git/ref/heads/${encodeURIComponent(branch)}`), undefined, 'no-store');
     const commit = await this.api<{ tree: { sha: string } }>('GET', this.repoPath(`/git/commits/${ref.object.sha}`));
     return { commitSha: ref.object.sha, treeSha: commit.tree.sha };
   }
