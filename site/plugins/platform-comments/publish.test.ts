@@ -3,6 +3,7 @@ import { mkdtemp, mkdir, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { listDocPages, publishComments } from './publish.mjs';
+import platformComments from './index.mjs';
 
 let dir = '';
 afterEach(async () => { if (dir) await rm(dir, { recursive: true, force: true }); });
@@ -38,5 +39,17 @@ describe('publishing comments into the build', () => {
     expect(await read('index.json')).toEqual({ schema: 1, page: 'index.md', threads: [] });
     expect(warnings).toHaveLength(1);
     expect(warnings[0]).toContain('not JSON');
+  });
+});
+
+describe('dev server route', () => {
+  it('passes requests with a malformed %-escape on to the next middleware instead of throwing', async () => {
+    const s = await site();
+    const plugin = platformComments({ siteDir: path.dirname(s.docsDir), baseUrl: '/docs/' } as never, { enabled: true });
+    const middlewares: { middleware: (req: unknown, res: unknown, next: () => void) => void }[] = [];
+    (plugin.configureWebpack as (c: unknown, isServer: boolean) => { devServer: { setupMiddlewares(m: unknown[]): unknown } })({}, false).devServer.setupMiddlewares(middlewares);
+    let passed = 0;
+    expect(() => middlewares[0]!.middleware({ method: 'GET', url: '/docs/platform/comments/%E0%A4%A.json' }, {}, () => { passed++; })).not.toThrow();
+    expect(passed).toBe(1);
   });
 });
