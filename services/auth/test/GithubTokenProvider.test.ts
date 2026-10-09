@@ -60,6 +60,27 @@ describe('GithubTokenProvider specifics', () => {
       const revoked: typeof fetch = async (input, init) => init?.method === 'POST' ? new Response('{}', { status: 401 }) : fakeGithubFetch(users)(input, init);
       await expect(new GithubTokenProvider({ owner: 'o', repo: 'r', fetch: revoked }).login({ kind: 'github-token', token: 'ghp_writer' })).rejects.toMatchObject({ code: 'INVALID_CREDENTIALS' });
     });
+    it('a rate-limited probe (403 with rate-limit headers or text) is not "cannot write"; it says to wait', async () => {
+      const limits: Record<string, string>[] = [{ 'retry-after': '60' }, { 'x-ratelimit-remaining': '0', 'x-ratelimit-reset': String(Math.floor(Date.now() / 1000) + 600) }];
+      for (const headers of limits) {
+        const limited: typeof fetch = async (input, init) => init?.method === 'POST' ? new Response(JSON.stringify({ message: 'API rate limit exceeded' }), { status: 403, headers }) : fakeGithubFetch(users)(input, init);
+        const e = await new GithubTokenProvider({ owner: 'o', repo: 'r', fetch: limited }).login({ kind: 'github-token', token: 'ghp_writer' }).catch((x: unknown) => x);
+        expect(e, JSON.stringify(headers)).toMatchObject({ name: 'AuthError', code: 'NETWORK' });
+        expect((e as Error).message).toMatch(/rate limit/i);
+        expect((e as Error).message).not.toMatch(/cannot write/);
+      }
+      const secondary: typeof fetch = async (input, init) => init?.method === 'POST' ? new Response(JSON.stringify({ message: 'You have exceeded a secondary rate limit. Please wait a few minutes before you try again.' }), { status: 403 }) : fakeGithubFetch(users)(input, init);
+      await expect(new GithubTokenProvider({ owner: 'o', repo: 'r', fetch: secondary }).login({ kind: 'github-token', token: 'ghp_writer' })).rejects.toMatchObject({ code: 'NETWORK' });
+    });
+    it('a rate-limited verify of a remembered session is NETWORK (the token is kept), not INVALID_CREDENTIALS', async () => {
+      const limited: typeof fetch = async () => new Response(JSON.stringify({ message: 'API rate limit exceeded for user ID 1.' }), { status: 403, headers: { 'x-ratelimit-remaining': '0' } });
+      const p = new GithubTokenProvider({ owner: 'o', repo: 'r', fetch: limited });
+      await expect(p.verify({ provider: 'github-token', token: 'ghp_writer', createdAt: new Date().toISOString() })).rejects.toMatchObject({ code: 'NETWORK' });
+    });
+    it('a plain 403 on the probe (no rate-limit sign) is still "cannot write"', async () => {
+      const plain: typeof fetch = async (input, init) => init?.method === 'POST' ? new Response(JSON.stringify({ message: 'Resource not accessible by personal access token' }), { status: 403 }) : fakeGithubFetch(users)(input, init);
+      await expect(new GithubTokenProvider({ owner: 'o', repo: 'r', fetch: plain }).login({ kind: 'github-token', token: 'ghp_writer' })).rejects.toMatchObject({ code: 'CANNOT_WRITE' });
+    });
     it('verify of a remembered session does not write', async () => {
       let posts = 0;
       const spy: typeof fetch = async (input, init) => { if (init?.method === 'POST') posts++; return fakeGithubFetch(users)(input, init); };

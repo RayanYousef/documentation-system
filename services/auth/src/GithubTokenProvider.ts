@@ -3,6 +3,17 @@ import { AuthError, type AuthProvider, type Credentials, type Identity, type Ses
 export interface GithubTokenProviderOptions { owner: string; repo: string; fetch?: typeof fetch; apiRoot?: string }
 
 /**
+ * A GitHub rate limit (429, or 403 with rate-limit headers or text) is a NETWORK error: the token may be fine, so it
+ * is neither "cannot write" nor a bad token (a remembered session is kept for the next try).
+ */
+async function throwIfRateLimited(res: Response): Promise<void> {
+  if (res.status !== 403 && res.status !== 429) return;
+  const message = await res.clone().json().then((j: { message?: unknown }) => typeof j.message === 'string' ? j.message : '', () => '');
+  const limited = res.status === 429 || res.headers.get('x-ratelimit-remaining') === '0' || res.headers.get('retry-after') !== null || /rate limit/i.test(message);
+  if (limited) throw new AuthError('NETWORK', 'GitHub is limiting how fast this token can make requests (rate limit). Wait a few minutes, then try again.');
+}
+
+/**
  * Fine-grained PAT authentication. A session is valid only when the token can read the
  * repository AND has push permission; the identity comes from GET /user. `login` also proves the token can
  * write (see `probeWrite`), because for a fine-grained token `permissions.push` shows the user's role, not
@@ -52,6 +63,7 @@ export class GithubTokenProvider implements AuthProvider {
       throw new AuthError('NETWORK', `GitHub is unreachable: ${(e as Error).message}`);
     }
     if (res.status === 401) throw new AuthError('INVALID_CREDENTIALS', `GitHub rejected the token (HTTP 401). Check the token and its expiry.`);
+    await throwIfRateLimited(res);
     if (res.status === 403 || res.status === 404) throw new AuthError('CANNOT_WRITE', 'This token can read the repo but cannot write to it. Give it Repository permissions → Contents: Read and write.');
     if (!res.ok) throw new AuthError('NETWORK', `GitHub API ${res.status} for POST ${path}`);
   }
@@ -63,6 +75,7 @@ export class GithubTokenProvider implements AuthProvider {
     } catch (e) {
       throw new AuthError('NETWORK', `GitHub is unreachable: ${(e as Error).message}`);
     }
+    await throwIfRateLimited(res);
     if (res.status === 401 || res.status === 403 || res.status === 404) {
       throw new AuthError('INVALID_CREDENTIALS', `GitHub rejected the token for ${path} (HTTP ${res.status}). Check the token, its expiry and that it is scoped to ${this.opts.owner}/${this.opts.repo}.`);
     }
