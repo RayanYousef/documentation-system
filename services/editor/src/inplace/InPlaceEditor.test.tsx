@@ -164,6 +164,18 @@ describe('InPlaceEditor: sign-in', () => {
     expect(onExit).toHaveBeenCalledWith({});
   });
 
+  it('a token that cannot write is refused with the fix and a link to "Create your token"', async () => {
+    const message = 'This token can read the repo but cannot write to it. Give it Repository permissions → Contents: Read and write.';
+    const { host } = makeHost(fakeBackend({ 'systems/inventory.md': PAGE }), {}, { id: 'github-token', login: vi.fn(async () => { throw new AuthError('CANNOT_WRITE', message); }) });
+    await mount(host, inventory);
+    await type(byLabel('GitHub token'), 'github_pat_x');
+    await click(button('Sign in'));
+    const alert = q('[role="alert"]')!;
+    expect(alert.textContent).toContain(message);
+    const link = [...document.body.querySelectorAll('a')].find((a) => a.textContent === 'Create your token')!;
+    expect(link.getAttribute('href')).toBe('/b/platform/editor#create-your-token');
+  });
+
   it('Cancel in the sign-in dialog leaves edit mode', async () => {
     const { host } = makeHost(fakeBackend({ 'systems/inventory.md': PAGE }));
     const { onExit } = await mount(host, inventory);

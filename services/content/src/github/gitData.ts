@@ -1,4 +1,5 @@
 import { ContentError, type Author } from '@platform/contracts';
+import { refusalFor } from './apiErrors.js';
 
 export interface GitDataClientOptions { owner: string; repo: string; token: string | null; fetch?: typeof fetch; apiRoot?: string }
 export interface TreeEntry { path: string; sha: string; type: 'blob' | 'tree'; size?: number }
@@ -37,7 +38,11 @@ export class GitDataClient {
     try { res = await this.f(`${this.root}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), ...(cache ? { cache } : {}) }); }
     catch (e) { throw new ContentError('NETWORK', `GitHub unreachable: ${(e as Error).message}`); }
     if (res.status === 404) throw new ContentError('NOT_FOUND', `GitHub: not found ${path}`);
-    if (res.status === 401 || res.status === 403) throw new ContentError('FORBIDDEN', `GitHub refused ${method} ${path} (HTTP ${res.status})`);
+    if (res.status === 401 || res.status === 403 || res.status === 429 || res.status === 422) {
+      const message = await res.clone().json().then((j: { message?: unknown }) => typeof j.message === 'string' ? j.message : '', () => '');
+      const refusal = refusalFor({ status: res.status, method, path, message, header: (n) => res.headers.get(n) }, this.opts.owner, this.opts.repo);
+      if (refusal) throw refusal;
+    }
     if (res.status === 409 || res.status === 422) throw new ContentError('CONFLICT', `GitHub rejected ${method} ${path} (HTTP ${res.status}); the branch may have moved`);
     if (!res.ok) throw new ContentError('NETWORK', `GitHub API ${res.status} for ${method} ${path}`);
     return (await res.json()) as T;

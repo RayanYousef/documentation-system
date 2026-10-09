@@ -14,6 +14,8 @@ export interface SignInPanel {
   toCredentials(value: string): Credentials;
   /** Text of the remember-me warning (what is stored on this device). */
   rememberWarning: string;
+  /** A link shown under a sign-in error: where to read how to get a working credential. */
+  help?(host: Pick<InPlaceHost, 'config'>): { label: string; href: string };
 }
 
 export const SIGN_IN_PANELS: Readonly<Record<string, SignInPanel>> = {
@@ -29,6 +31,7 @@ export const SIGN_IN_PANELS: Readonly<Record<string, SignInPanel>> = {
     placeholder: 'github_pat_...',
     secret: true,
     toCredentials: (token) => ({ kind: 'github-token', token }),
+    help: ({ config }) => ({ label: 'Create your token', href: `${config.baseUrl}platform/editor#create-your-token` }),
     rememberWarning: 'Anyone using this browser profile can read the saved token and commit as you. Do not keep it on a shared machine; use Sign out in the page actions menu when done.',
   },
   mock: {
