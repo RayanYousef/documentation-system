@@ -279,6 +279,16 @@ test('a reader who is not signed in sees comments and threads but cannot add, re
   expect(commitMessages(gh).length).toBe(commitsBefore);
 });
 
+test('moving to another page in the site shows that page\'s comments only', async ({ page, gh }) => {
+  await seedComments(page, gh, PAGE, [{ id: 'c1', body: 'Here.', exact: 'yellow highlight', tab: HOW_TO_USE }]);
+  await open(page);
+  await expect.poll(() => highlighted(page)).toEqual(['yellow highlight']);
+  await page.locator('nav.menu').getByRole('link', { name: 'Editor service', exact: true }).click(); // client-side navigation
+  await expect(page).toHaveURL(/platform\/editor$/);
+  await expect(commentsButton(page)).toHaveAccessibleName('Comments');
+  await expect.poll(() => highlighted(page)).toEqual([]);
+});
+
 test('comments are not offered on frozen versions', async ({ page, gh: _gh }) => {
   await page.goto('1.0.0/systems/');
   await expect(page.locator('article h1').first()).toBeVisible();

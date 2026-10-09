@@ -62,7 +62,8 @@ export default function ContentWrapper(props: Props) {
   if (!isBrowser || !page) return <Content {...props} />;
 
   // Not while editing: the highlights go away with the layer and come back after the save.
-  const comments = commentsOn && view.kind !== 'edit' ? <Suspense fallback={null}><CommentsMount page={page} /></Suspense> : null;
+  // Keyed by page: moving to another doc starts with that page's comments only (no card or panel carried over).
+  const comments = commentsOn && view.kind !== 'edit' ? <Suspense fallback={null}><CommentsMount key={page.path} page={page} /></Suspense> : null;
 
   if (view.kind === 'edit') {
     return (
