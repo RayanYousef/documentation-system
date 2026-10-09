@@ -11,6 +11,11 @@ if (!process.env.GITHUB_TOKEN?.trim()) {
   process.exit(1);
 }
 
+// On a failure Playwright writes test-results/**/error-context.md with an aria snapshot of the page, and that snapshot
+// lists the value of every text box: a failure while the sign-in dialog is open would write the token to disk.
+// This turns the page snapshot off (set here, so the test workers inherit it).
+process.env.PLAYWRIGHT_NO_COPY_PROMPT = '1';
+
 const PORT = 3212;
 // One page name per run (the config is loaded before the workers start, so they inherit it).
 process.env.E2E_LIVE_PAGE ??= `e2e-live-${new Date().toISOString().replace(/\D/g, '').slice(0, 14)}`;

@@ -22,13 +22,27 @@ function scrub(e: unknown): Error {
   return new Error(message);
 }
 
+/**
+ * Types the token and signs in. The token box is emptied before this returns, success or not: a failed `expect`
+ * writes an aria snapshot of the page into test-results/**\/error-context.md, and that snapshot lists the value of
+ * every text box. So no assertion may run while the token is in the box; this only waits for the outcome.
+ */
 async function signIn(page: Page): Promise<void> {
+  const dialog = page.getByRole('dialog', { name: 'Sign in to edit' });
+  const input = dialog.getByLabel('GitHub token');
   try {
-    const input = page.getByLabel('GitHub token');
     await input.focus();
     await page.keyboard.insertText(TOKEN); // not fill(): the call log of a failed fill would repeat the value
     await button(page, 'Sign in').click();
-  } catch (e) { throw scrub(e); }
+    await Promise.race([
+      editorBody(page).waitFor({ timeout: 60_000 }),
+      dialog.getByRole('alert').waitFor({ timeout: 60_000 }),
+    ]).catch(() => { /* the assertions after the box is empty report what went wrong */ });
+  } catch (e) {
+    throw scrub(e);
+  } finally {
+    if (await input.count().catch(() => 0)) await input.fill('').catch(() => { /* the page is gone */ });
+  }
 }
 
 /** Opens the editor on a page; signs in when the dialog asks (the first time). */
