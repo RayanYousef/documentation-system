@@ -39,6 +39,25 @@ test('typing right after a block type pick lands in the new heading', async ({ p
   expect(fileOnMain(gh, PAGE)).toMatch(/^### Typed while the mouse moves$/m);
 });
 
+test('a settings popover opened right after a component menu pick stays open; its props are saved', async ({ page, gh }) => {
+  await openEditor(page, 'getting-started');
+  await newParagraph(page);
+  await toolbarButton(page, 'Insert component').click();
+  await page.getByRole('menuitem', { name: 'FbxViewer' }).click();
+  // At once, while the menu is still closing: the menu must not pull the focus back to the editor (that closes the popover).
+  await body(page).locator('[data-docs-block="FbxViewer"]').getByRole('button', { name: 'FbxViewer settings' }).click();
+  const repo = page.getByLabel('FbxViewer repo');
+  await expect(repo).toBeVisible();
+  await page.waitForTimeout(400); // longer than the menu's close animation
+  await expect(repo).toBeVisible();
+  await repo.fill('RayanYousef/documentation-system');
+  await page.getByLabel('FbxViewer path').fill('examples/unity-project/Assets/Models/Chest.fbx');
+  await page.keyboard.press('Escape');
+
+  await saveReloadAndEdit(page);
+  expect(fileOnMain(gh, PAGE)).toMatch(/<FbxViewer[^>]*repo="RayanYousef\/documentation-system"[^>]*path="examples\/unity-project\/Assets\/Models\/Chest\.fbx"[^>]*\/>/);
+});
+
 test('typing right after an admonition pick lands in the admonition', async ({ page, gh }) => {
   await openEditor(page, 'getting-started');
   await newParagraph(page);
