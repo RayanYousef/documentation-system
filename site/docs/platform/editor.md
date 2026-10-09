@@ -1,71 +1,89 @@
 ---
 title: Editor service
-description: "Describes the in-browser editor (Vite + React, page body in Plate behind the RichTextEditor interface): how it is composed from platform.config.js, what each screen, toolbar and dialog does, how Markdown is imported and written back, when a page opens in Raw mode, how frontmatter edits preserve YAML, how the Tailwind and arcade theme is applied, and how it is built, tested and deployed under /editor/; open it when changing editor behaviour or debugging a save from the UI."
+description: "Describes in-place editing of the docs pages (Edit button, lazily loaded editor library, sign-in, Visual and Raw modes, page settings, page actions, saving to GitHub or to disk on the dev server, pending previews), how the editor library is composed by the site, how Markdown is imported and written back, how the page look and the isolated stylesheet work, and how it is tested; open it when changing editing behaviour or debugging a save."
 type: system
-tags: [platform, editor, vite, react, plate, markdown, tailwind, shadcn, frontmatter, theme]
+tags: [platform, editor, inplace, react, plate, codemirror, markdown, tailwind, frontmatter, theme]
 resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor
 sources:
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/App.tsx
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/BodyEditor.tsx
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/FrontmatterForm.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/host.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/index.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/InPlaceEditor.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/editSessionReducer.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/composeDocument.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/signInPanels.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/pendingEdits.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/SavedPreview.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/folderIntroGuard.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/frontmatter/yamlDoc.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/componentsManifest.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/rawtext/RawTextEditor.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/RichTextEditor.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/index.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/skin.tsx
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/createRichTextServices.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/localAssets.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/assets.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/PlateDocument.tsx
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/docsMarkdown.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/supportedSyntax.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/markdown/componentRules.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/nodes/docsNodesKit.tsx
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/kits/editor-kit.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/kits/page-look-kit.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/kits/page-editor-kit.tsx
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/toolbar/FixedToolbarButtons.tsx
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/slash/SlashInputElement.tsx
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/session/SessionStore.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/index.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/tokens.css
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme/tailwind.css
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/theme-inpage/inplace.pcss
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/components.json
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vite.config.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/playwright.config.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/body.spec.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/formatting.spec.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/components.spec.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/e2e/theme.spec.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/mountInPlaceEditor.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/DocItem/Content/index.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/devContentMiddleware.mjs
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/support.ts
 sidebar_position: 6
 ---
 
-`@platform/editor` is a standalone React application built with Vite. It talks to the platform only through `AuthProvider` and `ContentBackend`; the concrete classes are chosen in one file. The page body is edited in [Plate](https://platejs.org) (MIT), hidden behind the editor's own `RichTextEditor` interface.
+Pages are edited where they are read. Every Latest page of the docs site has an **Edit** button above its content (and the footer's "Edit this page" does the same); the page turns into an editor in the same content column, with the same navbar, sidebar, table of contents and colour mode. `@platform/editor` is a React library: the site loads it only when someone clicks Edit, and it talks to the platform only through `AuthProvider`, `ContentBackend` and a small `InPlaceHost` port.
+
+## What an editor sees
+
+1. Click **Edit**. The first time in a tab, a sign-in dialog opens: on the live site, paste a fine-grained personal access token with Contents read and write on this repository (only write collaborators get in); on `npm start`, type a display name. "Remember on this device" is on by default, with a warning about shared devices. A remembered session is verified once per tab; if it stopped working it is forgotten and the dialog says why.
+2. The edit bar sticks under the navbar: **Visual** / **Raw**, **Page settings**, **Page actions**, an "Unsaved changes" marker, the commit message (default `Update <title>`, for a folder intro `Update <path> intro`), **Cancel** and **Save**. Below it the formatting toolbar sticks while the page scrolls.
+3. The title is edited where the page shows it; **Page settings** opens the frontmatter form (description, type, tags, resource, sidebar position). The body is edited in the page's own look: headings, lists, tables and code look like the rendered page, admonitions are the site's real admonition component, tabs are the site's tabs (one panel at a time, double-click a tab to edit its props, the gear edits the tab group, "Add tab" appends one), and 3D viewers show the real model with their props behind a settings button.
+4. **Raw** shows the whole file (frontmatter and body) in CodeMirror 6. A page the visual editor cannot write back safely opens in Raw with the message "This file could not be opened in the visual editor; editing raw MDX instead."
+5. **Save** validates the page, then commits it (live site) or writes it to disk (dev server). **Cancel** with unsaved edits asks first; so do site links and closing or reloading the tab.
+
+**Page actions**: "New page in this folder..." (path prefilled with the current folder), "Rename...", "Delete..." (both in dialogs; not offered for folder intros), "Publish version..." (live site, role `editor`) and "Sign out". Frozen versions have no Edit button and no edit link; `log.md` and `code-maps/` are generated and not editable.
+
+## Saving
+
+Every save goes through `ContentBackend.writePage` with the etag the page was loaded with, so the page, its regenerated folder index, `manifest.json`, code maps and a `log.md` entry land together (see [Content service](content.md)).
+
+- **Live site** (`github` mode): one Git Data commit on `deployBranch` (`main`). If someone else changed the same page, the save stops with "Someone else changed this page since you opened it. Nothing was overwritten." and two actions: "Copy my version (Raw)" and "Reload latest". If only other files changed, the backend retries on the new head by itself.
+- After a live save the page shows the saved version, read-only, with "Saved as abc1234 (view commit). The public site updates after the deploy finishes". The tab keeps that copy (`pendingEdits`, sessionStorage) across reloads until the site is served from a newer build (`customFields.buildSha`, set from `PLATFORM_BUILD_SHA` in the deploy workflow) or 15 minutes pass, which covers the GitHub Pages cache.
+- **Dev server** (`local-disk` mode, `npm start`): the save goes to the dev server's own endpoint and the files land in the working tree with no commit; Docusaurus hot-reloads the page. The banner says "Saved to disk"; commit with your usual git flow. Publishing is not offered in this mode. `PLATFORM_EDIT_BACKEND=github npm start` uses the live path instead.
+- A folder intro (`index.md`) is edited like any page; its generated okf block is shown rendered and read-only, and a save that would change it is refused.
+- Images and 3D models uploaded from the editor are committed at once (`uploads/`, `models/`, `models/fbx/`) and shown from the browser's copy until the site serves them, so a new viewer renders immediately.
 
 ## Composition
 
-`src/composition/createPlatform.ts` reads `platform.config.js` and returns `{ auth, backend(session), config, componentsUrl }`:
+The editor sees only contract types. The one place that picks implementations is the site's composition root, `site/src/platform/inplace/`:
 
-- `auth` is `MockAuthProvider` when `VITE_PLATFORM_AUTH=mock` or `auth.provider` is `mock`, otherwise `GithubTokenProvider({ owner: organizationName, repo: projectName })`.
-- `backend(session)` is `HttpContentBackend(url)` when `VITE_PLATFORM_CONTENT` is set or `content.backend` is `http`, otherwise `GithubBrowserBackend` for `organizationName/projectName` on `deployBranch` under `sitePath`, with the session token.
-- `componentsUrl` is `<baseUrl>platform/components.json`, produced by the site prebuild from `site/components.json`; a bundled default (`DEFAULT_COMPONENTS` in `src/mdx/componentsManifest.ts`) is used when the fetch fails.
+- `createInPlaceHost.ts` builds the `InPlaceHost` (`services/editor/src/host.ts`): in `github` mode `GithubTokenProvider` and `GithubBrowserBackend` with the session token; in `local-disk` mode, after a successful `ping` of the dev endpoint, `MockAuthProvider` and `HttpContentBackend` with the dev token (dev sign-ins are kept under their own storage key). It also supplies the session store, the router's navigation guard, page and commit URLs, `buildSha` and `onSignedIn` (which resets the site's own content backend so viewers use the new token).
+- `skin.tsx` injects the site's `Admonition` into the editor (`RichTextSkin`), so the editor never imports theme code.
+- `mountInPlaceEditor.tsx` is the entry of the lazy `inplace-editor` chunk: it builds the host, injects the editor stylesheet and mounts `InPlaceEditor` or `SavedPreview`.
+- `site/src/theme/DocItem/Content` and `site/src/theme/EditThisPage` are swizzle wrappers (no eject) with no editor imports; they load the chunk with a dynamic `import()`.
 
-This folder is the `editor-composition` lint element, the only part of the editor allowed to import `@platform/auth` and `@platform/content`. `PlatformContext.tsx` hands the result to the component tree.
-
-## Screens and actions
-
-- `LoginGate`: token (or mock name and role) input, "remember on this device" with a shared-device warning, provider errors shown inline; a stored session is re-verified on load and forgotten if verification fails.
-- `FilePicker`: pages of the selected version. `index.md`, `log.md`, `AGENTS.md`, `README.md` and `code-maps/` are hidden; a folder's intro is edited through `FolderIntroEditor`, which only touches text before the generated markers (`src/mdx/folderIntro.ts`).
-- `FrontmatterForm`: `title`, `description` (placeholder: "One sentence: when should someone open this page?"), `type` (dropdown of values in use plus a free-text new type), `tags` (comma-separated), `resource`, `sidebar_position`. Edits go through the `yaml` package's document API (`src/frontmatter/yamlDoc.ts`) so untouched lines, comments, quoting and scalar types survive. Only keys whose value really changed are rewritten; when nothing changed the frontmatter comes back byte for byte, and flow lists are written as `[a, b]`, the style the pages use.
-- `BodyEditor`: the page body in the rich text editor (see below), with a Visual / Raw MDX switch above it.
-- Save: `validatePage` runs locally and `ProblemList` shows problems; the backend's `VALIDATION` details are shown the same way. Dirty tracking guards page and version switches, rename, create, logout and page unload.
-- `NewPageDialog` (default `resource` built from the first `codeRepos` entry), Rename, Delete, and `PublishDialog` (role `editor`, version label input). Frozen versions open read-only, and a read-only body shows no toolbars.
+A new sign-in method is a new entry in `signInPanels.tsx` plus its wiring in `createInPlaceHost.ts`; a new backend is wired in `createInPlaceHost.ts` only.
 
 ## Rich text editor
 
 ### One interface, one implementation
 
-`src/richtext/RichTextEditor.ts` is the seam. A component gets the page body as Markdown (no frontmatter), `readOnly`, the components manifest and a `RichTextServices` object, and reports `onChange` and `onParseError`. The app pulls the Markdown back through a `RichTextHandle` (`getMarkdown()`) on save and when switching to Raw. `src/richtext/index.ts` is the only import path the app uses; it exports `RichTextEditor`, typed as the interface, which today is `PlateRichTextEditor` from `src/richtext/plate/`. Another editor, or a different storage format later, is a new sibling folder of `plate/` and a one-line change in `index.ts`; `App.tsx` and `BodyEditor.tsx` stay the same.
+`src/richtext/RichTextEditor.ts` is the seam. A component gets the page body as Markdown (no frontmatter), `readOnly`, the components manifest and a `RichTextServices` object, and reports `onChange` and `onParseError`. The in-place editor pulls the Markdown back through a `RichTextHandle` (`getMarkdown()`) on save and when switching to Raw. `src/richtext/index.ts` exports `RichTextEditor`, today `PlateRichTextEditor` with the page-look kit. Raw mode has the same kind of seam: `src/rawtext/RawTextEditor.ts`, implemented with CodeMirror 6.
 
-`createRichTextServices` (built once per page in `BodyEditor`) gives the editor what it needs from the platform: `baseUrl`, `uploadImage`, `uploadModel`, `listAssets` (cached per page, cleared on failure), `getAsset` and `defaultRef`. Editor code never calls `usePlatform()` itself. Upload paths and insert formats live in `src/richtext/assets.ts`, which has no React and no Plate code, so any editor shares them: an image goes to `uploads/<name>` and is inserted with the base URL in front; a `.glb` or `.gltf` goes to `models/<name>` and an `.fbx` to `models/fbx/<name>`, inserted as `ModelViewer` or `FbxViewer` with a site-relative `src`.
+`createRichTextServices` gives the editor `baseUrl`, `uploadImage`, `uploadModel`, `listAssets`, `getAsset` and `defaultRef`. Upload paths and insert formats live in `src/richtext/assets.ts`: an image goes to `uploads/<name>` and is inserted with the base URL in front; a `.glb` or `.gltf` goes to `models/<name>` and an `.fbx` to `models/fbx/<name>`, inserted as `ModelViewer` or `FbxViewer` with a site-relative `src`.
 
 ### Markdown in and out
 
@@ -74,70 +92,39 @@ This folder is the `editor-composition` lint element, the only part of the edito
 - Pages stay plain Markdown. Manifest components are written as JSX tags with no import lines, because the site registers them globally.
 - A generated `<!-- okf:* -->` ... `<!-- /okf:* -->` block becomes one read-only block and is written back byte for byte. Other HTML comments are kept as small hidden markers.
 - `:::note`, `:::tip`, `:::info`, `:::caution` and `:::danger` admonitions (with an optional `[Title]`) become callout blocks.
-- Table column alignment, code fence meta (such as `title="x.ts"`), the page's own bullet marker (`*` or `-`) and the compact `|---|` table delimiter row are kept. Links are always written in the inline form (link text in square brackets, the URL in parentheses), never in the angle-bracket autolink form, which MDX cannot read.
-- Text such as `site:build` stays plain text instead of being escaped.
+- Table column alignment, code fence meta, the page's own bullet marker and the compact `|---|` delimiter row are kept. Links are always written in the inline form.
 
-The editor never makes a page dirty on its own. The baseline is the export of the freshly loaded page, so loading and normalising do not count, and `getMarkdown()` returns the loaded text byte for byte when nothing was edited.
+The editor never makes a page dirty on its own, and a page saved without edits comes back byte for byte (`composeDocument.ts` rewrites only changed frontmatter keys and an edited body).
 
 ### When a page opens in Raw mode
 
-Before import, `supportedSyntax.ts` scans the body for shapes the editor cannot write back safely, for example an unknown component, a JavaScript expression, a paragraph wrapped over several lines, an image inside text, a link title, a list item with more than one block, two lists of the same kind next to each other, or the old `:::note Title` admonition form. After import, a round-trip check compares the page with its own export by meaning. If either step finds a problem, the editor calls `onParseError`, renders nothing, and the app opens the page in the Raw MDX text area with the message "This file could not be opened in the visual editor; editing raw MDX instead." The page can still be edited and saved there.
+Before import, `supportedSyntax.ts` scans the body for shapes the editor cannot write back safely, for example an unknown component, a JavaScript expression or `import` line, a paragraph wrapped over several lines, an image inside text, a link title, a list item with more than one block, or the old `:::note Title` admonition form. After import, a round-trip check compares the page with its own export by meaning. If either step finds a problem, the page opens in Raw.
 
-### Custom blocks
+### Blocks and toolbars
 
-`src/richtext/plate/nodes/` holds the docs blocks, registered in `docsNodesKit.tsx`:
+- `ModelViewer` and `FbxViewer`: the real viewer from `@platform/viewers` at the page's height, with a settings button for the props the components manifest lists. A `src` starting with `/` is shown from the site's base URL; otherwise `repo` + `path` (+ `ref`) is read through the backend.
+- `Tabs` and `TabItem`: Infima tab markup, normalizers keep the shape Tabs, then TabItem, then blocks.
+- Fixed toolbar: undo and redo, block type, marks, lists, link, image by URL, upload image, upload 3D model, insert from repo, table, code block, divider, insert admonition, insert tabs, insert component.
+- The "/" menu offers basic blocks, each admonition and each manifest component. Markdown shortcuts work while typing; blocks have drag handles.
 
-- `ModelViewer` and `FbxViewer`: a live 3D preview (the cores from `@platform/viewers`, loaded lazily) plus input fields for the props the components manifest lists. A `src` starting with `/` is shown from the site's base URL; otherwise `repo` + `path` (+ `ref`, else the repo's `defaultRef`) is read through the backend.
-- `Tabs` and `TabItem`: a tab group whose children are tab items with editable Markdown inside; "Add tab" appends a tab, and normalizers keep the shape Tabs, then TabItem, then blocks.
-- A component whose manifest `preview` is `generic` shows its tag and attributes; one with children has editable Markdown inside.
-- The generated okf block (read-only), HTML comments, admonition callouts and images (with `src` and alt inputs).
+Only the free, MIT-licensed Plate parts are used.
 
-Which tag maps to which block comes from `site/components.json`, through `componentRules.ts`.
+## Look and stylesheet
 
-### Toolbar and "/" menu
+The editor's styles are one Tailwind 4 entry, `src/theme-inpage/inplace.pcss`. The site plugin compiles it to a string inside the lazy chunk (`postcss-loader` with `@tailwindcss/postcss`, webpack `asset/source`), never through Docusaurus' CSS pipeline, which would merge it into the one stylesheet every reader downloads. It is injected as `<style data-platform-editor>` while editing and removed afterwards. It holds Tailwind's theme and utilities only (no global Preflight; resets are scoped to the editor chrome and its popovers), never generates `.container`, and maps every colour onto the site's Infima variables, so dark and light follow the site. Inside the page content the site's own rules win over the editor's utilities, which is how the edited page keeps its look. A test (`noGlobalCss.test.ts`) fails if any module reachable from the editor entry imports a `.css` file.
 
-- Fixed toolbar, sticky at the top of the page: undo and redo; block type (text, headings 1 to 6, lists, code, quote); bold, italic, underline, strikethrough, inline code; bulleted, numbered and to-do lists; link, image by URL, upload image, upload 3D model, insert from repo, table, code block, divider; insert admonition, insert tabs, insert component (one item per manifest entry).
-- Floating toolbar over a text selection: block type, the marks and link. A floating link toolbar edits, opens or removes a link.
-- The "/" menu (not inside code blocks) has two groups: basic blocks (text, headings 1 to 3, lists, code block, table, quote, divider) and docs blocks (each admonition and each manifest component).
-- Markdown shortcuts work while typing (`#`, `*` or `>` followed by a space, three backticks, `**`); there is no autoformat that replaces text with symbols. Shift+Enter adds a line break in a paragraph only; Ctrl+Enter leaves a code block, quote or table. Top-level blocks have drag handles in the left gutter. Code blocks are coloured with lowlight's common languages.
-
-The editor uses only the free, MIT-licensed Plate parts: no AI, comments, suggestions, collaboration or upload server.
-
-## Theme
-
-The look lives in one module, `src/theme/`, imported once from `src/main.tsx` as `./theme/index.js`:
-
-- `tokens.css`: the arcade palette as `--ed-*` variables. Dark is the default (`index.html` sets `data-theme="dark"`); light applies when `html` has `data-theme="light"`, or when no `data-theme` is set and the OS prefers light. Every colour goes through these tokens.
-- `tailwind.css`: Tailwind CSS 4 (through `@tailwindcss/vite`) and the shadcn variables the Plate UI files use, each mapped onto an `--ed-*` token, so Plate and the app chrome share one look in dark and light. It declares the layer order `theme, base, chrome, components, utilities`.
-- `shadcn-variants.css`: a verbatim copy of shadcn's own Tailwind variants and utilities (MIT); the shadcn CLI is not a dependency.
-- `arcade.css`: the app chrome (sidebar, buttons, the Visual / Raw segmented control, fields, frontmatter panel, modals, editor frame) inside `@layer chrome`.
-- `index.ts`: imports the three CSS files, `tailwind.css` first.
-
-The Plate UI parts are vendored shadcn / Plate UI files under `src/richtext/plate/ui/`; `components.json` records the shadcn settings and the `@plate` registry they came from, and the `@/` path alias is used only by those files. A new look is a sibling module imported from `main.tsx` in place of `./theme/index.js`.
-
-## Build and deploy
-
-`vite.config.ts` sets `base` to `<baseUrl>editor/` from `platform.config.js` and adds the React and Tailwind plugins. `npm run build -w @platform/editor` type-checks and builds `services/editor/dist`; `scripts/copy-editor.mjs` copies it into `site/build/editor/` so GitHub Pages serves the editor at `https://RayanYousef.github.io/documentation-system/editor/`. The site navbar links there when `features.editor` is true.
-
-Development: `npm run dev -w @platform/editor` with `VITE_PLATFORM_AUTH=mock` and `VITE_PLATFORM_CONTENT=http://127.0.0.1:4321` against `node services/editor/e2e/content-server.mjs` (a `serveContentBackend` over a `LocalFolderBackend`).
+The Plate UI parts are vendored shadcn / Plate UI files under `src/richtext/plate/ui/`; `components.json` records where they came from, and the `@/` alias (set by the site plugin and the site `tsconfig.json`) is used only by those files.
 
 ## Tests
 
-Vitest unit and component tests (`npm test -w @platform/editor`) cover the app (`dialogs.test.tsx`, `BodyEditor.test.tsx`, `yamlDoc.test.ts`, `folderIntro.test.ts`, `componentsManifest.test.ts`, `SessionStore.test.ts`) and the rich text editor under `src/richtext`: the services and asset rules, the viewer URL logic, the Plate document and its change tracking, table and insert transforms, Shift+Enter, prop fields, the toolbar, and the Markdown rules. The Markdown tests round-trip frozen copies of real pages byte for byte, check every live page under `site/docs` for the same meaning, and cover the Raw-mode scan and the round-trip guard.
+Vitest (`npm test`) covers the editor library: composing the saved file, the edit-session flow (`InPlaceEditor.test.tsx`: sign-in, remembered sessions, save with etag, conflict, validation, cancel, the navigation guard, Raw fallback, drafts, folder intros, page actions), pending edits, the sign-in dialog, the CodeMirror editor, the page look, the stylesheet isolation check, and all the Markdown round-trip suites. The site has unit tests for the composition root and the page rules, and an integration test of the dev disk endpoint.
 
-Six Playwright specs run with `npm run e2e -w @platform/editor`, one at a time against one content server and one temporary git repository. Every test fails on a console error (`e2e/support.ts`), and each test seeds the pages it changes.
-
-- `e2e/editor.spec.ts`: sign in with the mock provider, the file picker, every frontmatter field, the unsaved-changes guard, local and server validation problems, create, rename and delete, and publishing frozen version `1.1.0`, which then opens read-only.
-- `e2e/body.spec.ts`: typing and saving, untouched pages keep every byte, one edit keeps every other construct, Visual to Raw and back, the Raw fallback for pages the editor cannot open, and the save-conflict message.
-- `e2e/formatting.spec.ts`: block types, marks, links, inserts, tables, the "/" menu, Markdown shortcuts, undo and redo, to-do lists, the floating toolbar and admonitions, each checked against the saved Markdown.
-- `e2e/components.spec.ts`: image and 3D model uploads, inserts from the repo, viewer previews and prop editing, tabs, and the Insert component menu.
-- `e2e/folder-intro.spec.ts`: a folder intro is saved and the generated okf block is untouched.
-- `e2e/theme.spec.ts`: in dark and light, the editor, its menus, popovers and dialogs use the arcade palette; an unchecked to-do checkbox has enough contrast; the sign-in screen and app dialogs follow the theme; the toolbar sticks flush to the top of the scrolled page.
+The Playwright suite runs against the built site (`npm run e2e -w @platform/site`, which builds and serves it); GitHub is mocked in the browser by `site/e2e/support.ts` (a `FakeGitHub` seeded from this repository), and every test fails on a console error. It covers the Edit entry points and that readers download no editor code or styles before Edit, token sign-in, saving and the pending preview, the unsaved-changes guards, Raw mode, conflicts and the branch-moved retry, folder intros, page actions, theme isolation and the sticky toolbar, existing and newly added blocks (uploaded and repo 3D models, the component and "/" menus, tabs with editable props), and that every 3D viewer on the doc pages renders.
 
 ## Known minor issues
 
-- Rename and Delete use native `window.prompt` and `window.confirm` dialogs rather than the shared `Modal`.
-- The frontmatter form has no field for `sources`; they are edited in the Raw MDX view.
-- The New page dialog derives its default `resource` from `codeRepos[0]` only; other declared repositories must be typed by hand.
-- Component insertion falls back to the bundled component list silently when `components.json` cannot be fetched.
-- The Phase 1 HTTP bridge (`serveContentBackend`) has no authentication, which is why it is limited to local development and the e2e until the Phase 2 server exists.
+- While editing, code blocks have no title bar or copy button of the page's own code blocks, and headings have no anchor links.
+- Tables keep the editor's own table chrome (cell selection, borders) with the page's cell styling.
+- After creating a page on the live site there is no page to open until the deploy finishes; the status line says so.
+- The frontmatter form has no field for `sources`; they are edited in Raw.
+- The New page dialog derives its default `resource` from `codeRepos[0]` only.

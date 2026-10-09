@@ -1,6 +1,6 @@
 ---
 title: Platform decisions
-description: Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each, plus later decisions such as Plate replacing MDXEditor in the editor; read it before reopening any of them.
+description: Summarises the twenty design decisions recorded in section 7 of the specification (viewers package, TS contracts over OpenAPI, in-memory okf-core, composition roots, sample repo layout, frozen 1.0.0, code maps, two search indexes, and more) with the reason for each, plus later decisions such as Plate replacing MDXEditor and in-place editing replacing the standalone editor app; read it before reopening any of them.
 type: decision
 tags: [platform, decisions, adr, design]
 resource: https://github.com/RayanYousef/documentation-system/blob/main/docs/design/2026-09-06-documentation-platform-design.md
@@ -8,6 +8,7 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/eslint.config.js
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/platform.config.js
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/versions.json
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/docs/design/2026-10-09-inplace-editing-plan.md
 sidebar_position: 13
 ---
 
@@ -20,7 +21,7 @@ Section 7 of the design specification records decisions that were not in the ori
 | 3 | okf-core operates on an in-memory file map; Node I/O lives in a separate `node` entry. | The browser backend must regenerate indexes, manifest and code maps before every commit. |
 | 4 | `HttpContentBackend` and `serveContentBackend` ship in Phase 1. | The e2e needs the editor to reach a `LocalFolderBackend`; they are the seed of the Phase 2 server backend. |
 | 5 | `MockAuthProvider` exists. | Tests and the e2e need a provider with no network. |
-| 6 | Composition roots (`services/editor/src/composition/`, `site/src/platform/`) are the only places that import service implementations. | Everything else sees contract types; substitution is a one-line change. |
+| 6 | Composition roots (`site/src/platform/`; originally also `services/editor/src/composition/`, removed by decision 24) are the only places that import service implementations. | Everything else sees contract types; substitution is a one-line change. |
 | 7 | The sample code repo lives at `examples/unity-project/` in this repository, declared with `pathPrefix`; resource URLs point here; stub source files exist for every cited path; placeholder FBX files were replaced with real meshes. | Every `resource` resolves on GitHub and every viewer renders. |
 | 8 | The demo's deliberate broken link was fixed. | CI must be green; the broken-link rule is covered by a unit test fixture instead. |
 | 9 | Frozen `1.0.0` stays partial (root index, `systems/index.md`, `systems/inventory.md`) with a README explaining it; its pins use a real sha. | It demonstrates freezing without duplicating the whole demo bundle. |
@@ -30,8 +31,8 @@ Section 7 of the design specification records decisions that were not in the ori
 | 13 | Two Orama indexes: the Docusaurus plugin's for the site UI and the one `ContentBackend.search` builds with `buildSearchIndex` (the site prebuild also writes it to `static/platform/search-index-<version>.json`, which no backend reads yet). | The plugin index is not addressable from the contract; the second one is. |
 | 14 | The editor edits frontmatter through the `yaml` package's document API; okf-core keeps its own zero-dependency YAML subset parser for validation. | Editing must preserve comments, quoting and scalar types; validation must stay dependency-free. |
 | 15 | Viewers are global MDX components; the editor writes no import lines (first through MDXEditor descriptors with no `source`, now through the Plate component rules, see decision 23). | Pages stay plain Markdown with components. |
-| 16 | Asset fetches use `media.githubusercontent.com` first and `raw.githubusercontent.com` as fallback, cached with the Cache API. | The media endpoint serves real bytes for Git LFS pointers. |
-| 17 | `index.md`, `log.md`, `AGENTS.md`, `README.md` and `code-maps/` are hidden from the editor's file picker; folder intros are edited through a dedicated view that only touches text before the markers. | Generated content can never be hand-edited from the UI. |
+| 16 | Asset fetches read `raw.githubusercontent.com` first and follow a Git LFS pointer (or a refusal) to `media.githubusercontent.com`, cached with the Cache API. (Originally media first; changed because media answers 404 for files not in LFS, a console error on every page with a viewer.) | The media endpoint serves real bytes for Git LFS pointers. |
+| 17 | `log.md`, `AGENTS.md`, `README.md` and `code-maps/` are never edited by hand; folder intros are edited in place with the generated block read-only and a save that changes it refused (originally a dedicated view in the standalone editor's file picker). | Generated content can never be hand-edited from the UI. |
 | 18 | Node 22 in CI; `engines.node` stays at 20 or newer. | Current LTS in CI without forcing local upgrades. |
 | 19 | `scripts/build-site.ps1` and `scripts/start-site.ps1` were replaced by root npm scripts. | One command set on every platform. |
 | 20 | The platform skill is committed at `.agents/skills/docs-platform/`; installing it elsewhere means copying the folder. | Documented, not automated, until the skill stabilises. |
@@ -48,3 +49,13 @@ A later decision about the editor, also recorded here rather than in the spec:
 | # | Decision | Why |
 |---|---|---|
 | 23 | Plate replaces MDXEditor for the page body, behind the editor's own `RichTextEditor` interface (`services/editor/src/richtext/`). | Plate gives a better look (Tailwind and shadcn styled with the arcade tokens) and more features (a "/" menu, a floating toolbar over a selection, block drag handles). It is MIT licensed, and only its free parts are used. Pages stay plain Markdown with globally registered components, and a page the editor cannot write back safely opens in Raw mode. Because the app only knows the interface, a later editor, or a move to a database format, is a new implementation next to `plate/`, not a rewrite of the app. |
+
+Decisions made when editing moved into the pages (plan: `docs/design/2026-10-09-inplace-editing-plan.md`):
+
+| # | Decision | Why |
+|---|---|---|
+| 24 | In-place editing replaces the standalone `/editor/` app. `services/editor` becomes a library (`@platform/editor/inplace`), loaded lazily by the site on Edit, and the site's `site/src/platform/inplace/` is its one composition root. `/editor/` redirects to the docs. | Editors edit what readers see, with the same layout and theme; one bundler and one build; readers download no editor code, and lint keeps reader code from importing the editor. |
+| 25 | On `npm start`, saves go to a dev-server-only, same-origin endpoint that writes the working tree without committing (`WorkingTreeCommitter`), guarded by loopback address, loopback Host, same Origin, JSON only, a per-process token and a method allow-list without `publishVersion`. | Instant feedback through hot reload, no token needed locally, no surprise commits on a feature branch, and nothing another website or machine can reach. |
+| 26 | The editor stylesheet is compiled to a string and injected only while editing, never through Docusaurus' global CSS chunk; there is no global Preflight and every colour maps onto Infima variables. | Docusaurus merges every CSS import into the one stylesheet all readers download; scoping keeps the site chrome unchanged while editing and after. |
+| 27 | Frozen versions and generated files (`log.md`, `code-maps/`) have no Edit button; frozen pages lose the footer edit link too. | Editing a frozen version would break its freeze; generated files are rewritten by every save. |
+| 28 | Git Data commits name their expected parent; a save that finds the branch moved re-reads, re-checks the etag and re-plans up to twice, then reports a conflict. | Two near-simultaneous saves could otherwise leave stale generated files on `main` and fail the deploy's `okf:check`. |

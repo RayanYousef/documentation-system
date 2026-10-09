@@ -1,6 +1,6 @@
 ---
 name: docs-platform
-description: The only agent entry point for a Documentation Platform bundle (Docusaurus site + OKF Core index layer + in-browser editor). Use when working inside a code repository whose documentation lives in a docs-platform bundle, when the user says "open the docs for this repo", "which page describes this file", "update the documentation", "add a doc page", "run the OKF generator", or "publish a docs version". Looks the bundle up in the user-level registry (~/.docs-platform/registry.json), navigates by index.md and code maps, and explains how pages are added and regenerated. Format rules come from the ray-okf-core skill, which this skill never modifies.
+description: The only agent entry point for a Documentation Platform bundle (Docusaurus site + OKF Core index layer + in-place page editing). Use when working inside a code repository whose documentation lives in a docs-platform bundle, when the user says "open the docs for this repo", "which page describes this file", "update the documentation", "add a doc page", "run the OKF generator", or "publish a docs version". Looks the bundle up in the user-level registry (~/.docs-platform/registry.json), navigates by index.md and code maps, and explains how pages are added and regenerated. Format rules come from the ray-okf-core skill, which this skill never modifies.
 ---
 
 # Documentation Platform
@@ -21,7 +21,7 @@ One docs bundle per code repository. The bundle is a Docusaurus `site/` whose `d
 - Never write `AGENTS.md`, `index.md` or any docs into a code repository; the docs live in the bundle.
 - Never hand-edit generated content: index blocks between `<!-- okf:index -->` markers, `manifest.json`, `code-maps/`, or log bullets. Run the generator instead: `npm run okf:generate` from the bundle's repository root (`npm run okf:check` validates only).
 - A page's `description` is one sentence answering "is this the file I need?"; `type` is required; `resource` is `https://github.com/<owner>/<repo>/blob/<ref>/<path>` and the repo must be declared in `platform.config.js` `codeRepos`.
-- Frozen versions (`versioned_docs/version-*`) are read-only; edit `docs/` (Latest). Publishing a version is done through the editor's "Publish version" action or the content service.
+- Frozen versions (`versioned_docs/version-*`) are read-only; edit `docs/` (Latest). Publishing a version is done through the "Publish version" page action while editing on the live site, or the content service.
 
 ## References
 

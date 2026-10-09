@@ -1,6 +1,6 @@
 # Documentation Platform (template)
 
-Docusaurus site + OKF Core index layer + in-browser editor + 3D viewers, organised as a contracts-first monorepo. Design: `docs/design/2026-09-06-documentation-platform-design.md`.
+Docusaurus site + OKF Core index layer + in-place page editing + 3D viewers, organised as a contracts-first monorepo. Design: `docs/design/2026-09-06-documentation-platform-design.md`.
 
 ## Use it for a new project
 
@@ -14,7 +14,7 @@ Docusaurus site + OKF Core index layer + in-browser editor + 3D viewers, organis
    npm run site:build
    ```
    The packages export from the git-ignored `dist/` folder, so they must be built before `okf:generate`. Note: the frozen demo version `1.0.0` (`site/versions.json`) pins this template repository, so keep that repository in `codeRepos`; otherwise the validator reports `undeclared-repo`.
-4. Turn on GitHub Pages for the `gh-pages` branch before the first deploy. Push to `main`: `deploy-pages.yml` publishes the site and the editor to GitHub Pages; `okf-validate.yml` guards every push.
+4. Turn on GitHub Pages for the `gh-pages` branch before the first deploy. Push to `main`: `deploy-pages.yml` publishes the site (editing included) to GitHub Pages; `okf-validate.yml` guards every push.
 
 ## Commands
 
@@ -23,12 +23,12 @@ Docusaurus site + OKF Core index layer + in-browser editor + 3D viewers, organis
 | `npm run okf:generate` / `npm run okf:check` | regenerate / validate every docs bundle (Latest + frozen) |
 | `npm run build` | build all packages and services |
 | `npm test` / `npm run lint` | Vitest everywhere / ESLint incl. import boundaries |
-| `npm run site:build` | build editor + site into `site/build` (editor at `/editor/`) |
-| `npm run site:start` | Docusaurus dev server |
-| `npm run dev -w @platform/editor` | editor dev server (`VITE_PLATFORM_AUTH=mock VITE_PLATFORM_CONTENT=http://127.0.0.1:4321` with `node services/editor/e2e/content-server.mjs`) |
-| `npm run e2e -w @platform/editor` | Playwright end-to-end |
+| `npm run typecheck` | TypeScript over every package, service and the site |
+| `npm run site:build` | build the site into `site/build` (the editor is a lazy chunk of it) |
+| `npm run site:start` | Docusaurus dev server; click Edit on any page, saves are written to `site/docs` without a commit |
+| `npm run e2e -w @platform/site` | Playwright end-to-end against the built site, GitHub mocked (first time: `npx playwright install chromium`) |
 
-Live: https://RayanYousef.github.io/documentation-system/ (editor: `/editor/`).
+Live: https://RayanYousef.github.io/documentation-system/ (click **Edit** on any Latest page; the first time, sign in with a fine-grained token that can write to this repository).
 
 ## Architecture
 

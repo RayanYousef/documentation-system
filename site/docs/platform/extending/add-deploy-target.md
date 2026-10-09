@@ -1,14 +1,13 @@
 ---
 title: Add a deploy target
-description: "Recipe for hosting the site somewhere other than GitHub Pages (another static host, Docker, a Node process): what site:build produces, which config fields fix the URLs, how the editor and Phase 2 server are mounted, and the workflow to add without touching deploy-pages.yml."
+description: "Recipe for hosting the site somewhere other than GitHub Pages (another static host, Docker, a Node process): what site:build produces, which config fields fix the URLs, what in-place editing needs from the host and how the Phase 2 server is mounted, and the workflow to add without touching deploy-pages.yml."
 type: guide
 tags: [platform, extending, deploy, github-actions, docker, hosting]
 resource: https://github.com/RayanYousef/documentation-system/blob/main/.github/workflows/deploy-pages.yml
 sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/package.json
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/platform.config.js
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/scripts/copy-editor.mjs
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/vite.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/serveContentBackend.ts
 sidebar_position: 5
 ---
@@ -17,22 +16,22 @@ Deployment is additive: `deploy-pages.yml` stays as it is and a new target gets 
 
 | Item | Where |
 |---|---|
-| Contract to implement | none in code; the contract is the build output: `site/build/` (static site with the editor at `site/build/editor/`) produced by `npm run site:build` |
-| Contract test to run | `npm run okf:check`, `npm run lint`, `npm test` after the package build step and before `npm run site:build`, as `okf-validate.yml` does (it runs them without `site:build`; `deploy-pages.yml` runs only `okf:check`); a smoke check that `site/build/index.html` and `site/build/editor/index.html` exist after it |
-| Composition root to register in | Phase 1: none (static). Phase 2: the Hono shell's mount table (`/` gate + site, `/editor/`, `/api/content/*`, `/api/auth/*`, `/api/search`) |
-| Config field | `siteUrl`, `baseUrl`, `deployBranch` in `platform.config.js` (they drive Docusaurus `url`/`baseUrl`, the editor's Vite `base` and the GitHub backend's branch); `content.backend`/`content.url` when the target hosts a content service |
+| Contract to implement | none in code; the contract is the build output: `site/build/` (static site; the in-place editor is a lazy chunk under `assets/js/`) produced by `npm run site:build` |
+| Contract test to run | `npm run okf:check`, `npm run lint`, `npm test` after the package build step and before `npm run site:build`, as `okf-validate.yml` does (it runs them without `site:build`; `deploy-pages.yml` runs only `okf:check`); a smoke check that `site/build/index.html` and an `assets/js/inplace-editor.*.js` chunk exist after it, or `npm run e2e -w @platform/site` |
+| Composition root to register in | Phase 1: none (static). Phase 2: the Hono shell's mount table (`/` gate + site, `/api/content/*`, `/api/auth/*`, `/api/search`) |
+| Config field | `siteUrl`, `baseUrl`, `deployBranch` in `platform.config.js` (they drive Docusaurus `url`/`baseUrl`, the editor's URLs and the GitHub backend's branch); `PLATFORM_BUILD_SHA` at build time (the commit being deployed); `content.backend`/`content.url` when the target hosts a content service |
 | Boundary rule | root scripts (`scripts/**`) are the `root` element and may import `platform.config.js`, `@platform/contracts`, `@platform/okf-core` and `@platform/content`, nothing else; workflow YAML is not linted, so keep logic in a root script rather than inline in the workflow |
 
 ## Static host (Netlify, S3, another Pages site)
 
-1. Set `siteUrl` and `baseUrl` for the new host. Both the site and the editor read them at build time, so a wrong `baseUrl` breaks every asset and the `/editor/` link.
+1. Set `siteUrl` and `baseUrl` for the new host. The site (and the editor compiled into it) reads them at build time, so a wrong `baseUrl` breaks every asset.
 2. Add `.github/workflows/deploy-<target>.yml`: checkout, Node 22, `npm ci`, build packages and services (copy the step from `deploy-pages.yml`), `npm run okf:check`, `npm run site:build`, then the host's upload action over `./site/build`. Use a distinct `concurrency` group.
-3. If the host serves from a sub-path, keep `baseUrl` ending in `/` and confirm `site/build/editor/index.html` loads its chunks from `<baseUrl>editor/`.
+3. If the host serves from a sub-path, keep `baseUrl` ending in `/` and confirm the Edit button loads the `inplace-editor` chunk from `<baseUrl>assets/js/`. Set `PLATFORM_BUILD_SHA` to the deployed commit so editors' pending previews retire when the new build is live.
 
 ## Docker image or Node process (Phase 2 shape)
 
 1. Build stage: the same commands as above produce `site/build`.
-2. Runtime stage: a Node image running the Hono shell (see the [Roadmap](../roadmap.md)) that serves `site/build` behind the gate, mounts the editor at `/editor/`, and exposes `serveContentBackend`-style routes for a server-side `ContentBackend` holding the GitHub token as an environment secret. Until the shell exists, `services/editor/e2e/content-server.mjs` shows the minimal Node process: `serveContentBackend(new LocalFolderBackend(...), { port })`.
+2. Runtime stage: a Node image running the Hono shell (see the [Roadmap](../roadmap.md)) that serves `site/build` behind the gate, and exposes `createContentRpcHandler` routes for a server-side `ContentBackend` holding the GitHub token as an environment secret. Until the shell exists, the dev server's disk endpoint (`site/plugins/platform-inplace-edit/devContentMiddleware.mjs`) shows how a backend is mounted behind guards with `createContentRpcHandler`.
 3. Config for that deployment: `content: { backend: 'http', url: 'https://<host>/api/content' }` and, once the password provider ships, `auth: { provider: 'password' }`. Secrets (users list, JWT key, GitHub token) arrive through the environment from GitHub secrets, never through `platform.config.js`.
 4. Add `deploy-<target>.yml` that builds and pushes the image (or restarts the process) on push to `main`.
 

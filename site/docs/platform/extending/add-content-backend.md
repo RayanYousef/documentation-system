@@ -10,7 +10,7 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/writePipeline.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/publishPipeline.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/test/localHarness.ts
-  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/composition/createPlatform.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/createContentBackend.ts
 sidebar_position: 2
 ---
@@ -21,7 +21,7 @@ A backend owns storage and commits; validation, regeneration, logging and versio
 |---|---|
 | Contract to implement | `ContentBackend` (twelve operations) in `packages/contracts/src/content.ts` |
 | Contract test to run | `describeContentBackendContract` in `packages/contracts/src/testing/contentBackendContract.ts` |
-| Composition roots to register in | `services/editor/src/composition/createPlatform.ts` and `site/src/platform/createContentBackend.ts` |
+| Composition roots to register in | `site/src/platform/inplace/createInPlaceHost.ts` (in-place editing) and `site/src/platform/createContentBackend.ts` (the site's asset resolution) |
 | Config field | `content.backend` (and `content.url` when remote) in `platform.config.js`; the union in `PlatformConfig['content']['backend']` |
 | Boundary rule | `services/content` imports only `@platform/contracts` and `@platform/okf-core`; browser-safe code in the default entry, Node-only code behind `src/node.ts` |
 
@@ -35,8 +35,8 @@ A backend owns storage and commits; validation, regeneration, logging and versio
 6. **Assets and search**: delegate `getAsset` to `fetchAsset` from `src/assets/getAsset.ts` and `search` to `buildSearchIndex` over the version's bundle files: cache the result (clear it on write for a local backend, or when the tree sha changes for GitHub) and answer with `searchRaw(raw, query)`. The site prebuild's `search-index-<version>.json` is not read by any backend today.
 7. **Pass the contract suite.** Write `services/content/test/<Name>Backend.test.ts` with a harness `{ backend, readFile, listTags, cleanup }` seeded from `MINI_BUNDLE` (copy `test/localHarness.ts` or `test/FakeGitHub.ts`), then `describeContentBackendContract('<Name>Backend', factory)`. Run `npm test -w @platform/content`.
 8. **Export** it from `src/index.ts` (browser-safe) or `src/node.ts` (Node-only).
-9. **Register** it in both composition roots: `createPlatform.ts` for the editor and `createContentBackend.ts` for the site's asset resolution.
+9. **Register** it in both composition roots: `createInPlaceHost.ts` for editing (choose it from `config.content.backend`; the dev server's disk endpoint is wired there too) and `createContentBackend.ts` for the site's asset resolution.
 10. **Set the config**: `content: { backend: '<id>' }` (plus `url` for a remote backend) in `platform.config.js`.
-11. **Verify** with `npm run lint`, `npm test` and, for a backend the editor will use, `npm run e2e -w @platform/editor` pointed at it through `VITE_PLATFORM_CONTENT`.
+11. **Verify** with `npm run lint`, `npm test` and, for a backend the editor will use, an e2e spec under `site/e2e` (the existing specs mock GitHub in the browser; a new backend needs its own fake).
 
 The Phase 2 server-side backend follows exactly this path: it wraps a `LocalFolderBackend` (or a GitHub Git Data client holding a secret token) behind `serveContentBackend`, and the browser keeps using `HttpContentBackend` unchanged.

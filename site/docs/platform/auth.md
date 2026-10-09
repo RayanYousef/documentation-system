@@ -26,11 +26,11 @@ Tests run the contract suite against a mocked `fetch` (`test/fakeGithubAuth.ts`)
 
 ## MockAuthProvider
 
-Id `mock`. `login({ kind: 'mock', name, role })` encodes the identity into the token (`mock.` followed by base64 JSON); `verify` decodes it. No network. Used by unit tests and by the Playwright e2e, and selected in the editor with `VITE_PLATFORM_AUTH=mock` or `auth.provider: 'mock'` in `platform.config.js`.
+Id `mock`. `login({ kind: 'mock', name, role })` encodes the identity into the token (`mock.` followed by base64 JSON); `verify` decodes it. No network. Used by unit tests and by in-place editing on `npm start` (a display-name sign-in: nothing is committed there, the name only appears in `log.md`).
 
 ## Sessions
 
-Session storage is the editor's concern, not the provider's. `BrowserSessionStore` (`services/editor/src/session/SessionStore.ts`) keeps the session in memory and writes it to `localStorage` under `docs-platform.session` only when the user ticks "remember on this device" (the login screen shows a shared-device warning and a "forget token" button). The site reads the same key so `ModelViewer` and `FbxViewer` can fetch assets from private code repositories with the editor's token. A stored session that fails re-verification is forgotten and the provider's message is shown on the sign-in screen.
+Session storage is the editor's concern, not the provider's. `BrowserSessionStore` (`services/editor/src/session/SessionStore.ts`) keeps the session in memory and writes it to `localStorage` under `docs-platform.session` when "Remember on this device" is ticked, which is the default in the sign-in dialog (it shows a shared-device warning; "Sign out" in the page actions menu forgets it). Dev sign-ins use the key `docs-platform.dev-session`. The sign-in dialog opens on the first Edit of a tab; its input comes from the panel registered for the provider's id in `services/editor/src/inplace/signInPanels.tsx`. The site reads the same key so `ModelViewer` and `FbxViewer` can fetch assets from private code repositories with the editor's token. A stored session is verified once per tab; one that fails is forgotten and the provider's message is shown in the sign-in dialog.
 
 ## Phase 2
 

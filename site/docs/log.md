@@ -5,6 +5,24 @@ sidebar_position: 99
 
 Newest first. Each entry names the page that changed and who changed it.
 
+## 2026-10-09
+
+* **Update**: [Editor service](/platform/editor.md) - rewrote the page for in-place editing: Edit on every Latest page, sign-in, Visual and Raw (CodeMirror), page settings and actions, saving to GitHub or to disk on the dev server, pending previews, the site composition root, the isolated stylesheet and the new tests. (by Rayan Yousef)
+* **Update**: [Platform decisions](/platform/decisions.md) - added decisions 24 to 28 (in-place editing replaces the standalone app, dev disk endpoint, injected stylesheet, no editing of frozen or generated pages, expected-parent commits with retry) and updated decisions 6, 16 and 17. (by Rayan Yousef)
+* **Update**: [Architecture](/platform/architecture.md) - new composition diagram, lint table and save flow for in-place editing; raw-first asset fetch. (by Rayan Yousef)
+* **Update**: [Site](/platform/site.md) - documented the platform-inplace-edit plugin, the DocItem/Content and EditThisPage wrappers, buildSha and the /editor/ redirect. (by Rayan Yousef)
+* **Update**: [Auth service](/platform/auth.md) - sign-in moved into the pages, remember-on by default, dev sign-ins use the mock provider. (by Rayan Yousef)
+* **Update**: [Content service](/platform/content.md) - added the Committer seam, the RPC handler, expected-parent commits with retry, stricter path checks and the raw-first asset fetch. (by Rayan Yousef)
+* **Update**: [Workflows and scripts](/platform/workflows.md) - site:build without the editor build and copy step, the site typecheck, the new e2e command and deploy build sha. (by Rayan Yousef)
+* **Update**: [Viewers package](/platform/viewers.md) - described the page-look viewer block and live rendering of newly uploaded models. (by Rayan Yousef)
+* **Update**: [Add an auth provider](/platform/extending/add-auth-provider.md) - register in createInPlaceHost and add a sign-in panel. (by Rayan Yousef)
+* **Update**: [Add a content backend](/platform/extending/add-content-backend.md) - register in createInPlaceHost; e2e under site/e2e. (by Rayan Yousef)
+* **Update**: [Add a deploy target](/platform/extending/add-deploy-target.md) - no separate editor output; set PLATFORM_BUILD_SHA. (by Rayan Yousef)
+* **Update**: [Add a new service module](/platform/extending/add-service-module.md) - the composition roots are under site/src/platform. (by Rayan Yousef)
+* **Update**: [Add a site plugin or viewer component](/platform/extending/add-site-plugin-or-viewer.md) - page-look component, skin injection and local site plugins. (by Rayan Yousef)
+* **Update**: [Roadmap](/platform/roadmap.md) - the Hono shell no longer mounts /editor/; refreshed the editor's known issues. (by Rayan Yousef)
+* **Update**: [Agent skill](/platform/agent-skill.md) - authoring reference now describes editing in place. (by Rayan Yousef)
+
 ## 2026-10-05
 
 * **Update**: [Editor service](/platform/editor.md) - rewrote the page for Plate replacing MDXEditor: the RichTextEditor interface, Markdown import and export rules, Raw mode, custom blocks, toolbar and "/" menu, the Tailwind and shadcn theme, and the unit tests and six Playwright specs. (by Rayan Yousef)

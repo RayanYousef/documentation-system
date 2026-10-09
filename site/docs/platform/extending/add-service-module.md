@@ -20,7 +20,7 @@ Use this when the thing you are adding is not an implementation of an existing c
 |---|---|
 | Contract to implement | define it first in `packages/contracts/src/<name>.ts` and export it from `src/index.ts`; if implementations will vary, add a `testing/<name>Contract.ts` suite |
 | Contract test to run | the suite you just wrote, from the new service's `test/` folder |
-| Composition root to register in | whichever process hosts it: `services/editor/src/composition/createPlatform.ts`, `site/src/platform/`, or (Phase 2) the shell's mount table |
+| Composition root to register in | whichever process hosts it: `site/src/platform/` (including `site/src/platform/inplace/` for in-place editing), or (Phase 2) the shell's mount table |
 | Config field | add a typed field to `PlatformConfig` in `packages/contracts/src/platform-config.ts` and a commented value in `platform.config.js` |
 | Boundary rule | declare the element in `eslint.config.js` and give it an explicit allow list; default is `disallow` |
 
