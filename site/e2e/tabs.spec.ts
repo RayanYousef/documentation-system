@@ -1,5 +1,6 @@
-// Tabs: more than three tabs, rename (the tab props dialog), default tab, text and 3D models inside a tab,
-// and reorder / remove through Raw (the visual editor has no buttons for those yet). Saved, reloaded, opened again.
+// Tabs: more than three tabs, props (the tab settings), default tab, text and 3D models inside a tab,
+// and reorder / remove through Raw. Saved, reloaded, opened again. Renaming by clicking a tab and the
+// move and remove buttons are in tabs-editing.spec.ts.
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 import type { Locator, Page } from '@playwright/test';
@@ -16,16 +17,24 @@ const tabsOf = (page: Page) => body(page).locator('.tabs-container');
 const tabItems = (tabs: Locator) => tabs.locator('ul.tabs > li.tabs__item');
 const panels = (tabs: Locator) => tabs.locator('[role="tabpanel"]');
 
-/** Opens a tab's props (double-click) and sets one of them. */
+/** Shows a tab without renaming it (a click on the tab that is already shown starts renaming). */
+async function showTab(tabs: Locator, index: number): Promise<void> {
+  const item = tabItems(tabs).nth(index);
+  if (!/tabs__item--active/.test((await item.getAttribute('class')) ?? '')) await item.click();
+  await expect(item).toHaveClass(/tabs__item--active/);
+}
+
+/** Shows a tab, opens its props ("Tab settings") and sets one of them. */
 async function setTabProp(page: Page, tabs: Locator, index: number, prop: 'label' | 'value', value: string): Promise<void> {
-  await tabItems(tabs).nth(index).dblclick();
+  await showTab(tabs, index);
+  await tabs.getByRole('button', { name: 'Tab settings' }).click();
   await page.getByLabel(`TabItem ${prop}`).fill(value);
   await tabs.getByRole('button', { name: 'Done' }).click();
 }
 
 /** Writes text into the first paragraph of a tab's panel. */
 async function typeInTab(tabs: Locator, page: Page, index: number, text: string): Promise<void> {
-  await tabItems(tabs).nth(index).click();
+  await showTab(tabs, index);
   await expect(panels(tabs).nth(index)).toBeVisible();
   await panels(tabs).nth(index).locator('p').first().click();
   await page.keyboard.press('End');
@@ -52,7 +61,8 @@ test('four tabs: add, rename, write in each, make the third the default; saved i
   for (const [i, text] of ['Steps go here.', 'Endpoints go here.', 'Odds and ends.', 'More extras.'].entries()) await typeInTab(tabs, page, i, text);
 
   // Default tab: the third.
-  await tabItems(tabs).nth(2).dblclick();
+  await showTab(tabs, 2);
+  await tabs.getByRole('button', { name: 'Tab settings' }).click();
   await page.getByLabel('TabItem default').check();
   await tabs.getByRole('button', { name: 'Done' }).click();
 

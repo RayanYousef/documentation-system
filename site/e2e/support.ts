@@ -64,11 +64,11 @@ function walk(rel: string, out: Record<string, Uint8Array>, skip: (rel: string) 
 }
 
 let seedFiles: Record<string, Uint8Array> | null = null;
-/** site/docs, frozen versions, versions.json and static files (not the generated static/platform). */
+/** site/docs, frozen versions, versions.json, comments and static files (not the generated static/platform). */
 function seed(): Record<string, Uint8Array> {
   if (seedFiles) return seedFiles;
   const files: Record<string, Uint8Array> = {};
-  for (const rel of ['site/docs', 'site/versioned_docs', 'site/versioned_sidebars', 'site/versions.json', 'site/sidebars.js']) walk(rel, files);
+  for (const rel of ['site/docs', 'site/versioned_docs', 'site/versioned_sidebars', 'site/versions.json', 'site/sidebars.js', 'site/comments']) walk(rel, files);
   walk('site/static', files, (r) => r.startsWith('site/static/platform'));
   seedFiles = files;
   return files;
@@ -250,4 +250,108 @@ export async function caretAtEnd(page: Page, el: Locator): Promise<void> {
     return after.toString().replace(/\uFEFF/g, '') === '';
   })).toBe(true);
   await page.waitForTimeout(150); // one throttle window of the editor's selection reading
+}
+
+// ---------- comments ----------
+
+export const commentsButton = (page: Page) => page.getByTestId('comments-button');
+/** The page's content as readers see it (the built page, or the saved preview after a save). */
+export const pageContent = (page: Page) => page.locator('article .theme-doc-markdown');
+
+export interface ThreadFixture {
+  id: string; body: string; exact: string; prefix?: string; suffix?: string;
+  tab?: { group: number; value: string; label: string } | null;
+  status?: 'open' | 'resolved'; login?: string; replies?: { id: string; body: string; login?: string }[];
+}
+
+/** A comments file as the store writes it. */
+export function commentsFile(pagePath: string, threads: ThreadFixture[]): string {
+  const author = (login = 'rita') => ({ login, name: login === 'mira' ? 'Mira Okonkwo' : 'Rita Reader' });
+  return `${JSON.stringify({
+    schema: 1,
+    page: pagePath,
+    threads: threads.map((t) => ({
+      id: t.id, author: author(t.login), createdAt: '2026-10-08T09:30:00.000Z', body: t.body,
+      anchor: { exact: t.exact, prefix: t.prefix ?? '', suffix: t.suffix ?? '', tab: t.tab ?? null },
+      status: t.status ?? 'open',
+      ...(t.status === 'resolved' ? { resolvedAt: '2026-10-08T10:00:00.000Z', resolvedBy: author('rita') } : {}),
+      replies: (t.replies ?? []).map((r) => ({ id: r.id, author: author(r.login), createdAt: '2026-10-08T09:45:00.000Z', body: r.body })),
+    })),
+  }, null, 2)}\n`;
+}
+
+/**
+ * The page's comments as a deploy would have published them (served in place of the built file), and the same
+ * file on the fake `main`, where signed-in editors read it before changing it.
+ */
+export async function seedComments(page: Page, gh: FakeGitHub, pagePath: string, threads: ThreadFixture[]): Promise<void> {
+  const text = commentsFile(pagePath, threads);
+  const name = pagePath.replace(/\.mdx?$/, '.json');
+  await page.route(new RegExp(`/platform/comments/${name.replace(/[.]/g, '\\.')}(\\?|$)`), (route) => route.fulfill({ status: 200, contentType: 'application/json', body: text }));
+  await commitOnMain(gh, `site/comments/${name}`, text, 'Seed comments');
+}
+
+/** Selects `text` inside `scope` with a DOM selection (across inline markup), as a reader's drag would. */
+export async function selectText(scope: Locator, text: string): Promise<void> {
+  await scope.first().evaluate((root, wanted) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    const nodes: Text[] = [];
+    let all = '';
+    const starts: number[] = [];
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) { starts.push(all.length); nodes.push(n as Text); all += (n as Text).data; }
+    const at = all.indexOf(wanted);
+    if (at < 0) throw new Error(`"${wanted}" is not on the page`);
+    const locate = (i: number) => { let k = 0; while (k + 1 < nodes.length && starts[k + 1]! <= i) k++; return { node: nodes[k]!, offset: i - starts[k]! }; };
+    const s = locate(at);
+    const e = locate(at + wanted.length - 1);
+    const range = document.createRange();
+    range.setStart(s.node, s.offset);
+    range.setEnd(e.node, e.offset + 1);
+    (s.node.parentElement ?? root).scrollIntoView({ block: 'center' });
+    const sel = window.getSelection()!;
+    sel.removeAllRanges();
+    sel.addRange(range);
+  }, text);
+}
+
+/** Center of the first line of `text` inside `scope`, in viewport coordinates (null when it is not shown). */
+export async function textPoint(scope: Locator, text: string): Promise<{ x: number; y: number }> {
+  const p = await scope.first().evaluate((root, wanted) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const t = n as Text;
+      const at = t.data.indexOf(wanted);
+      if (at < 0) continue;
+      const range = document.createRange();
+      range.setStart(t, at);
+      range.setEnd(t, at + wanted.length);
+      const rect = range.getClientRects()[0];
+      if (rect && rect.width) { (t.parentElement ?? root).scrollIntoView({ block: 'center' }); const r = range.getClientRects()[0]!; return { x: r.left + r.width / 2, y: r.top + r.height / 2 }; }
+    }
+    return null;
+  }, text);
+  if (!p) throw new Error(`"${text}" is not shown on the page`);
+  return p;
+}
+
+/** The texts painted by the comment highlight (CSS Custom Highlight API), in page order. */
+export const highlighted = (page: Page): Promise<string[]> => page.evaluate(() => {
+  const h = (CSS as unknown as { highlights?: Map<string, Set<Range>> }).highlights?.get('platform-comment');
+  return h ? [...h].map((r) => r.toString()) : [];
+});
+
+/** How many on-screen boxes the highlight paints (0 when its text is in a hidden tab). */
+export const highlightBoxes = (page: Page): Promise<number> => page.evaluate(() => {
+  const h = (CSS as unknown as { highlights?: Map<string, Set<Range>> }).highlights?.get('platform-comment');
+  return h ? [...h].reduce((n, r) => n + [...r.getClientRects()].filter((b) => b.width > 0).length, 0) : 0;
+});
+
+/** Signs in for comments through Edit, then leaves the editor (one sign-in serves both). */
+export async function signInThroughEdit(page: Page): Promise<void> {
+  await editButton(page).click();
+  await signInWithToken(page);
+  await expect(body(page)).toBeVisible();
+  await button(page, 'Cancel').click();
+  await expect(editing(page)).toHaveCount(0);
+  await expect(commentsButton(page)).toBeVisible();
 }

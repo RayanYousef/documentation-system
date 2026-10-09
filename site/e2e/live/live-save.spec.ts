@@ -4,7 +4,8 @@
 //
 // It builds and serves the site from this checkout, signs in with the token (which proves the token can write),
 // creates one temporary test page with the editor's "New page", and then on that page: saves, saves again within a
-// minute, adds Tabs, adds an FBX model that is already in the repo, and finally deletes the page again.
+// minute, adds Tabs, adds an FBX model that is already in the repo, adds and then deletes a comment, and finally
+// deletes the page again.
 // Every step is a real commit to main and starts a Pages deploy. The token is only ever typed into the sign-in
 // dialog; it is not printed or written anywhere.
 import { test, expect, type Page } from '@playwright/test';
@@ -64,10 +65,61 @@ async function saveAndWait(page: Page, commitMessage: string): Promise<void> {
   await expect(page.getByTestId('saved-banner')).toContainText('Saved as');
 }
 
-/** Hooks for steps added later (Part B adds the comment step here). Each runs on the test page, signed in, in the editor. */
+/** Selects `text` in the page content with a DOM selection, as a reader's drag would. */
+async function selectInPage(page: Page, text: string): Promise<void> {
+  await page.locator('article .theme-doc-markdown').first().evaluate((root, wanted) => {
+    const walker = document.createTreeWalker(root, NodeFilter.SHOW_TEXT);
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) {
+      const t = n as Text;
+      const at = t.data.indexOf(wanted);
+      if (at < 0) continue;
+      const range = document.createRange();
+      range.setStart(t, at);
+      range.setEnd(t, at + wanted.length);
+      t.parentElement?.scrollIntoView({ block: 'center' });
+      window.getSelection()!.removeAllRanges();
+      window.getSelection()!.addRange(range);
+      return;
+    }
+    throw new Error(`"${wanted}" is not on the page`);
+  }, text);
+}
+
+/** Hooks for steps added later. Each runs on the test page, signed in, after the last save (the saved version is shown). */
 export const extraSteps: { name: string; run(page: Page): Promise<void> }[] = [
-  // TODO(Part B, comments): add a step here that selects text on the test page, adds a comment, and checks that
-  // it shows after a reload. The test below runs every entry of this list between "add an FBX model" and "delete".
+  {
+    // A comment is a real commit of site/comments/<page>.json; deleting the last one removes the file again.
+    name: 'comment: add a comment, see it after a reload, then resolve and delete it',
+    async run(page) {
+      const commentsButton = page.getByTestId('comments-button');
+      await expect(commentsButton).toBeVisible();
+      await selectInPage(page, 'First live save.');
+      await button(page, 'Comment').click();
+      const box = page.getByRole('dialog', { name: 'New comment' });
+      await box.getByLabel('Comment').fill('Live e2e comment.');
+      await box.getByRole('button', { name: 'Save' }).click();
+      await expect(box).toHaveCount(0);
+      await expect(commentsButton).toHaveAccessibleName('Comments (1 open)');
+
+      // The deploy has not published it yet; this tab keeps showing it after a reload.
+      await page.reload();
+      await expect(commentsButton).toHaveAccessibleName('Comments (1 open)');
+
+      // Resolve it from its card, then delete it for good from the Resolved tab.
+      await commentsButton.click();
+      const panel = page.getByRole('complementary', { name: 'Comments' });
+      await panel.getByTestId('comment-item').getByRole('button').click();
+      const card = page.getByRole('dialog', { name: 'Comment thread' });
+      await expect(card).toContainText('Live e2e comment.');
+      await card.getByRole('button', { name: 'Resolve' }).click();
+      await expect(card).toHaveCount(0);
+      await panel.getByRole('tab', { name: /^Resolved/ }).click();
+      await panel.getByRole('button', { name: 'Delete' }).click();
+      await panel.getByRole('alertdialog', { name: 'Delete this comment for good?' }).getByRole('button', { name: 'Delete for good' }).click();
+      await expect(panel.getByText('No resolved comments.')).toBeVisible();
+      await expect(commentsButton).toHaveAccessibleName('Comments');
+    },
+  },
 ];
 
 test.describe.configure({ mode: 'serial' });
@@ -77,7 +129,7 @@ test.beforeAll(() => {
   if (!PAGE) throw new Error('E2E_LIVE_PAGE is not set (playwright.live.config.ts sets it).');
 });
 
-test('live: sign in, create a test page, save twice, add Tabs and an FBX model, then delete the page', async ({ page }) => {
+test('live: sign in, create a test page, save twice, add Tabs and an FBX model, comment, then delete the page', async ({ page }) => {
   // 1. Sign in (this makes the write check against the real repo) and create the temporary page.
   await openEditor(page, 'getting-started');
   await button(page, 'Page actions').click();
