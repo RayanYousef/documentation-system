@@ -1,4 +1,4 @@
-name: Deploy site and editor to GitHub Pages
+name: Deploy site to GitHub Pages
 
 on:
   push:
@@ -26,8 +26,11 @@ jobs:
         run: npm run build -w @platform/contracts -w @platform/okf-core -w @platform/viewers -w @platform/auth -w @platform/content
       - name: OKF validate
         run: npm run okf:check
-      - name: Build editor and site, compose output
+      - name: Build site
         run: npm run site:build
+        env:
+          # In-place editing keeps showing a just-saved page until a build from a newer commit is served.
+          PLATFORM_BUILD_SHA: ${{ github.sha }}
       - name: Publish to gh-pages
         uses: peaceiris/actions-gh-pages@v4
         with:
