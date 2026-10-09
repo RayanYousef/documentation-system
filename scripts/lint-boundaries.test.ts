@@ -46,6 +46,14 @@ describe('import boundaries', () => {
     const rules = await lint('site/src/theme/bad.tsx');
     expect(rules.filter((r) => r.startsWith('boundaries/'))).not.toEqual([]);
   }, TIMEOUT_MS);
+  it('rejects the comments service importing a comment store implementation', async () => {
+    const rules = await lint('services/comments/src/bad.ts');
+    expect(rules.filter((r) => r.startsWith('boundaries/'))).not.toEqual([]);
+  }, TIMEOUT_MS);
+  it('rejects reader code (a theme component) importing the comments service', async () => {
+    const rules = await lint('site/src/theme/badComments.tsx');
+    expect(rules.filter((r) => r.startsWith('boundaries/'))).not.toEqual([]);
+  }, TIMEOUT_MS);
   it('accepts the site composition root importing the editor', async () => {
     const rules = await lint('site/src/platform/good.ts');
     expect(rules.filter((r) => r.startsWith('boundaries/'))).toEqual([]);

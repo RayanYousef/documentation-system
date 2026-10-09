@@ -29,6 +29,8 @@ export default tseslint.config(
         { type: 'auth', pattern: 'services/auth/**' },
         { type: 'content', pattern: 'services/content/**' },
         { type: 'editor', pattern: 'services/editor/**' },
+        // Comments on doc pages: UI, anchoring and pure actions; sees contracts only (the site supplies stores and sign-in).
+        { type: 'comments', pattern: 'services/comments/**' },
         { type: 'site-composition', pattern: 'site/src/platform/**', mode: 'full' },
         // Build-time Node scripts (prebuild artifacts) may use okf-core and content like the root scripts do.
         { type: 'site-scripts', pattern: 'site/scripts/**', mode: 'full' },
@@ -53,9 +55,10 @@ export default tseslint.config(
           { from: ['auth'], allow: ['auth', 'contracts', 'okf-core'] },
           { from: ['content'], allow: ['content', 'contracts', 'okf-core'] },
           { from: ['editor'], allow: ['editor', 'contracts', 'okf-core', 'viewers'] },
+          { from: ['comments'], allow: ['comments', 'contracts'] },
           { from: ['site'], allow: ['site', 'site-composition', 'contracts', 'viewers', 'platform-config'] },
           // The site composition root (site/src/platform) is the one place that wires implementations, including the editor.
-          { from: ['site-composition'], allow: ['site', 'site-composition', 'contracts', 'okf-core', 'viewers', 'auth', 'content', 'editor', 'platform-config'] },
+          { from: ['site-composition'], allow: ['site', 'site-composition', 'contracts', 'okf-core', 'viewers', 'auth', 'content', 'editor', 'comments', 'platform-config'] },
           { from: ['site-scripts'], allow: ['site-scripts', 'contracts', 'okf-core', 'content', 'platform-config'] },
           { from: ['site-plugins'], allow: ['site-plugins', 'contracts', 'okf-core', 'content', 'platform-config'] },
           { from: ['root'], allow: ['root', 'platform-config', 'contracts', 'okf-core', 'content'] },
@@ -70,8 +73,9 @@ export default tseslint.config(
           { from: ['viewers'], disallow: platformPackages.filter((p) => p !== 'viewers').map((p) => `@platform/${p}`) },
           { from: ['auth'], disallow: ['@platform/content', '@platform/viewers', '@platform/editor', '@platform/site'] },
           { from: ['content'], disallow: ['@platform/auth', '@platform/viewers', '@platform/editor', '@platform/site'] },
-          { from: ['editor'], disallow: ['@platform/auth', '@platform/content', '@platform/site', '@platform/editor'] },
-          { from: ['site'], disallow: ['@platform/auth', '@platform/content', '@platform/editor'] },
+          { from: ['editor'], disallow: ['@platform/auth', '@platform/content', '@platform/site', '@platform/editor', '@platform/comments'] },
+          { from: ['comments'], disallow: ['@platform/auth', '@platform/content', '@platform/content/*', '@platform/editor', '@platform/editor/*', '@platform/viewers', '@platform/okf-core', '@platform/site', '@platform/comments'] },
+          { from: ['site'], disallow: ['@platform/auth', '@platform/content', '@platform/editor', '@platform/comments'] },
           { from: ['site-plugins'], disallow: ['@platform/auth', '@platform/editor', '@platform/viewers'] },
         ],
       }],

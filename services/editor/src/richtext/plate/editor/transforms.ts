@@ -102,6 +102,34 @@ export function addTab(editor: SlateEditor, m: ComponentsManifest, tabsPath: Pat
   editor.tf.insertNodes(tabItemNode(m, `tab${n}`, `Tab ${n}`, ''), { at, select: true });
 }
 
+const tabsAt = (editor: SlateEditor, tabsPath: Path): TElement | undefined => {
+  const tabs = editor.api.node<TElement>(tabsPath)?.[0];
+  return tabs && tabs.type === DOCS_KEYS.tabs ? tabs : undefined;
+};
+
+/** Moves the tab at `from` to position `to` (both indexes in the Tabs block); out-of-range moves do nothing. */
+export function moveTab(editor: SlateEditor, tabsPath: Path, from: number, to: number): void {
+  const tabs = tabsAt(editor, tabsPath);
+  const n = tabs?.children.length ?? 0;
+  if (!tabs || from === to || from < 0 || to < 0 || from >= n || to >= n) return;
+  editor.tf.moveNodes({ at: [...tabsPath, from], to: [...tabsPath, to] });
+}
+
+/** Removes the tab at `index`; the last tab of a Tabs block stays (remove the whole block instead). */
+export function removeTab(editor: SlateEditor, tabsPath: Path, index: number): void {
+  const tabs = tabsAt(editor, tabsPath);
+  if (!tabs || tabs.children.length <= 1 || index < 0 || index >= tabs.children.length) return;
+  editor.tf.removeNodes({ at: [...tabsPath, index] });
+}
+
+/** Sets the label of the tab at `index` (its value, the page address of the tab, stays). Blank names are ignored. */
+export function renameTab(editor: SlateEditor, tabsPath: Path, index: number, label: string): void {
+  const tabs = tabsAt(editor, tabsPath);
+  const name = label.trim();
+  if (!tabs || !name || index < 0 || index >= tabs.children.length) return;
+  editor.tf.setNodes({ label: name }, { at: [...tabsPath, index] });
+}
+
 /** Insert a manifest component. A TabItem goes into the Tabs around the cursor, or comes as a new Tabs block. */
 export function insertComponent(editor: SlateEditor, m: ComponentsManifest, d: ComponentDescriptor): void {
   if (jsxTypeFor(d) === DOCS_KEYS.tabItem && editor.selection) {

@@ -1,14 +1,12 @@
 // Drives the editing session's asynchronous steps (verify a remembered session, load the page) around
 // the pure editSessionReducer.
 import { useEffect, useMemo, useReducer } from 'react';
-import { AuthError, CURRENT_VERSION, type ContentBackend, type Identity } from '@platform/contracts';
+import { AuthError, CURRENT_VERSION, type ContentBackend } from '@platform/contracts';
 import type { EditablePage, InPlaceHost } from '../host.js';
+import { forgetVerifiedSessions, rememberVerified, verifiedIdentity } from '../session/verifiedSessions.js';
 import { editSessionReducer, initialEditState, type Draft, type EditAction, type EditState } from './editSessionReducer.js';
 
-/** Sessions already verified in this tab (token -> identity): a remembered session is checked once per tab. */
-const verified = new Map<string, Identity>();
-export const rememberVerified = (token: string, identity: Identity): void => { verified.set(token, identity); };
-export const forgetVerifiedSessions = (): void => { verified.clear(); };
+export { forgetVerifiedSessions, rememberVerified };
 
 /** Unsaved drafts by page path, so a remount (dev hot reload, route data refresh) restores the edits. */
 export const drafts = new Map<string, Draft>();
@@ -22,10 +20,10 @@ export function useEditSession(host: InPlaceHost, page: EditablePage): { state: 
     let cancelled = false;
     const stored = host.sessionStore.load();
     if (!stored) { dispatch({ type: 'need-sign-in' }); return undefined; }
-    const known = verified.get(stored.token);
+    const known = verifiedIdentity(stored.token);
     if (known) { dispatch({ type: 'session-ok', session: stored, identity: known }); return undefined; }
     host.auth.verify(stored).then(
-      (identity) => { verified.set(stored.token, identity); if (!cancelled) dispatch({ type: 'session-ok', session: stored, identity }); },
+      (identity) => { rememberVerified(stored.token, identity); if (!cancelled) dispatch({ type: 'session-ok', session: stored, identity }); },
       (e: Error) => {
         // GitHub unreachable (offline, outage): the token may be fine; keep it for the next try.
         if (e instanceof AuthError && e.code === 'NETWORK') { if (!cancelled) dispatch({ type: 'load-failed', error: `Could not check your saved sign-in. ${e.message}` }); return; }

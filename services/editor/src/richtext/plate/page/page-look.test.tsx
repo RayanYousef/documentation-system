@@ -128,8 +128,55 @@ describe('page look', () => {
     await act(async () => { tabs[1]!.click(); });
     expect([...m.host.querySelectorAll<HTMLElement>('[role="tabpanel"]')].map((p) => p.hidden)).toEqual([true, false]);
     expect(m.host.querySelector('.tabs__item--active')!.textContent).toBe('Beta');
-    await act(async () => { tabs[1]!.dispatchEvent(new MouseEvent('dblclick', { bubbles: true })); });
+    await act(async () => { m.host.querySelector<HTMLButtonElement>('button[aria-label="Tab settings"]')!.click(); });
     expect(m.host.querySelector<HTMLInputElement>('input[aria-label="TabItem label"]')!.value).toBe('Beta');
+  });
+
+  it('renames a tab by clicking the shown tab: Enter saves, Escape cancels', async () => {
+    const md = '\n<Tabs>\n  <TabItem value="a" label="Alpha">\n    First.\n  </TabItem>\n\n  <TabItem value="b" label="Beta">\n    Second.\n  </TabItem>\n</Tabs>\n';
+    const m = await mount(md);
+    const tab = (i: number) => m.host.querySelectorAll<HTMLElement>('.tabs-container ul.tabs > li.tabs__item')[i]!;
+    const nameBox = () => m.host.querySelector<HTMLInputElement>('input[aria-label="Tab name"]');
+    const type = async (box: HTMLInputElement, text: string) => {
+      await act(async () => {
+        Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')!.set!.call(box, text);
+        box.dispatchEvent(new Event('input', { bubbles: true }));
+      });
+    };
+    const key = async (box: HTMLInputElement, k: string) => { await act(async () => { box.dispatchEvent(new KeyboardEvent('keydown', { key: k, bubbles: true })); }); };
+
+    await act(async () => { tab(1).click(); }); // shows Beta, no text box yet
+    expect(nameBox()).toBeNull();
+    await act(async () => { tab(1).click(); }); // a click on the shown tab: its name becomes a text box
+    expect(nameBox()!.value).toBe('Beta');
+    await type(nameBox()!, 'Linux');
+    await key(nameBox()!, 'Escape');
+    expect(nameBox()).toBeNull();
+    expect(tab(1).textContent).toBe('Beta');
+
+    await act(async () => { tab(1).click(); });
+    await type(nameBox()!, 'Linux');
+    await key(nameBox()!, 'Enter');
+    expect(nameBox()).toBeNull();
+    expect(tab(1).textContent).toBe('Linux');
+    expect(m.getMarkdown()).toContain('<TabItem value="b" label="Linux">');
+  });
+
+  it('moves and removes the shown tab with the header chips', async () => {
+    const md = '\n<Tabs>\n  <TabItem value="a" label="Alpha">\n    First.\n  </TabItem>\n\n  <TabItem value="b" label="Beta">\n    Second.\n  </TabItem>\n\n  <TabItem value="c" label="Gamma">\n    Third.\n  </TabItem>\n</Tabs>\n';
+    const m = await mount(md);
+    const labels = () => [...m.host.querySelectorAll<HTMLElement>('.tabs-container ul.tabs > li.tabs__item')].map((t) => t.textContent);
+    const chip = (name: string) => m.host.querySelector<HTMLButtonElement>(`button[aria-label="${name}"]`)!;
+    expect(chip('Move tab left').disabled).toBe(true);
+    await act(async () => { chip('Move tab right').click(); });
+    expect(labels()).toEqual(['Beta', 'Alpha', 'Gamma']);
+    expect(m.host.querySelector('.tabs__item--active')!.textContent).toBe('Alpha');
+    await act(async () => { chip('Remove tab').click(); });
+    expect(labels()).toEqual(['Beta', 'Gamma']);
+    expect(m.getMarkdown()).not.toContain('First.');
+    await act(async () => { chip('Remove tab').click(); });
+    expect(labels()).toEqual(['Gamma']);
+    expect(chip('Remove tab').disabled).toBe(true);
   });
 
   it('shows the viewer at the page height with its props behind a settings button', async () => {

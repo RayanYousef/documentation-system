@@ -14,6 +14,8 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/pendingEdits.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/SavedPreview.tsx
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/inplace/folderIntroGuard.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/components/pageTemplates.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/signin/index.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/frontmatter/yamlDoc.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/mdx/componentsManifest.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/rawtext/RawTextEditor.ts
@@ -36,6 +38,10 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/components.json
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/createInPlaceHost.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/mountInPlaceEditor.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/editAccess.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/platform/inplace/sessionStores.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/editor/src/richtext/plate/page/PageTabsElement.tsx
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/tabs-editing.spec.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/src/theme/DocItem/Content/index.tsx
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/index.mjs
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/devContentMiddleware.mjs
@@ -54,11 +60,15 @@ Pages are edited where they are read. Every Latest page of the docs site has an 
 
 1. Click **Edit**. The first time in a tab, a sign-in dialog opens: on the live site, paste a fine-grained personal access token with Contents read and write on this repository (only write collaborators get in); on `npm start`, type a display name. "Remember on this device" is on by default, with a warning about shared devices. A remembered session is verified once per tab; if it stopped working it is forgotten and the dialog says why (when GitHub cannot be reached it is kept, and the editor shows the reason with **Close**).
 2. The edit bar sticks under the navbar: **Visual** / **Raw**, **Page settings**, **Page actions**, an "Unsaved changes" marker, the commit message (default `Update <title>`, for a folder intro `Update <path> intro`), **Cancel** and **Save**. Below it the formatting toolbar sticks while the page scrolls.
-3. The title is edited where the page shows it; **Page settings** opens the frontmatter form (description, type, tags, resource, sidebar position). The body is edited in the page's own look: headings, lists, tables and code look like the rendered page, admonitions are the site's real admonition component, tabs are the site's tabs (one panel at a time, double-click a tab to edit its props, the gear edits the tab group, "Add tab" appends one), and 3D viewers show the real model with their props behind a settings button.
+3. The title is edited where the page shows it; **Page settings** opens the frontmatter form (description, type, tags, resource, sidebar position). The body is edited in the page's own look: headings, lists, tables and code look like the rendered page, admonitions are the site's real admonition component, tabs are the site's tabs (see Tabs below), and 3D viewers show the real model with their props behind a settings button.
 4. **Raw** shows the whole file (frontmatter and body) in CodeMirror 6. A page the visual editor cannot write back safely opens in Raw with the message "This file could not be opened in the visual editor; editing raw MDX instead."
 5. **Save** validates the page, then commits it (live site) or writes it to disk (dev server). **Cancel** with unsaved edits asks first; so do links to other pages of the site (confirming throws the edits away, they are not restored on the next Edit) and closing or reloading the tab. Jumps within the page (table of contents, heading anchors) do not ask.
 
-**Page actions**: "New page in this folder..." (path prefilled with the current folder), "Rename...", "Delete..." (both in dialogs; not offered for folder intros), "Publish version..." (live site, role `editor`) and "Sign out". Frozen versions have no Edit button and no edit link; `log.md` and `code-maps/` are generated and not editable.
+**Page actions**: "New page in this folder..." (path prefilled with the current folder; the template is **Blank**, a title and one paragraph, or **Feature page**, a title and the tabs How to use, API and Misc, each with a short placeholder line), "Rename...", "Delete..." (both in dialogs; not offered for folder intros), "Publish version..." (live site, role `editor`) and "Sign out". Frozen versions have no Edit button and no edit link; `log.md` and `code-maps/` are generated and not editable.
+
+**Tabs**: any number of tabs, one panel shown at a time. Click a tab to show it; click the shown tab's label to rename it in place (the label becomes a text box: Enter saves, Escape cancels, leaving the box saves). The chips after the labels act on the shown tab: move it left or right, remove it (the last tab of a group stays), **Tab settings** (its value, label and default), then **Add tab** and the gear for the group's props (`groupId`). Tab labels read like a heading, on the site and in the editor: their size is one CSS value, `--platform-tab-label-size` in `site/src/css/custom.css` (1.5rem, the size of a page's H3; 2rem would be H2).
+
+**Comments**: while a page is edited its comment highlights and the Comments button are hidden; they come back after the save, on the saved version. Comments have their own page: [Comments](comments.md).
 
 ## Create your token
 
@@ -101,7 +111,10 @@ The editor sees only contract types. The one place that picks implementations is
 - `mountInPlaceEditor.tsx` is the entry of the lazy `inplace-editor` chunk: it builds the host, injects the editor stylesheet and mounts `InPlaceEditor` or `SavedPreview`.
 - `site/src/theme/DocItem/Content` and `site/src/theme/EditThisPage` are swizzle wrappers (no eject) with no editor imports; they load the chunk with a dynamic `import()`.
 
-A new sign-in method is a new entry in `signInPanels.tsx` plus its wiring in `createInPlaceHost.ts`; a new backend is wired in `createInPlaceHost.ts` only.
+- `editAccess.ts` decides the mode, the `AuthProvider` and the session store once for everything that writes: the editor (`createInPlaceHost`) and the comments (`site/src/platform/comments/commentSession.ts`). `sessionStores.ts` keeps one `BrowserSessionStore` per storage and key for the whole tab, so a sign-in made for a comment is the editor's sign-in too, even when it is not remembered on the device.
+- `@platform/editor/signin` exports the sign-in dialog and the tab's verified-session cache on their own (no Plate), and `showSignInDialog.tsx` opens that dialog with the editor stylesheet when a comment needs a signed-in editor; `editorStylesheet.ts` counts its users, so the style is removed when the last one closes.
+
+A new sign-in method is a new entry in `signInPanels.tsx` plus its wiring in `editAccess.ts`; a new backend is wired in `createInPlaceHost.ts` only.
 
 ## Rich text editor
 
@@ -129,7 +142,7 @@ Before import, `supportedSyntax.ts` scans the body for shapes the editor cannot 
 ### Blocks and toolbars
 
 - `ModelViewer` and `FbxViewer`: the real viewer from `@platform/viewers` at the page's height, with a settings button for the props the components manifest lists. A `src` starting with `/` is shown from the site's base URL; otherwise `repo` + `path` (+ `ref`) is read through the backend.
-- `Tabs` and `TabItem`: Infima tab markup, normalizers keep the shape Tabs, then TabItem, then blocks.
+- `Tabs` and `TabItem`: Infima tab markup, normalizers keep the shape Tabs, then TabItem, then blocks. `moveTab`, `removeTab` and `renameTab` in `editor/transforms.ts` back the header buttons and the in-place rename.
 - Fixed toolbar: undo and redo, block type, marks, lists, link, image by URL, upload image, upload 3D model, insert from repo, table, code block, divider, insert admonition, insert tabs, insert component.
 - The "/" menu offers basic blocks, each admonition and each manifest component. Markdown shortcuts work while typing; blocks have drag handles.
 
@@ -153,11 +166,13 @@ The Playwright suite runs against the built site (`npm run e2e -w @platform/site
 
 The Playwright specs insert each editor feature, save, reload, open the editor again and check both the page and the saved MDX read back from the fake `main`: formatting, links, code blocks, images, tables, admonitions, Tabs, 3D models, Raw round trips (Visual to Raw and back leaves every character alone), repeated saves, and the save errors above (`FakeGitHub` in `support.ts` has read-only tokens, revoked tokens, a rate limit, a protected branch and a dead connection). `npm run e2e -w @platform/site` runs the built-site suite and then `playwright.dev.config.ts` (dev-mode saving on `npm start`: it creates a temporary page, checks that the file is written and no commit is made, and restores `site/docs` afterwards). `npm run e2e:live -w @platform/site` is for a person with a token: it needs `GITHUB_TOKEN` in the terminal (never a file; traces, videos and screenshots are off, the page snapshot in `error-context.md` is off, and the token box is emptied before any check can fail, because that snapshot lists the value of every text box), builds the site, signs in against the real GitHub, and on one temporary page saves, saves again within a minute, adds Tabs and an FBX model, then deletes the page. Each step is a real commit to `main`. Without the token it stops with a short message.
 
+Tabs are covered by `site/e2e/tabs.spec.ts` (four tabs, props, default tab, 3D models inside tabs, Raw reorder) and `site/e2e/tabs-editing.spec.ts` (rename by clicking the label, move and remove with the buttons, five tabs, the last tab stays, H3-size labels, the Feature page template); the dev-mode suite creates a Feature page and opens it. Comments have their own specs ([Comments](comments.md)).
+
 A pick from a toolbar menu (block type, admonition, component) focuses the editor at once, so keys typed right after the pick land in the page (`site/e2e/menu-focus.spec.ts`). When the menu has finished its close animation it gives the focus back to the editor only if nothing else took it, so a viewer's settings popover opened right after inserting the viewer stays open.
 
 ## Known minor issues
 
-- The visual editor has no buttons to remove or reorder tabs yet (use Raw); renaming a tab is the tab's props dialog (double-click it). Only one tab of a group can be the default: ticking default on a tab clears it on the others.
+- Only one tab of a group can be the default: ticking default on a tab clears it on the others. Renaming a tab changes its label only; its value (the address of the tab) stays and is edited in Tab settings.
 - While editing, code blocks have no title bar or copy button of the page's own code blocks, and headings have no anchor links.
 - Tables keep the editor's own table chrome (cell selection, borders) with the page's cell styling.
 - After creating a page on the live site there is no page to open until the deploy finishes; the status line says so.

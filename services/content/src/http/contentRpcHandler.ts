@@ -20,11 +20,13 @@ export type ContentRpcHandler = (req: IncomingMessage, res: ServerResponse) => P
 
 const DEFAULT_MAX_BODY = 25 * 1024 * 1024;
 
-class RpcFailure extends Error {
+/** A refusal before the method runs (bad body, unknown method): sent with its HTTP status. */
+export class RpcFailure extends Error {
   constructor(public readonly status: number, public readonly code: ContentErrorCode, message: string) { super(message); }
 }
 
-async function readBody(req: IncomingMessage, limit: number): Promise<string> {
+/** Reads a request body up to `limit` bytes (over it: RpcFailure 413 TOO_LARGE). */
+export async function readBody(req: IncomingMessage, limit: number): Promise<string> {
   const declared = Number(req.headers['content-length'] ?? 0);
   if (declared > limit) throw new RpcFailure(413, 'TOO_LARGE', `Request body over ${limit} bytes`);
   const chunks: Buffer[] = [];

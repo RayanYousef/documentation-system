@@ -129,3 +129,17 @@
   mask-size: 100% 100%;
   transition: background-color var(--ifm-transition-fast);
 }
+
+/* ── Tab labels read like a heading (live site and the in-place editor, which use the same Infima markup) ──
+   One value sets the size: 1.5rem is the size of an H3 in a doc page (Docusaurus `.markdown > h3`);
+   2rem is an H2. */
+:root {
+  --platform-tab-label-size: 1.5rem;
+}
+
+.markdown .tabs__item {
+  font-family: var(--ifm-heading-font-family);
+  font-size: var(--platform-tab-label-size);
+  font-weight: var(--ifm-heading-font-weight);
+  line-height: var(--ifm-heading-line-height);
+}

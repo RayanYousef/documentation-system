@@ -24,6 +24,8 @@ const config = {
   plugins: [
     // In-place editing (Edit button on Latest doc pages; disk saves on `npm start`). See site/docs/platform/editor.md.
     ['./plugins/platform-inplace-edit/index.mjs', { enabled: platform.features.editor, codeRepos: platform.codeRepos }],
+    // Comments on Latest doc pages: publishes comments/ into the build as platform/comments/*.json. See site/docs/platform/comments.md.
+    ['./plugins/platform-comments/index.mjs', { enabled: platform.features.editor && platform.features.comments === true }],
     ...(platform.features.search
     ? [[
         '@orama/plugin-docusaurus-v3',

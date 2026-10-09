@@ -1,8 +1,10 @@
 import { useState } from 'react';
 import { applyFields } from '../frontmatter/yamlDoc.js';
 import { Modal } from './Modal.js';
+import { PAGE_TEMPLATES, type PageTemplate } from './pageTemplates.js';
 
-export function NewPageDialog({ typesInUse, defaultResource, defaultPath = '', onCreate, onClose }: { typesInUse: string[]; defaultResource: string; defaultPath?: string; onCreate(path: string, text: string): Promise<void>; onClose(): void }) {
+export function NewPageDialog({ typesInUse, defaultResource, defaultPath = '', templates = PAGE_TEMPLATES, onCreate, onClose }: { typesInUse: string[]; defaultResource: string; defaultPath?: string; templates?: readonly PageTemplate[]; onCreate(path: string, text: string): Promise<void>; onClose(): void }) {
+  const [template, setTemplate] = useState<PageTemplate>(templates[0]!);
   const [path, setPath] = useState(defaultPath);
   const [title, setTitle] = useState('');
   const [description, setDescription] = useState('');
@@ -13,13 +15,23 @@ export function NewPageDialog({ typesInUse, defaultResource, defaultPath = '', o
   const create = async () => {
     setBusy(true); setError('');
     try {
-      const text = applyFields(`\n# ${title}\n\nWrite the page here.\n`, { title, description, type, tags: [], resource });
+      const text = applyFields(template.body(title), { title, description, type, tags: [], resource });
       await onCreate(path.trim(), text);
     } catch (e) { setError((e as Error).message); }
     finally { setBusy(false); }
   };
   return (
     <Modal title="New page" onClose={busy ? undefined : onClose}>
+      {templates.length > 1 && (
+        <fieldset className="ped-templates">
+          <legend>Template</legend>
+          {templates.map((t) => (
+            <label key={t.id} className="ped-check" title={t.hint}>
+              <input type="radio" name="new-page-template" value={t.id} checked={template.id === t.id} disabled={busy} onChange={() => setTemplate(t)} /> {t.label}
+            </label>
+          ))}
+        </fieldset>
+      )}
       <label className="ped-row"><span>path</span><input aria-label="New page path" placeholder="systems/status-effects.md" value={path} onChange={(e) => setPath(e.target.value)} /></label>
       <label className="ped-row"><span>title</span><input aria-label="New page title" value={title} onChange={(e) => setTitle(e.target.value)} /></label>
       <label className="ped-row"><span>description</span><input aria-label="New page description" value={description} onChange={(e) => setDescription(e.target.value)} /></label>

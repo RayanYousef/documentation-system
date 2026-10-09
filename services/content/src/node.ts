@@ -4,3 +4,6 @@ export * from './local/committer.js';
 export * from './local/git.js';
 export * from './http/contentRpcHandler.js';
 export * from './http/serveContentBackend.js';
+export * from './comments/index.js';
+export * from './local/LocalCommentStore.js';
+export * from './http/commentRpcHandler.js';

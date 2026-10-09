@@ -150,8 +150,8 @@ test('add Tabs: Infima tabs render, one panel at a time; tabs and labels are edi
   await page.keyboard.press('End');
   await page.keyboard.type(' for Linux');
 
-  // Props: double-click a tab to edit it; the gear edits the Tabs props.
-  await items.nth(1).dblclick();
+  // Props: "Tab settings" edits the shown tab; the gear edits the Tabs props.
+  await tabs.getByRole('button', { name: 'Tab settings' }).click();
   await page.getByLabel('TabItem label').fill('Linux');
   await page.getByLabel('TabItem value').fill('linux');
   await tabs.getByRole('button', { name: 'Done' }).click();

@@ -64,8 +64,9 @@ platform.config.js
 | `viewers` | nothing internal |
 | `auth`, `content` | `contracts`, `okf-core` |
 | `editor` (`services/editor`) | `contracts`, `okf-core`, `viewers` |
-| `site` (`site` except `site/src/platform`, `site/scripts` and `site/plugins`) | `contracts`, `viewers`, `platform-config` (never `@platform/editor`, `auth` or `content`) |
-| `site-composition` (`site/src/platform`) | additionally `okf-core`, `auth`, `content`, `editor` |
+| `comments` (`services/comments`) | `contracts` only (stores and sign-in come from the site's composition root) |
+| `site` (`site` except `site/src/platform`, `site/scripts` and `site/plugins`) | `contracts`, `viewers`, `platform-config` (never `@platform/editor`, `@platform/comments`, `auth` or `content`) |
+| `site-composition` (`site/src/platform`) | additionally `okf-core`, `auth`, `content`, `editor`, `comments` |
 | `site-scripts` (`site/scripts`) | `contracts`, `okf-core`, `content`, `platform-config` |
 | `site-plugins` (`site/plugins`) | `contracts`, `okf-core`, `content`, `platform-config` |
 | `root` (`scripts/`, `eslint.config.js`, `vitest.workspace.ts`) | `platform-config`, `contracts`, `okf-core`, `content` |

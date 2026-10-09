@@ -1,6 +1,6 @@
 ---
 title: Contracts
-description: Lists every interface, type and error code in @platform/contracts and the two contract test suites that any new auth provider or content backend must pass; open it when you need the exact signature a service has to implement.
+description: Lists every interface, type and error code in @platform/contracts and the three contract test suites that any new auth provider, content backend or comment store must pass; open it when you need the exact signature a service has to implement.
 type: system
 tags: [platform, contracts, typescript, testing, auth, content]
 resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts
@@ -9,13 +9,15 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/content.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/platform-config.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/components-manifest.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/comments.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/authProviderContract.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/contentBackendContract.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/commentStoreContract.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/packages/contracts/src/testing/fixtures/miniBundle.ts
 sidebar_position: 2
 ---
 
-`packages/contracts` is pure TypeScript: interfaces, discriminated unions, two error classes and two Vitest suites. It has no runtime dependency on any service, and every service depends on it. Phase 1 chose TypeScript interfaces over OpenAPI; an OpenAPI document is derived from these when the HTTP surface becomes public in Phase 2.
+`packages/contracts` is pure TypeScript: interfaces, discriminated unions, two error classes and three Vitest suites. It has no runtime dependency on any service, and every service depends on it. Phase 1 chose TypeScript interfaces over OpenAPI; an OpenAPI document is derived from these when the HTTP surface becomes public in Phase 2.
 
 ## auth.ts
 
@@ -36,16 +38,24 @@ sidebar_position: 2
 
 ## platform-config.ts
 
-`PlatformConfig` is the type of `platform.config.js`: site identity fields, `sitePath`, `features { editor, viewers, search }`, `auth { provider: 'github-token' | 'mock' }`, `content { backend: 'github-browser' | 'http', url? }` and `codeRepos: CodeRepoRef[]`. `CodeRepoRef { owner, repo, defaultRef, label, pathPrefix? }`; `repoKey(r)` returns `owner/repo`, the key used by pins, code maps and ref rewriting. Adding a provider or backend widens the union here first.
+`PlatformConfig` is the type of `platform.config.js`: site identity fields, `sitePath`, `features { editor, viewers, search, comments? }`, `auth { provider: 'github-token' | 'mock' }`, `content { backend: 'github-browser' | 'http', url? }` and `codeRepos: CodeRepoRef[]`. `CodeRepoRef { owner, repo, defaultRef, label, pathPrefix? }`; `repoKey(r)` returns `owner/repo`, the key used by pins, code maps and ref rewriting. Adding a provider or backend widens the union here first.
 
 ## components-manifest.ts
 
 `ComponentsManifest { components: ComponentDescriptor[] }` is the shape of `site/components.json`, which the editor fetches from `<baseUrl>platform/components.json` to drive component insertion. `ComponentDescriptor { name, kind: 'flow', hasChildren, preview, props: ComponentProp[] }` with `ComponentProp { name, type: 'string' | 'number' | 'boolean' }`; `preview` is one of `model-viewer`, `fbx-viewer`, `tabs`, `tab-item`, `generic`.
 
+## comments.ts
+
+- `CommentsFile { schema: 1, page, threads }` is one page's comments; `emptyCommentsFile(page)` and `commentsFileName(page)` ("systems/inventory.md" to "systems/inventory.json", the name in the repository's `comments/` folder and on the site's `platform/comments/`).
+- `CommentThread extends CommentEntry { anchor, status: 'open' | 'resolved', resolvedAt?, resolvedBy?, replies: CommentEntry[] }`; `CommentEntry { id, author: CommentAuthor, createdAt, body }`; `CommentAuthor { login, name }`.
+- `CommentAnchor { exact, prefix, suffix, tab: CommentTab | null }` (a text-quote selector) with `CommentTab { group, value, label }`.
+- `CommentStore { readonly id; read(page): Promise<{ file, etag }>; write(page, file, { message, author, expectedEtag }): Promise<{ commitSha, commitUrl, etag }> }`. `expectedEtag` is required (null: no file yet); a mismatch is `ContentError('CONFLICT')`, a bad path or file is `VALIDATION`, and a file with no threads removes the file. See [Comments](comments.md).
+
 ## Contract test suites
 
 - `describeAuthProviderContract(name, factory)` takes a factory returning `{ provider, validCredentials, invalidCredentials, nonCollaboratorCredentials?, cleanup? }` and checks the id, login, verify, invalid credentials, unsupported credentials and (when supplied) the `NOT_COLLABORATOR` path.
 - `describeContentBackendContract(name, factory)` takes a factory returning `{ backend, readFile(relPath), listTags(), cleanup? }` seeded with `MINI_BUNDLE`, and checks version listing, page listing (reserved files and `code-maps/` hidden), etags, `NOT_FOUND`, single-commit regeneration of index, manifest and log, `CONFLICT` on a stale etag, create, delete, rename, `FROZEN`, `VALIDATION`, upload, search and publish (sha-pinned URLs, `versions/<v>.json`, tag).
+- `describeCommentStoreContract(name, factory, { commits? })` takes a factory returning `{ store, readFile(relPath), writeBehind(page, file | null), cleanup? }` over an empty repository and checks the empty read, one file per page under `comments/` without the page extension, the etag round trip, `CONFLICT` when another editor changed or created the file, removal of an empty file, and `VALIDATION` for bad paths and files.
 - `testing/fixtures/miniBundle.ts` exports `MINI_BUNDLE` (the in-memory bundle), `MINI_CODE_REPOS` (the single `acme/game` code repo the harnesses pass as `codeRepos`), `NEW_PAGE_TEXT` and `INVALID_PAGE_TEXT`, shared by both suites and by okf-core tests.
 
 The suites are imported from the `@platform/contracts/testing` subpath, and `vitest` is a peer dependency of the package.

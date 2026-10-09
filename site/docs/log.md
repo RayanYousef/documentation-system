@@ -7,6 +7,13 @@ Newest first. Each entry names the page that changed and who changed it.
 
 ## 2026-10-09
 
+* **Add**: [Comments](/platform/comments.md) - comments on the text of Latest pages: highlights for every reader, hover and thread cards, the Comments panel (Open, Unattached, Resolved), reply, resolve, reopen and delete, comments inside tabs, storage in site/comments, publishing into the build, anchoring and tests. (by Rayan Yousef)
+* **Update**: [Editor service](/platform/editor.md) - tabs: rename by clicking the shown tab, move and remove buttons, Tab settings, heading-size labels; the Feature page template; the shared sign-in for comments; removed the tabs known issue. (by Rayan Yousef)
+* **Update**: [Platform decisions](/platform/decisions.md) - added decisions 31 to 35 (comment storage, published comment files, text-quote anchoring and highlights, the comments service, tab editing and label size). (by Rayan Yousef)
+* **Update**: [Contracts](/platform/contracts.md) - comments.ts (CommentStore and the comments file) and the comment store contract suite. (by Rayan Yousef)
+* **Update**: [Content service](/platform/content.md) - the GitHub, disk and HTTP comment stores. (by Rayan Yousef)
+* **Update**: [Site](/platform/site.md) - the platform-comments plugin, the Tabs wrapper and the tab label size. (by Rayan Yousef)
+* **Update**: [Architecture](/platform/architecture.md) - the comments element in the dependency rules. (by Rayan Yousef)
 * **Update**: [Editor service](/platform/editor.md) - review fixes: keys typed right after a toolbar menu pick are kept, a closing menu no longer closes a popover opened after it, and a failed live e2e run cannot write the token to disk; removed the menu focus known issue. (by Rayan Yousef)
 * **Update**: [Auth service](/platform/auth.md) - a GitHub rate limit at sign-in or on a remembered session is `NETWORK`, not "cannot write" or a bad token. (by Rayan Yousef)
 * **Update**: [Editor service](/platform/editor.md) - added "Create your token" (the exact fine-grained token settings), the plain-language save errors, the end-to-end coverage (every editor feature, save errors, repeated saves, dev-mode saving, the live test), the upload fallback after a reload and two new known issues. (by Rayan Yousef)

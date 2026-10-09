@@ -7,6 +7,7 @@ import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { HttpContentBackend } from '@platform/content';
+import { HttpCommentStore } from '@platform/content/comments';
 import { git } from '@platform/content/node';
 import platform from '../../../platform.config.js';
 import { createDevContentMiddleware, DEV_TOKEN_HEADER } from './devContentMiddleware.mjs';
@@ -57,8 +58,8 @@ const withToken = (token: string | null): typeof fetch => (input, init) => {
 };
 const backend = (token: string | null = TOKEN) => new HttpContentBackend(endpoint(), withToken(token));
 /** POST through node:http (fetch does not let a caller set Host). Resolves the status code. */
-const rpc = (headers: Record<string, string>, body: unknown = { method: 'listVersions', args: [] }) => new Promise<{ status: number }>((resolve, reject) => {
-  const url = new URL(`${endpoint()}/rpc`);
+const rpc = (headers: Record<string, string>, body: unknown = { method: 'listVersions', args: [] }, route = 'rpc') => new Promise<{ status: number }>((resolve, reject) => {
+  const url = new URL(`${endpoint()}/${route}`);
   const req = request({ host: url.hostname, port: url.port, path: url.pathname, method: 'POST', agent: false, headers: { 'Content-Type': 'application/json', [DEV_TOKEN_HEADER]: TOKEN, ...headers } }, (res) => {
     res.resume();
     res.on('end', () => resolve({ status: res.statusCode ?? 0 }));
@@ -143,5 +144,32 @@ describe('dev content endpoint', () => {
     await writeFile(path.join(siteDir, 'docs', 'getting-started.md'), `${page.text}\nChanged in the IDE.\n`);
     await expect(b.writePage('current', 'getting-started.md', `${page.text}\nMine.\n`, { message: 'x', author, expectedEtag: page.etag })).rejects.toMatchObject({ code: 'CONFLICT' });
     expect(await readFile(path.join(siteDir, 'docs', 'getting-started.md'), 'utf8')).toContain('Changed in the IDE.');
+  });
+
+  it('reads and writes a page comments file under site/comments, with no commit; the same guards apply', async () => {
+    const store = new HttpCommentStore(endpoint(), withToken(TOKEN));
+    const page = 'systems/inventory.md';
+    const before = await commitCount();
+    const empty = await store.read(page);
+    expect(empty).toEqual({ file: { schema: 1, page, threads: [] }, etag: null });
+    const thread = { id: 'c1', body: 'Why?', author: { login: 'dev', name: 'Dev' }, createdAt: '2026-10-09T10:00:00.000Z', status: 'open' as const, replies: [], anchor: { exact: 'stored', prefix: '', suffix: '', tab: null } };
+    const res = await store.write(page, { schema: 1, page, threads: [thread] }, { message: 'Comment', author, expectedEtag: null });
+    expect(res.commitSha).toBe('');
+    expect(JSON.parse(await readFile(path.join(siteDir, 'comments', 'systems', 'inventory.json'), 'utf8')).threads[0].body).toBe('Why?');
+    expect(await commitCount()).toBe(before);
+    await expect(new HttpCommentStore(endpoint(), withToken(null)).read(page)).rejects.toMatchObject({ code: 'FORBIDDEN' });
+    await expect(store.read('../package.md')).rejects.toMatchObject({ code: 'VALIDATION' });
+    const body = { method: 'read', args: [page] };
+    expect((await rpc({ Host: 'evil.example' }, body, 'comments')).status).toBe(403);
+    expect((await rpc({ Origin: 'https://evil.example' }, body, 'comments')).status).toBe(403);
+    expect((await rpc({ 'Content-Type': 'text/plain' }, body, 'comments')).status).toBe(403);
+    expect((await rpc({ 'x-test-remote': '10.0.0.2' }, body, 'comments')).status).toBe(403);
+    expect((await rpc({}, body, 'comments')).status).toBe(200);
+    expect((await fetch(`${endpoint()}/comments`, { headers: { [DEV_TOKEN_HEADER]: TOKEN } })).status).toBe(405);
+  });
+
+  it('passes unknown routes under the endpoint to the next middleware', async () => {
+    expect(await (await fetch(`${endpoint()}/constructor`)).text()).toBe('next');
+    expect(await (await fetch(`${endpoint()}/rpc/x`)).text()).toBe('next');
   });
 });
