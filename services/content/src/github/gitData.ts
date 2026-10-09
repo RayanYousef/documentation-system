@@ -2,6 +2,15 @@ import { ContentError, type Author } from '@platform/contracts';
 
 export interface GitDataClientOptions { owner: string; repo: string; token: string | null; fetch?: typeof fetch; apiRoot?: string }
 export interface TreeEntry { path: string; sha: string; type: 'blob' | 'tree'; size?: number }
+export interface Head { commitSha: string; treeSha: string }
+export interface CommitFilesOptions {
+  /**
+   * The commit the change was computed from. The new commit gets it as its only parent and the branch is
+   * fast-forwarded only if it still points there; otherwise CONFLICT with details { reason: 'branch-moved' }.
+   * Without it the change is applied on top of whatever the branch points to when committing.
+   */
+  expectedParent?: Head;
+}
 
 const b64encode = (bytes: Uint8Array): string => { let s = ''; for (let i = 0; i < bytes.length; i += 0x8000) s += String.fromCharCode(...bytes.subarray(i, i + 0x8000)); return btoa(s); };
 const b64decode = (b64: string): Uint8Array => Uint8Array.from(atob(b64.replace(/\n/g, '')), (c) => c.charCodeAt(0));
@@ -16,12 +25,16 @@ export class GitDataClient {
     this.root = opts.apiRoot ?? 'https://api.github.com';
   }
 
-  private async api<T>(method: string, path: string, body?: unknown): Promise<T> {
+  /**
+   * `cache`: the fetch cache mode. GitHub sends `Cache-Control: max-age=60` on GETs and browsers honour it,
+   * so reads of something that moves (a branch ref) pass 'no-store'; reads by sha may come from the cache.
+   */
+  private async api<T>(method: string, path: string, body?: unknown, cache?: RequestCache): Promise<T> {
     const headers: Record<string, string> = { Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28' };
     if (this.opts.token) headers['Authorization'] = `Bearer ${this.opts.token}`;
     if (body !== undefined) headers['Content-Type'] = 'application/json';
     let res: Response;
-    try { res = await this.f(`${this.root}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body) }); }
+    try { res = await this.f(`${this.root}${path}`, { method, headers, body: body === undefined ? undefined : JSON.stringify(body), ...(cache ? { cache } : {}) }); }
     catch (e) { throw new ContentError('NETWORK', `GitHub unreachable: ${(e as Error).message}`); }
     if (res.status === 404) throw new ContentError('NOT_FOUND', `GitHub: not found ${path}`);
     if (res.status === 401 || res.status === 403) throw new ContentError('FORBIDDEN', `GitHub refused ${method} ${path} (HTTP ${res.status})`);
@@ -32,8 +45,10 @@ export class GitDataClient {
 
   private repoPath(p: string): string { return `/repos/${this.opts.owner}/${this.opts.repo}${p}`; }
 
-  async getHead(branch: string): Promise<{ commitSha: string; treeSha: string }> {
-    const ref = await this.api<{ object: { sha: string } }>('GET', this.repoPath(`/git/ref/heads/${encodeURIComponent(branch)}`));
+  async getHead(branch: string): Promise<Head> {
+    // Never from the browser's HTTP cache: a ref read up to a minute old would load a page as it was before
+    // the last save, and make every retry of a save compute on the same stale head.
+    const ref = await this.api<{ object: { sha: string } }>('GET', this.repoPath(`/git/ref/heads/${encodeURIComponent(branch)}`), undefined, 'no-store');
     const commit = await this.api<{ tree: { sha: string } }>('GET', this.repoPath(`/git/commits/${ref.object.sha}`));
     return { commitSha: ref.object.sha, treeSha: commit.tree.sha };
   }
@@ -55,8 +70,8 @@ export class GitDataClient {
 
   async getBlobText(sha: string): Promise<string> { return new TextDecoder().decode(await this.getBlobBytes(sha)); }
 
-  async commitFiles(branch: string, writes: Record<string, string | Uint8Array>, deletes: string[], message: string, author: Author): Promise<string> {
-    const head = await this.getHead(branch);
+  async commitFiles(branch: string, writes: Record<string, string | Uint8Array>, deletes: string[], message: string, author: Author, opts: CommitFilesOptions = {}): Promise<string> {
+    const head = opts.expectedParent ?? await this.getHead(branch);
     const tree: { path: string; mode: '100644'; type: 'blob'; sha: string | null }[] = [];
     for (const [path, content] of Object.entries(writes)) {
       const body = typeof content === 'string' ? { content, encoding: 'utf-8' } : { content: b64encode(content), encoding: 'base64' };
@@ -66,7 +81,12 @@ export class GitDataClient {
     for (const path of deletes) tree.push({ path, mode: '100644', type: 'blob', sha: null });
     const newTree = await this.api<{ sha: string }>('POST', this.repoPath('/git/trees'), { base_tree: head.treeSha, tree });
     const commit = await this.api<{ sha: string }>('POST', this.repoPath('/git/commits'), { message, tree: newTree.sha, parents: [head.commitSha], author: { name: author.name, email: author.email, date: new Date().toISOString() } });
-    await this.api('PATCH', this.repoPath(`/git/refs/heads/${encodeURIComponent(branch)}`), { sha: commit.sha, force: false });
+    try {
+      await this.api('PATCH', this.repoPath(`/git/refs/heads/${encodeURIComponent(branch)}`), { sha: commit.sha, force: false });
+    } catch (e) {
+      if (e instanceof ContentError && e.code === 'CONFLICT') throw new ContentError('CONFLICT', `${branch} moved while saving; nothing was committed`, { reason: 'branch-moved' });
+      throw e;
+    }
     return commit.sha;
   }
 

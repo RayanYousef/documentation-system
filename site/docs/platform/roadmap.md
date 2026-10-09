@@ -21,11 +21,11 @@ Phase 1 (shipped) is the static composition documented in [Architecture](archite
 
 ### Server-side content service in a Hono shell (spec 4.4, 4.8)
 
-A thin Hono application mounting the services on paths in one process: `/` (gate plus site), `/editor/`, `/api/content/*`, `/api/auth/*`, `/api/search`. The content route promotes today's `serveContentBackend` bridge: the server-side backend holds the GitHub token as a secret and enforces the auth session; browsers keep using `HttpContentBackend` (`content: { backend: 'http', url }`). `search` becomes an HTTP endpoint backed by the same `buildSearchIndex` and `searchRaw` functions the backends use today (the prebuilt `search-index-<version>.json` is not read by any backend yet). An OpenAPI document is derived from the TypeScript contracts at this point. Guides: [Add a content backend](extending/add-content-backend.md), [Add a new service module](extending/add-service-module.md).
+A thin Hono application mounting the services on paths in one process: `/` (gate plus site, with in-place editing), `/api/content/*`, `/api/auth/*`, `/api/search`. The content route promotes today's `serveContentBackend` bridge: the server-side backend holds the GitHub token as a secret and enforces the auth session; browsers keep using `HttpContentBackend` (`content: { backend: 'http', url }`). `search` becomes an HTTP endpoint backed by the same `buildSearchIndex` and `searchRaw` functions the backends use today (the prebuilt `search-index-<version>.json` is not read by any backend yet). An OpenAPI document is derived from the TypeScript contracts at this point. Guides: [Add a content backend](extending/add-content-backend.md), [Add a new service module](extending/add-service-module.md).
 
 ### Gate for private viewing (spec 4.6)
 
-`services/gate` serves the built site only with a valid session (a cookie carrying the JWT from the password provider) and redirects to the editor's login otherwise. Phase 1 has no gate; the site is public. Guide: [Add a new service module](extending/add-service-module.md).
+`services/gate` serves the built site only with a valid session (a cookie carrying the JWT from the password provider) and redirects to a login page otherwise. Phase 1 has no gate; the site is public. Guide: [Add a new service module](extending/add-service-module.md).
 
 ### Docker or Node deployment (spec 4.8)
 
@@ -39,11 +39,12 @@ A workflow in each code repository posts the pushed commit range to the content 
 
 Carried over from [Editor service](editor.md); none blocks daily use.
 
-- Rename and Delete use native `window.prompt` and `window.confirm` instead of the shared `Modal`.
-- The frontmatter form has no `sources` field; edit them in the raw-MDX view.
+- While editing, code blocks have no title bar or copy button, and headings have no anchor links.
+- Tables keep the editor's own table chrome with the page's cell styling.
+- The frontmatter form has no `sources` field; edit them in Raw.
 - The New page dialog derives its default `resource` from the first `codeRepos` entry only.
 - A failed `components.json` fetch falls back to the bundled component list without telling the user.
-- The Phase 1 HTTP bridge has no authentication, so it stays local-only until the server exists.
+- Sign-in on the live site needs a fine-grained token pasted by hand; a GitHub OAuth or device flow needs a server (see the Hono shell above).
 
 ## Not planned
 

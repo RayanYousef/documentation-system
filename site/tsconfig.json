@@ -1,1 +1,11 @@
-{ "extends": "@docusaurus/tsconfig", "compilerOptions": { "baseUrl": ".", "strict": true, "jsx": "react-jsx" }, "include": ["src", "docusaurus.config.js"] }
+{
+  "extends": "@docusaurus/tsconfig",
+  "compilerOptions": {
+    "baseUrl": ".",
+    "strict": true,
+    "jsx": "react-jsx",
+    // `@/` is the editor's alias for its vendored UI files (the plugin sets the same webpack alias).
+    "paths": { "@site/*": ["./*"], "@/*": ["../services/editor/src/*"] }
+  },
+  "include": ["src", "docusaurus.config.js", "../services/editor/src/types"]
+}

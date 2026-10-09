@@ -1,0 +1,345 @@
+/*
+ * The in-page editor's stylesheet: one Tailwind 4 entry compiled by the site's bundler to a CSS string
+ * (asset/source, see site/plugins/platform-inplace-edit). It is injected as <style data-platform-editor>
+ * when editing starts and removed when it ends, so readers never download or apply it.
+ *
+ * Rules of the road (the page must look and behave exactly as before once editing ends, and the site
+ * chrome must not change while editing):
+ * - No global Preflight. Tailwind's theme and utilities only; resets are scoped to the editor chrome
+ *   (.ped-ui and the popover/dialog portals).
+ * - Utilities are layered, the site's Infima rules are not: inside `.markdown` the page's own rules win,
+ *   which is how the edited page keeps its look.
+ * - Every colour maps onto the site's Infima variables, so light/dark follow the site's colour mode.
+ * - Only editor sources are scanned for class names (`@source "../"`), and `container` is never generated
+ *   (Infima has its own `.container`).
+ */
+@layer theme, base, components, utilities;
+@import "tailwindcss/theme.css" layer(theme);
+@import "tailwindcss/utilities.css" layer(utilities) source(none);
+@import "tw-animate-css";
+@import "./shadcn-variants.css";
+@source "../";
+@source not inline("container");
+
+/* The site switches colour mode with <html data-theme="dark|light">. */
+@custom-variant dark (&:where([data-theme='dark'], [data-theme='dark'] *));
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  /* No --primary of our own: the site already defines one; the editor reads --ed-primary directly. */
+  --color-primary: var(--ed-primary);
+  --color-primary-foreground: var(--ed-on-primary);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-brand: var(--brand);
+  --color-highlight: var(--highlight);
+  --color-field: var(--ed-field);
+  --color-band: var(--ed-band);
+  --color-paper: var(--ed-paper);
+  --color-raised: var(--ed-raised);
+  --color-raised-hover: var(--ed-raised-hover);
+  --color-link: var(--ed-link);
+  --color-line-strong: var(--ed-line-strong);
+  --color-faint: var(--ed-text-faint);
+  --font-sans: var(--ed-sans);
+  --font-heading: var(--ed-sans);
+  --font-mono: var(--ed-mono);
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+  --radius-2xl: calc(var(--radius) * 1.8);
+}
+
+/* Editor tokens, all from the site's Infima variables (which already switch with data-theme). */
+:root {
+  --ed-page: var(--ifm-background-color);
+  --ed-paper: var(--ifm-background-color);
+  --ed-field: var(--ifm-background-color);
+  --ed-band: var(--ifm-background-surface-color);
+  --ed-raised: var(--ifm-background-surface-color);
+  --ed-raised-hover: var(--ifm-color-emphasis-200);
+  --ed-line: var(--ifm-color-emphasis-300);
+  --ed-line-strong: var(--ifm-color-emphasis-500);
+  --ed-text: var(--ifm-font-color-base);
+  --ed-text-muted: var(--ifm-color-emphasis-700);
+  --ed-text-faint: var(--ifm-color-emphasis-500);
+  --ed-primary: var(--ifm-color-primary);
+  --ed-primary-hover: var(--ifm-color-primary-dark);
+  --ed-on-primary: var(--ifm-background-color);
+  --ed-primary-soft: color-mix(in srgb, var(--ifm-color-primary) 18%, transparent);
+  --ed-link: var(--ifm-link-color);
+  --ed-focus: var(--ifm-link-color);
+  --ed-danger: var(--ifm-color-danger);
+  --ed-danger-hover: var(--ifm-color-danger-dark);
+  --ed-on-danger: #ffffff;
+  --ed-danger-soft: var(--ifm-color-danger-contrast-background);
+  --ed-ok: var(--ifm-color-success);
+  --ed-treasure: var(--ifm-color-warning);
+  --ed-info: var(--ifm-color-info);
+  --ed-shadow: var(--ifm-global-shadow-md);
+  --ed-radius: var(--ifm-global-radius);
+  --ed-sans: var(--ifm-font-family-base);
+  --ed-mono: var(--ifm-font-family-monospace);
+  --ed-code-bg: var(--ifm-pre-background);
+  --ed-code-selection: color-mix(in srgb, var(--ifm-color-primary) 30%, transparent);
+  --ed-adm-note-bg: var(--ifm-color-secondary-contrast-background); --ed-adm-note-line: var(--ifm-color-secondary-dark);
+  --ed-adm-tip-bg: var(--ifm-color-success-contrast-background);    --ed-adm-tip-line: var(--ifm-color-success-dark);
+  --ed-adm-info-bg: var(--ifm-color-info-contrast-background);      --ed-adm-info-line: var(--ifm-color-info-dark);
+  --ed-adm-caution-bg: var(--ifm-color-warning-contrast-background); --ed-adm-caution-line: var(--ifm-color-warning-dark);
+  --ed-adm-danger-bg: var(--ifm-color-danger-contrast-background);  --ed-adm-danger-line: var(--ifm-color-danger-dark);
+  /* Code token colours: the site's Prism themes (github light, dracula dark). */
+  --ed-code-keyword: #00009f; --ed-code-string: #e3116c; --ed-code-number: #36acaa; --ed-code-comment: #999988;
+  --ed-code-name: #d73a49; --ed-code-type: #00a4db; --ed-code-punct: #393a34;
+
+  /* shadcn variables the vendored Plate UI files use (no --primary: see @theme above). */
+  --background: var(--ed-paper);
+  --foreground: var(--ed-text);
+  --card: var(--ed-raised);
+  --card-foreground: var(--ed-text);
+  --popover: var(--ed-raised);
+  --popover-foreground: var(--ed-text);
+  --secondary: var(--ed-band);
+  --secondary-foreground: var(--ed-text);
+  --muted: var(--ed-band);
+  --muted-foreground: var(--ed-text-muted);
+  --accent: var(--ed-primary-soft);
+  --accent-foreground: var(--ed-text);
+  --destructive: var(--ed-danger);
+  --destructive-foreground: var(--ed-on-danger);
+  --border: var(--ed-line);
+  --input: var(--ed-line);
+  --ring: var(--ed-focus);
+  --brand: var(--ed-primary);
+  --highlight: color-mix(in srgb, var(--ifm-color-warning) 35%, transparent);
+  --radius: var(--ed-radius);
+}
+
+/* Sticky offsets: the edit bar sits under the navbar, the formatting toolbar under the edit bar
+   (the editor sets --ped-editbar-height on its root from the measured edit bar). */
+.ped-ui {
+  --ped-editbar-top: var(--ifm-navbar-height);
+  --ped-sticky-top: calc(var(--ifm-navbar-height) + var(--ped-editbar-height, 3.25rem) + 0.25rem);
+}
+
+[data-theme='dark'] {
+  --ed-code-keyword: #ff79c6; --ed-code-string: #f1fa8c; --ed-code-number: #bd93f9; --ed-code-comment: #6272a4;
+  --ed-code-name: #50fa7b; --ed-code-type: #8be9fd; --ed-code-punct: #f8f8f2;
+}
+
+/* Scoped Preflight: only the editor chrome and its portals, never the page around it. */
+@layer base {
+  :where(.ped-ui, .ped-ui *, [data-radix-popper-content-wrapper], [data-radix-popper-content-wrapper] *, [data-slot^='dialog-'], [data-slot^='dialog-'] *) {
+    border-color: var(--border);
+    outline-color: color-mix(in srgb, var(--ring) 50%, transparent);
+  }
+  :where(.ped-ui, [data-radix-popper-content-wrapper], [data-slot^='dialog-']) :where(button, input, select, optgroup, textarea),
+  :where(.ped-ui, [data-radix-popper-content-wrapper], [data-slot^='dialog-']) ::file-selector-button {
+    font: inherit;
+    font-feature-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border: 0 solid var(--border);
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+    margin: 0;
+    padding: 0;
+  }
+  :where(.ped-ui, [data-radix-popper-content-wrapper], [data-slot^='dialog-']) :where(button, [role='button'], [role='menuitem'], [role='option']) { cursor: pointer; }
+  :where(.ped-ui, [data-radix-popper-content-wrapper], [data-slot^='dialog-']) :where(button:disabled) { cursor: default; }
+  :where(.ped-ui, [data-radix-popper-content-wrapper], [data-slot^='dialog-']) :where(input, textarea)::placeholder { color: var(--ed-text-faint); opacity: 1; }
+  /* Chrome only (not the page content inside .markdown): block-level resets the vendored UI expects. */
+  :where(.ped-chrome, .ped-toolbar, [data-radix-popper-content-wrapper], [data-slot^='dialog-']) :where(h1, h2, h3, h4, h5, h6, p, blockquote, figure, pre, dl, dd, hr) { margin: 0; }
+  :where(.ped-chrome, .ped-toolbar, [data-radix-popper-content-wrapper], [data-slot^='dialog-']) :where(ol, ul, menu) { list-style: none; margin: 0; padding: 0; }
+  :where(.ped-chrome, .ped-toolbar, [data-radix-popper-content-wrapper], [data-slot^='dialog-']) :where(svg, img) { display: block; vertical-align: middle; }
+  :where([data-radix-popper-content-wrapper], [data-slot^='dialog-']) { font-family: var(--ed-sans); color: var(--ed-text); line-height: 1.5; }
+}
+
+@layer components {
+  /* Code block syntax colours (lowlight / highlight.js token classes). */
+  .docs-code-block .hljs-keyword, .docs-code-block .hljs-doctag, .docs-code-block .hljs-template-tag,
+  .docs-code-block .hljs-template-variable, .docs-code-block .hljs-variable.language_ { color: var(--ed-code-keyword); }
+  .docs-code-block .hljs-string, .docs-code-block .hljs-regexp, .docs-code-block .hljs-meta .hljs-string,
+  .docs-code-block .hljs-addition { color: var(--ed-code-string); }
+  .docs-code-block .hljs-number, .docs-code-block .hljs-literal, .docs-code-block .hljs-symbol,
+  .docs-code-block .hljs-bullet { color: var(--ed-code-number); }
+  .docs-code-block .hljs-comment, .docs-code-block .hljs-quote, .docs-code-block .hljs-code,
+  .docs-code-block .hljs-formula { color: var(--ed-code-comment); font-style: italic; }
+  .docs-code-block .hljs-title, .docs-code-block .hljs-title.function_, .docs-code-block .hljs-built_in,
+  .docs-code-block .hljs-section { color: var(--ed-code-name); }
+  .docs-code-block .hljs-type, .docs-code-block .hljs-title.class_, .docs-code-block .hljs-name,
+  .docs-code-block .hljs-attr, .docs-code-block .hljs-attribute, .docs-code-block .hljs-selector-tag,
+  .docs-code-block .hljs-selector-class, .docs-code-block .hljs-selector-id, .docs-code-block .hljs-meta { color: var(--ed-code-type); }
+  .docs-code-block .hljs-punctuation, .docs-code-block .hljs-operator { color: var(--ed-code-punct); }
+  .docs-code-block .hljs-emphasis { font-style: italic; }
+  .docs-code-block .hljs-strong, .docs-code-block .hljs-section { font-weight: bold; }
+}
+
+@utility scrollbar-hide {
+  scrollbar-width: none;
+  &::-webkit-scrollbar { display: none; }
+}
+
+/*
+ * Unlayered from here on: these must beat Infima (also unlayered), so every selector is scoped under
+ * the editor root and is more specific than the Infima rule it replaces.
+ */
+
+/* ---------- page content while editing ---------- */
+
+/* Infima sizes headings with `.markdown > h2` (direct child); in the editor they sit inside block wrappers. */
+.ped-ui .markdown [data-slate-editor] h1 { --ifm-h1-font-size: 3rem; }
+.ped-ui .markdown [data-slate-editor] h2 {
+  --ifm-h2-font-size: 2rem;
+  margin-bottom: calc(var(--ifm-heading-vertical-rhythm-bottom) * var(--ifm-leading));
+  margin-top: calc(var(--ifm-h2-vertical-rhythm-top) * var(--ifm-leading));
+}
+.ped-ui .markdown [data-slate-editor] h3 {
+  --ifm-h3-font-size: 1.5rem;
+  margin-bottom: calc(var(--ifm-heading-vertical-rhythm-bottom) * var(--ifm-leading));
+  margin-top: calc(var(--ifm-h3-vertical-rhythm-top) * var(--ifm-leading));
+}
+.ped-ui .markdown [data-slate-editor] :is(h4, h5, h6) {
+  margin-bottom: calc(var(--ifm-heading-vertical-rhythm-bottom) * var(--ifm-leading));
+  margin-top: calc(var(--ifm-heading-vertical-rhythm-top) * var(--ifm-leading));
+}
+.ped-ui .markdown [data-slate-editor] :is(p, pre, ul) { margin-bottom: var(--ifm-leading); }
+.ped-ui .markdown [data-slate-editor] { outline: none; }
+.ped-ui .markdown [data-slate-editor] > :first-child :is(h1, h2, h3, h4, h5, h6, p):first-child { margin-top: 0; }
+/* Subtle affordance: the block under the pointer. */
+.ped-ui .markdown [data-slate-editor]:not([contenteditable='false']) > [data-slate-node='element']:hover {
+  box-shadow: -0.75rem 0 0 -0.6rem var(--ed-line);
+}
+.ped-ui .ped-pre { margin-bottom: var(--ifm-leading); padding-top: 2rem; }
+.ped-ui .ped-pre code { background: transparent; border: 0; padding: 0; font-size: inherit; }
+.ped-ui .ped-admonition [data-ped-chrome] { user-select: none; }
+.ped-ui .ped-tabs .tabs { margin-bottom: 0; }
+.ped-ui .ped-tabs .tabs__item { user-select: none; }
+.ped-ui .ped-tabs-actions { display: flex; gap: 0.25rem; margin-left: auto; align-items: center; list-style: none; }
+.ped-ui .ped-props {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem 0.75rem; margin-top: 0.5rem; padding: 0.5rem 0.75rem;
+  border: 1px solid var(--ed-line); border-radius: var(--ed-radius); background: var(--ed-band); font-size: 0.85rem;
+}
+.ped-ui .ped-props > div { display: grid; grid-template-columns: auto 1fr; gap: 0.25rem 0.5rem; align-items: center; flex: 1 1 18rem; }
+.ped-ui .ped-viewer { margin-bottom: var(--ifm-leading); }
+.ped-ui .ped-viewer-box {
+  display: flex; align-items: center; justify-content: center; text-align: center; padding: 1rem;
+  border: 1px solid var(--ifm-color-emphasis-300); border-radius: var(--ifm-global-radius); color: var(--ed-text-muted);
+}
+.ped-ui .ped-okf-block { position: relative; padding: 0.75rem 1rem; margin-bottom: var(--ifm-leading); border: 1px dashed var(--ed-line); border-radius: var(--ed-radius); }
+.ped-ui .ped-okf-badge { position: absolute; top: -0.65rem; right: 0.75rem; padding: 0 0.4rem; font-size: 0.7rem; color: var(--ed-text-muted); background: var(--ifm-background-color); }
+.ped-ui .ped-okf-block a { pointer-events: none; }
+.ped-ui .ped-hr { margin: calc(var(--ifm-leading) / 2) 0; }
+
+/* Chips: small buttons that live inside the page content (tabs, viewer settings). */
+.ped-ui .ped-chip, [data-radix-popper-content-wrapper] .ped-chip {
+  display: inline-flex; align-items: center; gap: 0.25rem; padding: 0.1rem 0.5rem; font-size: 0.75rem; line-height: 1.4;
+  border: 1px solid var(--ed-line); border-radius: 999px; background: var(--ifm-background-color); color: var(--ed-text-muted);
+}
+.ped-ui .ped-chip:hover { color: var(--ed-text); border-color: var(--ed-primary); }
+.ped-ui .ped-chip[aria-pressed='true'] { color: var(--ed-primary); border-color: var(--ed-primary); }
+
+/* Inline title: an <input> that looks like the page's h1. */
+.ped-ui .ped-title { margin: 0 0 calc(var(--ifm-h1-vertical-rhythm-bottom) * var(--ifm-leading)); }
+.ped-ui .ped-title-input {
+  display: block; width: 100%; margin: 0; padding: 0; border: 0; outline: none; background: transparent; color: var(--ifm-heading-color);
+  font-family: var(--ifm-heading-font-family); font-weight: var(--ifm-heading-font-weight); font-size: 3rem; line-height: var(--ifm-heading-line-height);
+}
+.ped-ui .ped-title-input:focus-visible { box-shadow: 0 2px 0 0 var(--ed-focus); }
+
+/* ---------- chrome: edit bar, settings panel, dialogs, messages ---------- */
+
+.ped-ui .ped-editbar {
+  position: sticky; top: var(--ped-editbar-top); z-index: calc(var(--ifm-z-index-fixed) - 1);
+  display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 1rem; padding: 0.5rem 0.75rem;
+  background: var(--ifm-background-surface-color); border: 1px solid var(--ed-line); border-radius: var(--ed-radius);
+  box-shadow: var(--ifm-global-shadow-lw); font-size: 0.9rem; color: var(--ed-text);
+}
+.ped-ui .ped-editbar .ped-spacer { flex: 1 1 auto; }
+.ped-ui .ped-segmented { display: inline-flex; border: 1px solid var(--ed-line); border-radius: var(--ed-radius); overflow: hidden; }
+.ped-ui .ped-segmented > button { padding: 0.25rem 0.75rem; }
+.ped-ui .ped-segmented > button[aria-pressed='true'] { background: var(--ed-primary); color: var(--ed-on-primary); }
+.ped-ui .ped-dirty { display: inline-flex; align-items: center; gap: 0.35rem; color: var(--ed-text-muted); font-size: 0.8rem; }
+.ped-ui .ped-dirty::before { content: ''; width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--ed-treasure); }
+.ped-ui .ped-status { flex-basis: 100%; margin: 0; font-size: 0.85rem; color: var(--ed-text-muted); }
+.ped-ui .ped-status[data-kind='error'] { color: var(--ed-danger); }
+.ped-ui .ped-status a { color: var(--ifm-link-color); }
+
+.ped-ui .ped-btn, .ped-ui .ped-input, .ped-ui .ped-row input, .ped-ui .ped-row select, .ped-modal input, .ped-modal select {
+  font-size: 0.9rem; line-height: 1.4; border-radius: var(--ed-radius);
+}
+.ped-ui .ped-btn {
+  display: inline-flex; align-items: center; gap: 0.35rem; padding: 0.3rem 0.85rem; font-weight: 600;
+  background: var(--ed-primary); color: var(--ed-on-primary); border: 1px solid var(--ed-primary);
+}
+.ped-ui .ped-btn:hover:not(:disabled) { background: var(--ed-primary-hover); border-color: var(--ed-primary-hover); }
+.ped-ui .ped-btn:disabled { opacity: 0.55; }
+.ped-ui .ped-btn--secondary { background: transparent; color: var(--ed-text); border-color: var(--ed-line-strong); }
+.ped-ui .ped-btn--secondary:hover:not(:disabled) { background: var(--ed-raised-hover); border-color: var(--ed-line-strong); }
+.ped-ui .ped-btn--danger { background: var(--ed-danger); border-color: var(--ed-danger); color: var(--ed-on-danger); }
+.ped-ui .ped-btn--danger:hover:not(:disabled) { background: var(--ed-danger-hover); border-color: var(--ed-danger-hover); }
+.ped-ui .ped-btn:focus-visible, .ped-ui .ped-input:focus-visible, .ped-ui .ped-row input:focus-visible, .ped-ui .ped-row select:focus-visible { outline: 2px solid var(--ed-focus); outline-offset: 1px; }
+.ped-ui .ped-input, .ped-ui .ped-row input:not([type='checkbox']), .ped-ui .ped-row select {
+  padding: 0.3rem 0.5rem; background: var(--ed-field); color: var(--ed-text); border: 1px solid var(--ed-line-strong); min-width: 0;
+}
+.ped-ui .ped-commit { flex: 1 1 10rem; max-width: 18rem; }
+
+.ped-ui .ped-menu { position: relative; }
+.ped-ui .ped-menu-list {
+  position: absolute; right: 0; top: calc(100% + 0.25rem); z-index: 10; min-width: 15rem; padding: 0.25rem;
+  background: var(--ed-raised); border: 1px solid var(--ed-line); border-radius: var(--ed-radius); box-shadow: var(--ed-shadow);
+}
+.ped-ui .ped-menu-list [role='menuitem'] { display: block; width: 100%; text-align: left; padding: 0.4rem 0.6rem; border-radius: calc(var(--ed-radius) * 0.8); }
+.ped-ui .ped-menu-list [role='menuitem']:hover:not(:disabled), .ped-ui .ped-menu-list [role='menuitem']:focus-visible { background: var(--ed-primary-soft); outline: none; }
+.ped-ui .ped-menu-list [role='menuitem']:disabled { opacity: 0.5; }
+.ped-ui .ped-menu-list hr { margin: 0.25rem 0; border: 0; border-top: 1px solid var(--ed-line); }
+.ped-ui .ped-menu-who { padding: 0.35rem 0.6rem; font-size: 0.8rem; color: var(--ed-text-muted); }
+
+.ped-ui .ped-settings { margin: 0 0 1.5rem; padding: 0.75rem 1rem; background: var(--ifm-background-surface-color); border: 1px solid var(--ed-line); border-radius: var(--ed-radius); }
+.ped-ui .ped-settings h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+.ped-ui .ped-row { display: grid; grid-template-columns: 9rem 1fr; gap: 0.5rem; align-items: center; margin: 0 0 0.5rem; }
+.ped-ui .ped-row > span:first-child { font-family: var(--ed-mono); font-size: 0.8rem; color: var(--ed-text-muted); }
+.ped-ui .ped-row > span:not(:first-child) { display: flex; gap: 0.5rem; }
+.ped-ui .ped-row input, .ped-ui .ped-row select { width: 100%; }
+
+.ped-ui .ped-notice { margin: 0.5rem 0; padding: 0.5rem 0.75rem; border-left: 3px solid var(--ed-treasure); background: var(--ifm-color-warning-contrast-background); color: var(--ifm-color-warning-contrast-foreground); border-radius: var(--ed-radius); font-size: 0.85rem; }
+.ped-ui .ped-problems { margin: 0 0 1rem; padding: 0.5rem 0.75rem; border-left: 3px solid var(--ed-danger); background: var(--ed-danger-soft); color: var(--ifm-color-danger-contrast-foreground); border-radius: var(--ed-radius); font-size: 0.85rem; }
+.ped-ui .ped-problems ul { margin: 0.25rem 0 0; padding-left: 1.25rem; list-style: disc; }
+.ped-ui .ped-banner { display: flex; flex-wrap: wrap; align-items: center; gap: 0.5rem; margin: 0 0 1rem; padding: 0.5rem 0.75rem; border-left: 3px solid var(--ed-ok); background: var(--ifm-color-success-contrast-background); color: var(--ifm-color-success-contrast-foreground); border-radius: var(--ed-radius); font-size: 0.9rem; }
+.ped-ui .ped-banner a { color: inherit; text-decoration: underline; }
+.ped-ui .ped-conflict { margin: 0 0 1rem; padding: 0.75rem; border: 1px solid var(--ed-danger); border-radius: var(--ed-radius); background: var(--ed-danger-soft); color: var(--ifm-color-danger-contrast-foreground); }
+.ped-ui .ped-conflict-actions { display: flex; flex-wrap: wrap; gap: 0.5rem; margin-top: 0.5rem; }
+.ped-ui .ped-loading { color: var(--ed-text-muted); font-style: italic; }
+
+.ped-modal { position: fixed; inset: 0; z-index: calc(var(--ifm-z-index-overlay) + 10); display: flex; align-items: flex-start; justify-content: center; padding: 10vh 1rem 1rem; background: rgb(0 0 0 / 0.45); }
+.ped-modal > [role='dialog'] {
+  width: min(34rem, 100%); max-height: 80vh; overflow: auto; padding: 1.25rem 1.5rem; font-family: var(--ifm-font-family-base); line-height: 1.5;
+  background: var(--ifm-background-color); color: var(--ed-text); border: 1px solid var(--ed-line); border-radius: calc(var(--ed-radius) * 1.5); box-shadow: var(--ed-shadow);
+}
+.ped-modal h2 { margin: 0 0 0.75rem; font-size: 1.35rem; }
+.ped-modal p { margin: 0 0 0.75rem; font-size: 0.95rem; }
+.ped-modal input:not([type='checkbox']) { display: block; width: 100%; padding: 0.4rem 0.6rem; background: var(--ed-field); border: 1px solid var(--ed-line-strong); border-radius: var(--ed-radius); }
+.ped-modal .ped-row input:not([type='checkbox']) { display: inline-block; }
+.ped-modal .ped-actions { display: flex; gap: 0.5rem; margin-top: 1rem; }
+.ped-modal .ped-filelist { list-style: none; margin: 0; padding: 0; max-height: 50vh; overflow: auto; }
+.ped-modal .ped-filelist button { display: block; width: 100%; text-align: left; padding: 0.3rem 0.5rem; border-radius: var(--ed-radius); font-family: var(--ed-mono); font-size: 0.85rem; }
+.ped-modal .ped-filelist button:hover { background: var(--ed-primary-soft); }
+.ped-ui .ped-check { display: flex; align-items: center; gap: 0.5rem; margin: 0.75rem 0; }
+
+.ped-ui .ped-toolbar { box-shadow: var(--ifm-global-shadow-lw); margin-bottom: 1rem; }
+.ped-ui .ped-raw { margin-bottom: 1rem; }

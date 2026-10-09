@@ -4,6 +4,7 @@
 //   and shown as an object url, which is revoked when it is no longer used.
 import { useEffect, useRef, useState } from 'react';
 import type { AssetRef } from '@platform/contracts';
+import { localAssetUrl } from './localAssets.js';
 import type { RichTextServices } from './RichTextEditor.js';
 
 export interface ViewerSourceProps { src?: string; repo?: string; gitRef?: string; path?: string }
@@ -11,7 +12,7 @@ export type ViewerSource = { kind: 'url'; url: string } | { kind: 'asset'; ref: 
 export type ViewerUrlServices = Pick<RichTextServices, 'baseUrl' | 'getAsset' | 'defaultRef'>;
 
 export function viewerSource({ src, repo, gitRef, path }: ViewerSourceProps, baseUrl: string, defaultRef: (repo: string) => string): ViewerSource {
-  if (src) return { kind: 'url', url: src.startsWith('/') ? `${baseUrl}${src.slice(1)}` : src };
+  if (src) return { kind: 'url', url: localAssetUrl(src) ?? (src.startsWith('/') ? `${baseUrl}${src.slice(1)}` : src) };
   if (!repo || !path) return null;
   return { kind: 'asset', ref: { repo, ref: gitRef || defaultRef(repo), path } };
 }

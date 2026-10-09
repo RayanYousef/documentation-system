@@ -4,6 +4,7 @@ import type { KeyboardEvent, MouseEvent } from 'react';
 import type { TElement } from 'platejs';
 import { PlateElement, type PlateElementProps, useEditorRef, useReadOnly } from 'platejs/react';
 import { imagePreviewUrl } from '../../assets.js';
+import { localAssetUrl } from '../../localAssets.js';
 import { useDocsServices } from '../context.js';
 
 /** Alt text of an image node (Plate keeps it as caption text). */
@@ -24,7 +25,7 @@ export function ImageElement(props: PlateElementProps) {
     <PlateElement {...props} className="my-3">
       <div contentEditable={false}>
         {url
-          ? <img src={imagePreviewUrl(url, baseUrl)} alt={alt} className="max-h-96 max-w-full rounded-md select-none" />
+          ? <img src={localAssetUrl(url) ?? imagePreviewUrl(url, baseUrl)} alt={alt} className="max-h-96 max-w-full rounded-md select-none" />
           : <span className="text-xs text-muted-foreground select-none">Image without src</span>}
         {!readOnly && (
           <div onKeyDown={stop} onMouseDown={stop} className="mt-1 grid grid-cols-[3rem_1fr] items-center gap-x-3 gap-y-1">

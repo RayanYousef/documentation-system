@@ -3,6 +3,7 @@ import { describe, it, expect, vi } from 'vitest';
 import type { AssetInfo, ContentBackend, Identity, MutationOptions, PlatformConfig } from '@platform/contracts';
 import { createRichTextServices, type RichTextSession } from './createRichTextServices.js';
 import { UnsupportedFileError } from './assets.js';
+import { forgetLocalAssets, localAssetUrl } from './localAssets.js';
 
 const identity: Identity = { name: 'Ray', login: 'ray', email: null } as Identity;
 const config = { baseUrl: '/Base/', codeRepos: [{ owner: 'o', repo: 'r', defaultRef: 'dev' }] } as unknown as PlatformConfig;
@@ -20,7 +21,7 @@ function fakeBackend(over: Partial<ContentBackend> = {}) {
   } as unknown as ContentBackend;
   return { backend, uploads };
 }
-const session = (backend: ContentBackend, id: Identity = identity): RichTextSession => ({ platform: { config } as RichTextSession['platform'], backend, identity: id });
+const session = (backend: ContentBackend, id: Identity = identity): RichTextSession => ({ host: { config } as RichTextSession['host'], backend, identity: id });
 const file = (name: string) => new File(['abc'], name);
 
 describe('createRichTextServices', () => {
@@ -41,6 +42,16 @@ describe('createRichTextServices', () => {
     await expect(s.uploadModel(file('air.fbx'))).resolves.toEqual({ component: 'FbxViewer', src: '/models/fbx/air.fbx', alt: 'air.fbx' });
     expect(uploads.map((u) => u.path)).toEqual(['models/ship.glb', 'models/fbx/air.fbx']);
     expect(uploads[1]!.opts).toEqual({ message: 'Add 3D model air.fbx for p.md', author: { name: 'Ray', email: 'ray@x.dev' } });
+  });
+
+  it('remembers uploads so the new block renders before the site serves the file', async () => {
+    const { backend } = fakeBackend();
+    const s = createRichTextServices(session(backend), 'p.md');
+    await s.uploadModel(file('ship.glb'));
+    await s.uploadImage(file('pic.png'));
+    expect(localAssetUrl('/models/ship.glb')).toMatch(/^blob:/);
+    expect(localAssetUrl('/Base/uploads/pic.png')).toMatch(/^blob:/);
+    forgetLocalAssets();
   });
 
   it('refuses unsupported files before uploading', async () => {

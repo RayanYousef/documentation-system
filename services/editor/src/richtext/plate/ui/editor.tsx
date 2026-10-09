@@ -1,4 +1,4 @@
-// From the Plate UI registry `editor` (MIT). Trimmed to the variants this app uses (default, docs).
+// From the Plate UI registry `editor` (MIT). Trimmed to the variants used here (default, docs, page).
 
 import * as React from 'react';
 
@@ -65,6 +65,8 @@ const editorVariants = cva(
           'size-full px-16 pt-4 pb-72 text-base sm:px-[max(64px,calc(50%-350px))]',
         // Docs editor (local): a left gutter for the block drag handle, no large bottom pad.
         docs: 'min-h-[50vh] w-full pt-3 pr-6 pb-8 pl-12 text-base',
+        // In-page editing: the page's own column, padding and type (no editor styling of its own).
+        page: 'min-h-[30vh] w-full',
       },
     },
   }

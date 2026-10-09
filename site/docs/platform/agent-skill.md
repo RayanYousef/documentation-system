@@ -21,7 +21,7 @@ sidebar_position: 9
 - `SKILL.md`: the trigger description and the on-start procedure.
 - `references/registry.md`: the registry file schema and how to add an entry.
 - `references/navigation.md`: the walk from `index.md` through folders to a page, its `resource`, and the code map.
-- `references/authoring.md`: adding and updating pages and folders, running the generator, committing, editing through the editor, using a remote content service, publishing a frozen version.
+- `references/authoring.md`: adding and updating pages and folders, running the generator, committing, editing in place on the site (Edit button) or on `npm start` with disk saves, using a remote content service, publishing a frozen version.
 - `scripts/resolve-bundle.mjs`: `normalizeRemote`, `lookupBundle`, `resolveBundle`; prints the bundle for the current repository or exits 1 when unregistered. Tested in `test/resolve-bundle.test.ts`.
 
 ## Registry

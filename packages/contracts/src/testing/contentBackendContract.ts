@@ -15,7 +15,17 @@ export interface ContentBackendHarness {
 
 const opts = (message: string): MutationOptions => ({ message, author: { name: 'Contract Tester', email: 'tester@example.com' } });
 
-export function describeContentBackendContract(name: string, factory: () => Promise<ContentBackendHarness>): void {
+/** What the backend under test records. Defaults describe a committing backend (git, GitHub). */
+export interface ContentBackendContractOptions {
+  /** false: mutations write files but record no commit (WriteResult.commitSha is ''). */
+  commits?: boolean;
+  /** false: publishVersion is refused (FORBIDDEN) instead of snapshotting a version. */
+  publishes?: boolean;
+}
+
+export function describeContentBackendContract(name: string, factory: () => Promise<ContentBackendHarness>, options: ContentBackendContractOptions = {}): void {
+  const commits = options.commits ?? true;
+  const publishes = options.publishes ?? true;
   describe(`ContentBackend contract: ${name}`, () => {
     let h: ContentBackendHarness;
     beforeAll(async () => { h = await factory(); });
@@ -47,7 +57,8 @@ export function describeContentBackendContract(name: string, factory: () => Prom
       const before = await h.backend.readPage(CURRENT_VERSION, 'systems/inventory.md');
       const edited = before.text.replace('Explains how items are stored', 'Explains how item stacks are stored');
       const res = await h.backend.writePage(CURRENT_VERSION, 'systems/inventory.md', edited, { ...opts('Clarify inventory description'), expectedEtag: before.etag });
-      expect(res.commitSha).toMatch(/^[0-9a-f]{7,40}$/);
+      if (commits) expect(res.commitSha).toMatch(/^[0-9a-f]{7,40}$/);
+      else expect(res.commitSha).toBe('');
       expect(res.regenerated).toEqual(expect.arrayContaining(['systems/index.md', 'manifest.json', 'log.md']));
       expect(await h.readFile('docs/systems/index.md')).toContain('Explains how item stacks are stored');
       expect(await h.readFile('docs/manifest.json')).toContain('Explains how item stacks are stored');
@@ -105,7 +116,12 @@ export function describeContentBackendContract(name: string, factory: () => Prom
       expect(hits.map((x) => x.path)).toContain('systems/inventory.md');
     });
 
-    it('publishVersion snapshots docs with sha-pinned resources, records pins and tags', async () => {
+    it.runIf(!publishes)('publishVersion is refused with FORBIDDEN', async () => {
+      await expect(h.backend.publishVersion('1.1.0', opts('Publish 1.1.0'))).rejects.toMatchObject({ code: 'FORBIDDEN' });
+      expect(await h.readFile('versioned_docs/version-1.1.0/systems/inventory.md')).toBeNull();
+    });
+
+    it.runIf(publishes)('publishVersion snapshots docs with sha-pinned resources, records pins and tags', async () => {
       const res = await h.backend.publishVersion('1.1.0', opts('Publish 1.1.0'));
       expect(res).toMatchObject({ version: '1.1.0', tag: 'docs-v1.1.0' });
       expect(res.pins['acme/game']).toMatch(/^[0-9a-f]{40}$/);
@@ -122,7 +138,7 @@ export function describeContentBackendContract(name: string, factory: () => Prom
       expect(versions.find((v) => v.id === '1.1.0')).toMatchObject({ frozen: true });
     });
 
-    it('writes into a frozen version are refused with FROZEN', async () => {
+    it.runIf(publishes)('writes into a frozen version are refused with FROZEN', async () => {
       const page = await h.backend.readPage('1.1.0', 'systems/inventory.md');
       await expect(h.backend.writePage('1.1.0', 'systems/inventory.md', page.text + '\nx\n', opts('nope'))).rejects.toMatchObject({ code: 'FROZEN' });
       await expect(h.backend.createPage('1.1.0', 'systems/new.md', NEW_PAGE_TEXT, opts('nope'))).rejects.toMatchObject({ code: 'FROZEN' });

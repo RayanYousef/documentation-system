@@ -18,11 +18,13 @@ export interface PlateDocumentProps extends Omit<RichTextEditorProps, 'services'
   editorRef?: Ref<PlateEditor>;
   /** Rendered inside <Plate>, before the content. */
   children?: ReactNode;
+  /** Editor surface: 'docs' (padded editing surface) or 'page' (the host page's own look). */
+  variant?: 'docs' | 'page';
 }
 
 const EMPTY: Value = [{ type: 'p', children: [{ text: '' }] }];
 
-export function PlateDocument({ markdown, readOnly, components, onChange, onParseError, ref, plugins, editorRef, children }: PlateDocumentProps) {
+export function PlateDocument({ markdown, readOnly, components, onChange, onParseError, ref, plugins, editorRef, children, variant = 'docs' }: PlateDocumentProps) {
   const md = useMemo(() => buildDocsMarkdown(components), [components]);
   const mdRef = useRef(md);
   mdRef.current = md;
@@ -76,9 +78,9 @@ export function PlateDocument({ markdown, readOnly, components, onChange, onPars
       }}
     >
       {children}
-      {/* No overflow on the container: the page (.main) scrolls, so the fixed toolbar can stick to its top. */}
+      {/* No overflow on the container: the page scrolls, so the fixed toolbar can stick to its top. */}
       <EditorContainer className="overflow-visible">
-        <Editor variant="docs" readOnly={readOnly} aria-label="Page body" data-testid="rich-text-body" />
+        <Editor variant={variant} readOnly={readOnly} aria-label="Page body" data-testid="rich-text-body" />
       </EditorContainer>
     </Plate>
   );

@@ -3,9 +3,9 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { act, createRef } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import type { ContentBackend, Identity, Session } from '@platform/contracts';
-import type { Platform } from '../composition/createPlatform.js';
+import type { InPlaceHost } from '../host.js';
 import { DEFAULT_COMPONENTS } from '../mdx/componentsManifest.js';
-import { PlatformContext, type PlatformSession } from '../PlatformContext.js';
+import { InPlaceContext, type InPlaceSession } from '../inplace/InPlaceContext.js';
 import type { RichTextEditorProps, RichTextHandle } from '../richtext/index.js';
 import { BodyEditor } from './BodyEditor.js';
 
@@ -18,12 +18,12 @@ vi.mock('../richtext/index.js', async (importOriginal) => ({
   RichTextEditor: (props: RichTextEditorProps) => { seen.push(props); return <div data-testid="rich-text" />; },
 }));
 
-const platform = { config: { baseUrl: '/Base/', codeRepos: [] } } as unknown as Platform;
+const host = { config: { baseUrl: '/Base/', codeRepos: [] } } as unknown as InPlaceHost;
 const backend = {} as ContentBackend;
 const identity: Identity = { login: 'ray', name: 'Ray', email: null, role: 'editor' };
 const session = { kind: 'mock' } as unknown as Session;
-/** App builds the context value inline, so every App render gives a new object with the same members. */
-const ctx = (): PlatformSession => ({ platform, session, identity, backend, logout: () => {} });
+/** The context value is rebuilt inline, so every render gives a new object with the same members. */
+const ctx = (): InPlaceSession => ({ host, session, identity, backend, signOut: () => {} });
 
 const roots: Root[] = [];
 afterEach(async () => { for (const r of roots.splice(0)) await act(async () => r.unmount()); seen.length = 0; });
@@ -36,9 +36,9 @@ describe('BodyEditor', () => {
     const onParseError = vi.fn();
     const ref = createRef<RichTextHandle>();
     await act(async () => root.render(
-      <PlatformContext.Provider value={ctx()}>
+      <InPlaceContext.Provider value={ctx()}>
         <BodyEditor markdown={'\nBody.\n'} editorRef={ref} fileLabel="a.md" components={DEFAULT_COMPONENTS} readOnly onChange={onChange} onParseError={onParseError} />
-      </PlatformContext.Provider>,
+      </InPlaceContext.Provider>,
     ));
     const props = seen.at(-1)!;
     expect(props).toMatchObject({ markdown: '\nBody.\n', readOnly: true, components: DEFAULT_COMPONENTS, onChange, onParseError, ref });
@@ -49,9 +49,9 @@ describe('BodyEditor', () => {
     const root = createRoot(document.createElement('div'));
     roots.push(root);
     const render = (fileLabel: string) => act(async () => root.render(
-      <PlatformContext.Provider value={ctx()}>
+      <InPlaceContext.Provider value={ctx()}>
         <BodyEditor markdown="" editorRef={createRef()} fileLabel={fileLabel} components={DEFAULT_COMPONENTS} readOnly={false} onChange={() => {}} onParseError={() => {}} />
-      </PlatformContext.Provider>,
+      </InPlaceContext.Provider>,
     ));
     await render('a.md');
     await render('a.md');

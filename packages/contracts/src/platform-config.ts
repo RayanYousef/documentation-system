@@ -18,6 +18,7 @@ export interface PlatformConfig {
   tagline: string;
   navbarTitle: string;
   footerCopyright: string;
+  /** editor: show the in-place Edit button on Latest doc pages. viewers: 3D viewer UI. search: Orama search. */
   features: { editor: boolean; viewers: boolean; search: boolean };
   auth: { provider: 'github-token' | 'mock' };
   content: { backend: 'github-browser' | 'http'; url?: string };

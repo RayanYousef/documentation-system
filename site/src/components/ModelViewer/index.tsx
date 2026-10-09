@@ -15,7 +15,7 @@ function Resolved({ src, repo, ref, path, alt, height, kind }: ViewerProps & { k
   const url = src ? base : asset.url;
   if (!src && (!repo || !path)) return <div style={box(h)}>ModelViewer needs either src or repo + path.</div>;
   if (!url) {
-    if (asset.status === 'error') return <div style={box(h)}>Model unavailable: {asset.error} (private code repos need an editor session; see the Editor link).</div>;
+    if (asset.status === 'error') return <div style={box(h)}>Model unavailable: {asset.error} (a private code repository needs a signed-in session: click Edit on any page to sign in).</div>;
     return <div style={box(h)}>Loading 3D model...</div>;
   }
   // require() inside BrowserOnly is the Docusaurus pattern that keeps WebGL code out of the SSR bundle.

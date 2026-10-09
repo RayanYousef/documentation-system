@@ -1,6 +1,10 @@
-import { CURRENT_VERSION, type AssetInfo, type VersionId } from '@platform/contracts';
+import { ContentError, CURRENT_VERSION, type AssetInfo, type VersionId } from '@platform/contracts';
 
-export const versionDir = (version: VersionId): string => (version === CURRENT_VERSION ? 'docs' : `versioned_docs/version-${version}`);
+export function versionDir(version: VersionId): string {
+  if (version === CURRENT_VERSION) return 'docs';
+  if (!/^\w[\w.-]*$/.test(version) || version.includes('..')) throw new ContentError('VALIDATION', `Invalid version ${version}`);
+  return `versioned_docs/version-${version}`;
+}
 export const isFrozen = (version: VersionId): boolean => version !== CURRENT_VERSION;
 export const STATIC_DIR = 'static';
 export const ASSET_DIRS = ['models', 'uploads', 'img'];
@@ -12,6 +16,12 @@ export function assetKind(path: string): AssetInfo['kind'] {
 }
 export function assertPagePath(path: string): void {
   if (!/^(?:[\w.-]+\/)*[\w.-]+\.mdx?$/.test(path) || path.split('/').some((s) => s === '..' || s.startsWith('.'))) {
-    throw new Error(`Invalid page path: ${path}`);
+    throw new ContentError('VALIDATION', `Invalid page path: ${path}`);
+  }
+}
+/** Asset paths are relative to the static folder: plain POSIX segments, no `..`, no dot-files, no backslashes or drive letters. */
+export function assertAssetPath(path: string): void {
+  if (!/^[\w.-]+(?:\/[\w.-]+)*$/.test(path) || path.split('/').some((s) => s === '..' || s.startsWith('.'))) {
+    throw new ContentError('VALIDATION', `Invalid asset path ${path}`);
   }
 }

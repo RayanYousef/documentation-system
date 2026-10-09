@@ -6,9 +6,9 @@ import type { ReactElement } from 'react';
 import type { AuthProvider } from '@platform/contracts';
 import { NewPageDialog } from './NewPageDialog.js';
 import { PublishDialog } from './PublishDialog.js';
-import { LoginGate } from './LoginGate.js';
+import { SignInDialog } from '../inplace/SignInDialog.js';
 import { Modal } from './Modal.js';
-import type { Platform } from '../composition/createPlatform.js';
+import type { InPlaceHost } from '../host.js';
 
 (globalThis as unknown as { IS_REACT_ACT_ENVIRONMENT: boolean }).IS_REACT_ACT_ENVIRONMENT = true;
 
@@ -76,21 +76,47 @@ describe('PublishDialog', () => {
   });
 });
 
-describe('LoginGate', () => {
-  const platform = (auth: AuthProvider): Platform => ({ auth, backend: () => { throw new Error('unused'); }, config: { organizationName: 'o', projectName: 'r' } as Platform['config'], componentsUrl: '' });
+describe('SignInDialog', () => {
+  const host = (auth: AuthProvider): Pick<InPlaceHost, 'auth' | 'config' | 'mode'> => ({ auth, config: { organizationName: 'o', projectName: 'r', deployBranch: 'main' } as InPlaceHost['config'], mode: 'github' });
+  const unused = async () => { throw new Error('unused'); };
   it('announces why a saved session was forgotten', async () => {
-    const auth: AuthProvider = { id: 'github-token', login: async () => { throw new Error('unused'); }, verify: async () => { throw new Error('unused'); } };
-    const host = await mount(<LoginGate platform={platform(auth)} initialError="Your saved session is no longer valid and was forgotten. You are not a write collaborator of o/r." onAuthed={() => {}} />);
-    expect(host.querySelector('[role="alert"]')!.textContent).toContain('not a write collaborator of o/r');
-    expect(host.textContent).toContain('Only write collaborators can sign in.');
+    const auth: AuthProvider = { id: 'github-token', login: unused, verify: unused };
+    const el = await mount(<SignInDialog host={host(auth)} initialError="Your saved session is no longer valid and was forgotten. You are not a write collaborator of o/r." onSignedIn={() => {}} onCancel={() => {}} />);
+    expect(el.querySelector('[role="alert"]')!.textContent).toContain('not a write collaborator of o/r');
+    expect(el.textContent).toContain('Only write collaborators can sign in.');
   });
   it('shows the provider error for a rejected token', async () => {
-    const auth: AuthProvider = { id: 'github-token', login: async () => { throw new Error('You are not a write collaborator of o/r. Ask a repository admin for write access.'); }, verify: async () => { throw new Error('unused'); } };
-    const host = await mount(<LoginGate platform={platform(auth)} onAuthed={() => {}} />);
-    await type(byLabel(host, 'GitHub token'), 'github_pat_x');
-    await click(button(host, 'Sign in'));
+    const auth: AuthProvider = { id: 'github-token', login: async () => { throw new Error('You are not a write collaborator of o/r. Ask a repository admin for write access.'); }, verify: unused };
+    const el = await mount(<SignInDialog host={host(auth)} onSignedIn={() => {}} onCancel={() => {}} />);
+    await type(byLabel(el, 'GitHub token'), 'github_pat_x');
+    await click(button(el, 'Sign in'));
     await tick();
-    expect(host.querySelector('[role="alert"]')!.textContent).toContain('not a write collaborator');
+    expect(el.querySelector('[role="alert"]')!.textContent).toContain('not a write collaborator');
+  });
+  it('remembers by default, warns about it, and hands back session, identity and the choice', async () => {
+    const session = { provider: 'github-token', token: 't', createdAt: '' };
+    const identity = { name: 'Ray', login: 'ray', email: null, role: 'editor' as const };
+    const auth: AuthProvider = { id: 'github-token', login: vi.fn(async () => session), verify: vi.fn(async () => identity) };
+    const onSignedIn = vi.fn();
+    const el = await mount(<SignInDialog host={host(auth)} onSignedIn={onSignedIn} onCancel={() => {}} />);
+    expect(el.querySelector<HTMLInputElement>('input[type="checkbox"]')!.checked).toBe(true);
+    expect(el.textContent).toContain('Anyone using this browser profile can read the saved token');
+    await type(byLabel(el, 'GitHub token'), '  github_pat_x  ');
+    await click(button(el, 'Sign in'));
+    await tick();
+    expect(auth.login).toHaveBeenCalledWith({ kind: 'github-token', token: 'github_pat_x' });
+    expect(onSignedIn).toHaveBeenCalledWith(session, identity, true);
+  });
+  it('asks the mock provider for a display name', async () => {
+    const auth: AuthProvider = { id: 'mock', login: unused, verify: unused };
+    const el = await mount(<SignInDialog host={{ ...host(auth), mode: 'local-disk' }} onSignedIn={() => {}} onCancel={() => {}} />);
+    expect(byLabel(el, 'Display name')).not.toBeNull();
+    expect(el.textContent).toContain('working tree');
+  });
+  it('explains an unknown provider instead of showing an empty form', async () => {
+    const auth: AuthProvider = { id: 'saml', login: unused, verify: unused };
+    const el = await mount(<SignInDialog host={host(auth)} onSignedIn={() => {}} onCancel={() => {}} />);
+    expect(el.querySelector('[role="alert"]')!.textContent).toContain('"saml"');
   });
 });
 

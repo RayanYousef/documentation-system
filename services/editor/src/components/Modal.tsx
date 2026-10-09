@@ -10,7 +10,7 @@ export function Modal({ title, onClose, children }: { title: string; onClose?: (
     return () => window.removeEventListener('keydown', onKey);
   }, [onClose]);
   return (
-    <div className="modal">
+    <div className="ped-ui ped-modal">
       <div role="dialog" aria-modal="true" aria-labelledby={headingId}>
         <h2 id={headingId}>{title}</h2>
         {children}

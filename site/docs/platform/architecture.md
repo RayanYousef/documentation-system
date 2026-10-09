@@ -22,7 +22,7 @@ The repository is an npm-workspaces monorepo. Every runtime piece is a workspace
 | `packages/viewers` | `@platform/viewers` | `ModelViewerCore` and `FbxViewerCore`, the React 3D rendering cores ([Viewers](viewers.md)) |
 | `services/auth` | `@platform/auth` | `GithubTokenProvider`, `MockAuthProvider` ([Auth](auth.md)) |
 | `services/content` | `@platform/content` | `LocalFolderBackend`, `GithubBrowserBackend`, `HttpContentBackend` + `serveContentBackend`, write and publish pipelines, asset fetch, search ([Content](content.md)) |
-| `services/editor` | `@platform/editor` | Vite + React in-browser editor served at `<baseUrl>editor/` ([Editor](editor.md)) |
+| `services/editor` | `@platform/editor` | React library for editing docs pages in place, loaded by the site on Edit ([Editor](editor.md)) |
 | `site` | `@platform/site` | Docusaurus site rendering `site/docs` and the frozen versions ([Site](site.md)) |
 | `.agents/skills/docs-platform` | (skill) | the only platform agent skill ([Agent skill](agent-skill.md)) |
 | `.github/workflows`, `scripts/` | (root) | validation and deploy workflows, root generator entry ([Workflows](workflows.md)) |
@@ -31,24 +31,27 @@ The repository is an npm-workspaces monorepo. Every runtime piece is a workspace
 
 ## One-process composition (Phase 1)
 
-Phase 1 is a static composition: there is no server. Everything runs either at build time in Node (generator, prebuild artifacts, Docusaurus) or in the reader's browser (site, editor, GitHub API calls with the editor's own token).
+Phase 1 is a static composition: there is no server. Everything runs either at build time in Node (generator, prebuild artifacts, Docusaurus) or in the reader's browser (site and in-place editor, GitHub API calls with the editor's own token). On `npm start` the dev server adds one same-origin endpoint that writes edits to disk.
 
 ```text
 platform.config.js
       |
-      +--> site/docusaurus.config.js ........ identity, navbar, footer, versions
-      +--> services/editor/vite.config.ts ... base = <baseUrl>editor/
+      +--> site/docusaurus.config.js ........ identity, navbar, footer, versions, plugin options
       +--> scripts/okf.mjs ................... --repo owner/repo for every codeRepos entry
       |
-      +--> services/editor/src/composition/createPlatform.ts
-      |        new GithubTokenProvider | MockAuthProvider      (AuthProvider)
-      |        new GithubBrowserBackend | HttpContentBackend   (ContentBackend)
+      +--> site/src/platform/inplace/createInPlaceHost.ts   (lazy inplace-editor chunk, on Edit)
+      |        github:     new GithubTokenProvider + GithubBrowserBackend(token)
+      |        local-disk: new MockAuthProvider + HttpContentBackend(<baseUrl>__platform/content, dev token)
+      |        -> InPlaceHost -> @platform/editor/inplace (contract types only)
       |
       +--> site/src/platform/createContentBackend.ts
-               new GithubBrowserBackend (token from localStorage when an editor session exists)
+      |        new GithubBrowserBackend (token from localStorage when an editor session exists)
+      |
+      +--> site/plugins/platform-inplace-edit (npm start only)
+               devContentMiddleware -> LocalFolderBackend + WorkingTreeCommitter (writes site/docs, no commit)
 ```
 
-`npm run site:build` builds the editor, then the site (whose `prebuild` writes `static/platform/*.json`), then `scripts/copy-editor.mjs` copies `services/editor/dist` into `site/build/editor/`. `deploy-pages.yml` publishes `site/build` to `gh-pages`. Phase 2 replaces this with a Hono shell that mounts the same services on paths in one process (see [Roadmap](roadmap.md)).
+`npm run site:build` builds the site (whose `prebuild` writes `static/platform/*.json`); the editor is compiled into it as a lazy chunk by the `platform-inplace-edit` plugin. `deploy-pages.yml` publishes `site/build` to `gh-pages`. Phase 2 replaces this with a Hono shell that mounts the same services on paths in one process (see [Roadmap](roadmap.md)).
 
 ## Dependency rules
 
@@ -60,11 +63,11 @@ platform.config.js
 | `okf-core` | nothing internal (zero runtime dependencies) |
 | `viewers` | nothing internal |
 | `auth`, `content` | `contracts`, `okf-core` |
-| `editor` (`services/editor` except composition) | `contracts`, `okf-core`, `viewers`, `platform-config` |
-| `editor-composition` (`services/editor/src/composition`) | additionally `auth`, `content` |
-| `site` (`site` except `site/src/platform` and `site/scripts`) | `contracts`, `viewers`, `platform-config` |
-| `site-composition` (`site/src/platform`) | additionally `okf-core`, `auth`, `content` |
+| `editor` (`services/editor`) | `contracts`, `okf-core`, `viewers` |
+| `site` (`site` except `site/src/platform`, `site/scripts` and `site/plugins`) | `contracts`, `viewers`, `platform-config` (never `@platform/editor`, `auth` or `content`) |
+| `site-composition` (`site/src/platform`) | additionally `okf-core`, `auth`, `content`, `editor` |
 | `site-scripts` (`site/scripts`) | `contracts`, `okf-core`, `content`, `platform-config` |
+| `site-plugins` (`site/plugins`) | `contracts`, `okf-core`, `content`, `platform-config` |
 | `root` (`scripts/`, `eslint.config.js`, `vitest.workspace.ts`) | `platform-config`, `contracts`, `okf-core`, `content` |
 
 The practical consequence: a new implementation of a contract is a new file inside an existing service (or a new service) plus one line in a composition root. Nothing else needs to know it exists.
@@ -73,18 +76,18 @@ The practical consequence: a new implementation of a contract is a new file insi
 
 ### Login
 
-1. `LoginGate` collects a fine-grained GitHub token (or a mock name and role when `VITE_PLATFORM_AUTH=mock`).
-2. `createPlatform()` has already chosen the `AuthProvider`; the editor calls `auth.login({ kind: 'github-token', token })`.
+1. The first Edit in a tab opens the sign-in dialog (`SignInDialog`, its input chosen by `AuthProvider.id`): a fine-grained GitHub token on the live site, a display name on `npm start`.
+2. `createInPlaceHost()` has already chosen the `AuthProvider`; the editor calls `auth.login({ kind: 'github-token', token })`.
 3. `GithubTokenProvider.verify` calls `GET /repos/{owner}/{repo}`; 401/403/404 become `AuthError('INVALID_CREDENTIALS')`, other failures `NETWORK`. It then requires `permissions.push === true` (otherwise `NOT_COLLABORATOR`) and reads name, login and email from `GET /user`. Role is `editor` when push is true.
-4. `BrowserSessionStore.save(session, remember)` keeps the session in memory and, only when the user ticked "remember on this device", in `localStorage` under `docs-platform.session`. The site reads the same key to authenticate asset fetches.
+4. `BrowserSessionStore.save(session, remember)` keeps the session in memory and, when "remember on this device" is ticked (the default), in `localStorage` under `docs-platform.session` (dev sign-ins use `docs-platform.dev-session`). The site reads the GitHub key to authenticate asset fetches, and resets its content backend after a sign-in.
 
 ### Save
 
 1. The editor validates the page locally with `validatePage` and shows problems before the request.
 2. `backend.writePage(version, path, text, { message, author, expectedEtag })` on the `ContentBackend` chosen by the composition root.
 3. Inside the backend, `planPageChanges` (in `writePipeline.ts`) rejects frozen versions (`FROZEN`), validates the page (`VALIDATION`), applies the change to the in-memory bundle, runs `generateBundle` (problems become `VALIDATION`), and prepends `log.md` entries (`Add` for a new page, `Update` otherwise, author = the editor's identity, summary = the commit message). An `expectedEtag` mismatch is `CONFLICT`.
-4. `GithubBrowserBackend` writes the page and every regenerated file (index blocks, `manifest.json`, `log.md`, code maps) in one Git Data commit: blobs, a tree with `base_tree`, a commit with `author`, then `PATCH refs/heads/<branch>`. `LocalFolderBackend` does the same with the `git` CLI (`--author`).
-5. The push to `main` triggers `deploy-pages.yml`; the live site updates after the build.
+4. `GithubBrowserBackend` writes the page and every regenerated file (index blocks, `manifest.json`, `log.md`, code maps) in one Git Data commit: blobs, a tree with `base_tree`, a commit whose parent is the snapshot it planned from, then `PATCH refs/heads/<branch>` without force. If the branch moved meanwhile, the whole operation is re-planned on the new head (at most twice). `LocalFolderBackend` writes the files and records them through its `Committer` (a git commit, or nothing on the dev server).
+5. The push to `main` triggers `deploy-pages.yml`; the live site updates after the build. Until then the editor's tab shows the saved version (pending edits keyed by `buildSha`).
 
 ### Publish a version
 
@@ -97,6 +100,6 @@ The practical consequence: a new implementation of a contract is a new file insi
 
 1. A page uses `<ModelViewer repo="owner/repo" path="Assets/Models/Airship.glb" />` (optionally `ref`). The site wrapper in `site/src/components/ModelViewer` runs inside `BrowserOnly` and calls `useAssetUrl`.
 2. `useAssetUrl` resolves the ref through `defaultRefFor(repo)` (from `platform.config.js`) and calls `createContentBackend().getAsset({ repo, ref, path })`.
-3. `fetchAsset` (in `services/content/src/assets/getAsset.ts`) tries `https://media.githubusercontent.com/media/<owner>/<repo>/<ref>/<path>` first (serves real bytes for Git LFS pointers), then `https://raw.githubusercontent.com/...`. A stored editor session adds `Authorization: token`, which is what makes private code repositories work for editors.
+3. `fetchAsset` (in `services/content/src/assets/getAsset.ts`) reads `https://raw.githubusercontent.com/<owner>/<repo>/<ref>/<path>` first and, when that is a Git LFS pointer (or refused), `https://media.githubusercontent.com/media/...`, which serves the real bytes. A stored editor session adds `Authorization: token`, which is what makes private code repositories work for editors.
 4. The response is stored in the Cache API store `docs-platform-assets` keyed by `<repo>@<ref>/<path>`: immutable when `ref` is a 40-hex sha, ten-minute TTL when it is a branch. Files over 100 MB are rejected with `TOO_LARGE`.
 5. The blob becomes an object URL and `ModelViewerCore` or `FbxViewerCore` from `@platform/viewers` mounts it.

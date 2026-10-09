@@ -15,6 +15,8 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/serveContentBackend.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/assets/getAsset.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/search/index.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/local/committer.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/http/contentRpcHandler.ts
 sidebar_position: 5
 ---
 
@@ -32,17 +34,17 @@ Every backend follows the same write rules: reject frozen versions with `FROZEN`
 
 | Class | Id | Runs in | Storage |
 |---|---|---|---|
-| `LocalFolderBackend({ siteDir, codeRepos, resolveRef? })` | `local-folder` | Node | filesystem plus `git` CLI commits with `--author`; `resolveRef` defaults to an unauthenticated `GET /repos/{o}/{r}/commits/{ref}` and tests inject a stub. Used for development, tests and the e2e. |
-| `GithubBrowserBackend({ owner, repo, branch, sitePath, codeRepos, token, fetch?, apiRoot? })` | `github-browser` | browser | Git Data API. Reads fetch the recursive tree once and blobs by sha (cached in memory by sha); every write is blobs, a tree with `base_tree`, a commit with `author`, then `PATCH refs/heads/<branch>`, so multi-file commits are atomic; tags via `POST /git/refs`. |
-| `HttpContentBackend(baseUrl, fetch?)` | `http` | browser | JSON over `POST <baseUrl>/rpc` with `{ method, args }`; errors come back as `{ error: { code, message, details } }` and are re-thrown as `ContentError`. Paired with `serveContentBackend(backend, { port, host })`, which exposes any backend over the same protocol (no auth in Phase 1: dev and e2e only). |
+| `LocalFolderBackend({ siteDir, codeRepos, resolveRef?, committer? })` | `local-folder` | Node | filesystem, then the `Committer`: `GitCommitter` (default, `git` CLI commits with `--author`) or `WorkingTreeCommitter` (writes only, no commit; `publishVersion` is refused with `FORBIDDEN`), which the dev server's disk endpoint uses. `resolveRef` defaults to an unauthenticated `GET /repos/{o}/{r}/commits/{ref}` and tests inject a stub. |
+| `GithubBrowserBackend({ owner, repo, branch, sitePath, codeRepos, token, fetch?, apiRoot? })` | `github-browser` | browser | Git Data API. Reads fetch the recursive tree once and blobs by sha (cached in memory by sha); every write is blobs, a tree with `base_tree`, a commit with `author` whose parent is the snapshot the change was planned from (`expectedParent`), then `PATCH refs/heads/<branch>` without force, so multi-file commits are atomic. A rejected ref update (the branch moved) becomes `CONFLICT` with `details.reason = 'branch-moved'`, and writes, creates, deletes and renames start over from a new snapshot (etag re-checked, files re-planned) at most twice; an asset upload is simply retried. The branch ref is read with `cache: 'no-store'`: GitHub sends `max-age=60` and a browser would otherwise serve a ref up to a minute old (a page loaded as it was before the last save, and every retry planned on the same stale head). Tags via `POST /git/refs`. |
+| `HttpContentBackend(baseUrl, fetch?)` | `http` | browser | JSON over `POST <baseUrl>/rpc` with `{ method, args }`; errors come back as `{ error: { code, message, details } }` and are re-thrown as `ContentError`. The server side is `createContentRpcHandler(backend, { allow?, maxBodyBytes? })`: the transport only (method allow-list, 25 MB body limit, no CORS headers). `serveContentBackend(backend, { port, host })` wraps it on its own port with open CORS (tools and tests only); the dev server's disk endpoint wraps it behind loopback, Host, Origin and token checks. |
 
-`GithubBrowserBackend` is what the live site and editor use (`content.backend: 'github-browser'` in `platform.config.js`). `HttpContentBackend` is selected by `content.backend: 'http'` plus `content.url`, or by `VITE_PLATFORM_CONTENT` in the editor; in Phase 2 it becomes the client of the server-side backend that holds the GitHub token as a secret.
+`GithubBrowserBackend` is what the live site and editor use (`content.backend: 'github-browser'` in `platform.config.js`). In-place editing on `npm start` uses `HttpContentBackend` against the dev server's same-origin endpoint; in Phase 2 it becomes the client of the server-side backend that holds the GitHub token as a secret.
 
 ## Assets
 
-`fetchAsset(ref, { token?, fetch?, cache? })` in `src/assets/getAsset.ts` builds two URLs from `AssetRef { repo, ref, path }`: `media.githubusercontent.com` first (serves real bytes for Git LFS pointers), `raw.githubusercontent.com` as fallback. A token adds `Authorization: token ...`. Responses are cached in the Cache API store `docs-platform-assets` (immutable for a 40-hex sha, ten-minute TTL for a branch); `MAX_ASSET_BYTES` is 100 MB and larger files throw `TOO_LARGE`.
+`fetchAsset(ref, { token?, fetch?, cache? })` in `src/assets/getAsset.ts` builds two URLs from `AssetRef { repo, ref, path }`: `raw.githubusercontent.com` first, and `media.githubusercontent.com` (which serves the real bytes) only when raw returns a Git LFS pointer or refuses. Reading media first logged a 404 on every page with a viewer of a non-LFS file. A token adds `Authorization: token ...`. Responses are cached in the Cache API store `docs-platform-assets` (immutable for a 40-hex sha, ten-minute TTL for a branch); `MAX_ASSET_BYTES` is 100 MB and larger files throw `TOO_LARGE`.
 
-`uploadAsset` is a backend method, not part of `fetchAsset`. It writes to `static/<path>` after rejecting empty or `..` segments, and returns an `AssetInfo`. `listAssets` only reports files under `static/models`, `static/uploads` and `static/img`, so keep uploads inside those folders or they will not be listed.
+`uploadAsset` is a backend method, not part of `fetchAsset`. It writes to `static/<path>` after `assertAssetPath` (plain POSIX segments, no `..`, dot-files, backslashes or drive letters), and returns an `AssetInfo`. Page paths go through `assertPagePath` and version ids through `versionDir`, all throwing `VALIDATION`. `listAssets` only reports files under `static/models`, `static/uploads` and `static/img`, so keep uploads inside those folders or they will not be listed.
 
 ## Search
 
@@ -50,4 +52,4 @@ Every backend follows the same write rules: reject frozen versions with `FROZEN`
 
 ## Tests
 
-`test/LocalFolderBackend.test.ts` runs the contract suite against a temporary git repository; `test/GithubBrowserBackend.test.ts` runs it against `test/FakeGitHub.ts`, an in-memory implementation of the Git Data, Contents, repos and user endpoints; `test/HttpContentBackend.test.ts` runs it through `serveContentBackend` over a `LocalFolderBackend`. Pipeline and asset tests are unit tests.
+`test/LocalFolderBackend.test.ts` runs the contract suite against a temporary git repository; `test/GithubBrowserBackend.test.ts` runs it against `test/FakeGitHub.ts`, an in-memory implementation of the Git Data, Contents, repos and user endpoints; `test/HttpContentBackend.test.ts` runs it through `serveContentBackend` over a `LocalFolderBackend`; `test/committer.test.ts` runs it again with `WorkingTreeCommitter`. `test/GithubBrowserBackend.race.test.ts` lands a commit between snapshot and commit and checks that the generated files on `main` cover both changes; `test/contentRpcHandler.test.ts` covers the allow-list, the body limit, error mapping and the absence of CORS headers. Pipeline and asset tests are unit tests.

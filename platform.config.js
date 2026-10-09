@@ -1,5 +1,6 @@
 // Single source of truth for identity, enabled features, auth/content wiring and code repos.
-// Read by site/docusaurus.config.js, services/editor (Vite), scripts/okf.mjs and CI.
+// Read by site/docusaurus.config.js (and the in-place editor's composition root in site/src/platform/inplace),
+// scripts/okf.mjs and CI.
 // No secrets here: this file is bundled into the browser.
 // Field reference: site/docs/platform/ (rendered at <siteUrl><baseUrl>platform/) and
 // packages/contracts/src/platform-config.ts (the PlatformConfig type).
@@ -8,15 +9,15 @@
 const platformConfig = {
   // Origin the site is served from (Docusaurus `url`). No trailing slash.
   siteUrl: 'https://RayanYousef.github.io',
-  // Path under siteUrl where the site lives (Docusaurus `baseUrl`, Vite `base` for the editor at
-  // `<baseUrl>editor/`, and the prefix for `<baseUrl>platform/*.json`). Must start and end with `/`.
+  // Path under siteUrl where the site lives (Docusaurus `baseUrl`, and the prefix for
+  // `<baseUrl>platform/*.json`). Must start and end with `/`.
   baseUrl: '/documentation-system/',
   // GitHub owner of the repository that holds this site. Used for the GitHub link, the edit URL,
   // the token provider's collaborator check and the browser content backend's commits.
   organizationName: 'RayanYousef',
   // GitHub repository name that holds this site (same uses as organizationName).
   projectName: 'documentation-system',
-  // Branch the editor commits to and the edit URL points at; the push to it triggers deploy-pages.yml.
+  // Branch in-place edits commit to (live site) and the edit URL points at; the push to it triggers deploy-pages.yml.
   deployBranch: 'main',
   // Folder of the Docusaurus site relative to the repository root. The docs bundle is `<sitePath>/docs`,
   // frozen versions `<sitePath>/versioned_docs/version-<v>`, static assets `<sitePath>/static`.
@@ -29,15 +30,16 @@ const platformConfig = {
   navbarTitle: 'Skyforge Docs',
   // Footer copyright line (any string; evaluated at build time).
   footerCopyright: `Copyright ${new Date().getFullYear()} Skyforge. Built with the Documentation Platform.`,
-  // Feature switches. editor: show the Editor links (the editor is still built). viewers: 3D viewer UI.
+  // Feature switches. editor: show the in-place Edit button on Latest doc pages. viewers: 3D viewer UI.
   // search: mount the Orama search plugin in the site.
   features: { editor: true, viewers: true, search: true },
-  // AuthProvider the editor's composition root instantiates: 'github-token' (fine-grained PAT with
-  // push permission on organizationName/projectName) or 'mock' (tests/e2e; VITE_PLATFORM_AUTH overrides).
+  // AuthProvider for in-place editing on the live site: 'github-token' (fine-grained PAT with push
+  // permission on organizationName/projectName). On `npm start` the editor uses a display-name sign-in
+  // ('mock') automatically, because saves go to the dev server's disk endpoint instead of GitHub.
   auth: { provider: 'github-token' },
-  // ContentBackend the editor and site use: 'github-browser' (Git Data API from the browser with the
-  // editor's token) or 'http' with `url` pointing at a serveContentBackend endpoint
-  // (VITE_PLATFORM_CONTENT overrides in the editor).
+  // ContentBackend the live site uses: 'github-browser' (Git Data API from the browser with the signed-in
+  // token). On `npm start` saves go to the dev server's same-origin disk endpoint (no commit) unless
+  // PLATFORM_EDIT_BACKEND=github is set. 'http' + `url` names a serveContentBackend endpoint (tools/tests).
   content: { backend: 'github-browser' },
   // Code repositories the docs may cite in `resource` / `sources` (validator rule `undeclared-repo`).
   // One entry per owner/repo: the generator writes one code map per entry
@@ -55,7 +57,7 @@ const platformConfig = {
       repo: 'documentation-system',
       // Branch that Latest docs pin to; publishVersion resolves it to a commit sha for frozen versions.
       defaultRef: 'main',
-      // Human-readable name shown in the editor (insert-from-repo, new page dialog).
+      // Human-readable name shown in the editor (new page dialog).
       label: 'Skyforge (sample Unity project)',
       // Sub-folder proposed as the default `resource` for new pages; see the note above.
       pathPrefix: 'examples/unity-project',
