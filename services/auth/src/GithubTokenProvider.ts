@@ -4,7 +4,9 @@ export interface GithubTokenProviderOptions { owner: string; repo: string; fetch
 
 /**
  * Fine-grained PAT authentication. A session is valid only when the token can read the
- * repository AND has push permission; the identity comes from GET /user.
+ * repository AND has push permission; the identity comes from GET /user. `login` also proves the token can
+ * write (see `probeWrite`), because for a fine-grained token `permissions.push` shows the user's role, not
+ * what the token itself may do.
  */
 export class GithubTokenProvider implements AuthProvider {
   readonly id = 'github-token';
@@ -19,6 +21,7 @@ export class GithubTokenProvider implements AuthProvider {
     if (credentials.kind !== 'github-token') throw new AuthError('UNSUPPORTED_CREDENTIALS', `GithubTokenProvider cannot log in with "${credentials.kind}" credentials`);
     const session: Session = { provider: this.id, token: credentials.token.trim(), createdAt: new Date().toISOString() };
     await this.verify(session);
+    await this.probeWrite(session.token);
     return session;
   }
 
@@ -29,6 +32,28 @@ export class GithubTokenProvider implements AuthProvider {
     if (repo.permissions?.push !== true) throw new AuthError('NOT_COLLABORATOR', `You are not a write collaborator of ${repoName}. Ask a repository admin for write access, then create a fine-grained token with Contents: Read and write.`);
     const user = await this.get<{ login: string; name: string | null; email: string | null }>('/user', session.token);
     return { name: user.name || user.login, login: user.login, email: user.email ?? null, role: 'editor' };
+  }
+
+  /**
+   * One harmless write: a tiny Git blob that no tree points to (GitHub garbage-collects it). It needs the same
+   * permission as a save (Contents: write), so a token without it is refused here instead of at the first save.
+   * A network failure is never "cannot write".
+   */
+  private async probeWrite(token: string): Promise<void> {
+    const path = `/repos/${this.opts.owner}/${this.opts.repo}/git/blobs`;
+    let res: Response;
+    try {
+      res = await this.fetchImpl(`${this.apiRoot}${path}`, {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${token}`, Accept: 'application/vnd.github+json', 'X-GitHub-Api-Version': '2022-11-28', 'Content-Type': 'application/json' },
+        body: JSON.stringify({ content: 'write check', encoding: 'utf-8' }),
+      });
+    } catch (e) {
+      throw new AuthError('NETWORK', `GitHub is unreachable: ${(e as Error).message}`);
+    }
+    if (res.status === 401) throw new AuthError('INVALID_CREDENTIALS', `GitHub rejected the token (HTTP 401). Check the token and its expiry.`);
+    if (res.status === 403 || res.status === 404) throw new AuthError('CANNOT_WRITE', 'This token can read the repo but cannot write to it. Give it Repository permissions → Contents: Read and write.');
+    if (!res.ok) throw new AuthError('NETWORK', `GitHub API ${res.status} for POST ${path}`);
   }
 
   private async get<T>(path: string, token: string): Promise<T> {

@@ -17,7 +17,7 @@ export interface GithubTokenCredentials { kind: 'github-token'; token: string }
 export interface MockCredentials { kind: 'mock'; name: string; role: Role }
 export type Credentials = GithubTokenCredentials | MockCredentials;
 
-export type AuthErrorCode = 'INVALID_CREDENTIALS' | 'NOT_COLLABORATOR' | 'UNSUPPORTED_CREDENTIALS' | 'NETWORK';
+export type AuthErrorCode = 'INVALID_CREDENTIALS' | 'NOT_COLLABORATOR' | 'UNSUPPORTED_CREDENTIALS' | 'CANNOT_WRITE' | 'NETWORK';
 
 export class AuthError extends Error {
   override readonly name = 'AuthError';
