@@ -1,5 +1,5 @@
 /** Minimal fetch stub for GET /repos/:o/:r and GET /user keyed by token. */
-export interface FakeUser { login: string; name: string; email: string | null; push: boolean }
+export interface FakeUser { login: string; name: string; email: string | null; push: boolean; /** Can the token write (POST /git/blobs)? Default true. A fine-grained token without Contents: write has push=true on the repo but false here. */ write?: boolean }
 
 export function fakeGithubFetch(users: Record<string, FakeUser>): typeof fetch {
   return (async (input: string | URL | Request, init?: RequestInit) => {
@@ -10,6 +10,7 @@ export function fakeGithubFetch(users: Record<string, FakeUser>): typeof fetch {
     const json = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { 'content-type': 'application/json' } });
     if (!user) return json(401, { message: 'Bad credentials' });
     if (/\/repos\/[^/]+\/[^/]+$/.test(url)) return json(200, { full_name: 'o/r', permissions: { push: user.push, pull: true } });
+    if (/\/git\/blobs$/.test(url) && init?.method === 'POST') return user.write === false ? json(403, { message: 'Resource not accessible by personal access token' }) : json(201, { sha: 'a'.repeat(40) });
     if (/\/user$/.test(url)) return json(200, { login: user.login, name: user.name, email: user.email });
     return json(404, { message: 'Not Found' });
   }) as typeof fetch;

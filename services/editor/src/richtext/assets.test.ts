@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { AssetInfo } from '@platform/contracts';
-import { IMAGE_EXTENSIONS, MODEL_EXTENSIONS, UnsupportedFileError, imagePreviewUrl, imageUploadPath, modelUploadPath, repoAssetInsert } from './assets.js';
+import { IMAGE_EXTENSIONS, MODEL_EXTENSIONS, UnsupportedFileError, imagePreviewUrl, imageUploadPath, modelUploadPath, repoAssetInsert, siteAssetPath } from './assets.js';
 
 const asset = (path: string, kind: AssetInfo['kind']): AssetInfo => ({ path, url: `/${path}`, size: 1, kind });
 
@@ -37,6 +37,15 @@ describe('assets', () => {
   it('inserts a repo image (and any other file) as an image with the base url and the path as alt', () => {
     expect(repoAssetInsert(asset('uploads/x.png', 'image'), '/Base/')).toEqual({ kind: 'image', src: '/Base/uploads/x.png', alt: 'uploads/x.png' });
     expect(repoAssetInsert(asset('uploads/notes.pdf', 'other'), '/Base/')).toEqual({ kind: 'image', src: '/Base/uploads/notes.pdf', alt: 'uploads/notes.pdf' });
+  });
+
+  it('maps a site address to the file under static/ (for reading a file the deploy has not published yet)', () => {
+    expect(siteAssetPath('/Docs/uploads/a.png', '/Docs/')).toBe('uploads/a.png');
+    expect(siteAssetPath('/models/fbx/Air.fbx', '/Docs/')).toBe('models/fbx/Air.fbx');
+    expect(siteAssetPath('https://example.com/a.png', '/Docs/')).toBeNull();
+    expect(siteAssetPath('//cdn.example.com/a.png', '/Docs/')).toBeNull();
+    expect(siteAssetPath('pic.png', '/Docs/')).toBeNull();
+    expect(siteAssetPath('/Docs/../secret', '/Docs/')).toBeNull();
   });
 
   it('shows site-relative images under the base url, and leaves uploads and absolute urls alone', () => {

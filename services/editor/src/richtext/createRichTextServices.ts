@@ -3,7 +3,7 @@
 import type { AssetInfo } from '@platform/contracts';
 import type { InPlaceSession } from '../inplace/InPlaceContext.js';
 import { readFileBytes } from '../mdx/uploadHelpers.js';
-import { imageUploadPath, modelUploadPath } from './assets.js';
+import { imageUploadPath, modelUploadPath, siteAssetPath } from './assets.js';
 import { rememberLocalAsset } from './localAssets.js';
 import type { RichTextServices } from './RichTextEditor.js';
 
@@ -11,7 +11,7 @@ import type { RichTextServices } from './RichTextEditor.js';
 export type RichTextSession = Pick<InPlaceSession, 'host' | 'backend' | 'identity'>;
 
 export function createRichTextServices({ host, backend, identity }: RichTextSession, fileLabel: string): RichTextServices {
-  const { baseUrl, codeRepos } = host.config;
+  const { baseUrl, codeRepos, organizationName, projectName, deployBranch, sitePath } = host.config;
   const author = { name: identity.name, email: identity.email ?? `${identity.login}@users.noreply.github.com` };
   let assets: Promise<AssetInfo[]> | null = null;
   return {
@@ -34,6 +34,11 @@ export function createRichTextServices({ host, backend, identity }: RichTextSess
       return assets;
     },
     getAsset: (ref) => backend.getAsset(ref),
+    async getSiteAsset(src) {
+      const rel = siteAssetPath(src, baseUrl);
+      if (!rel) throw new Error(`${src} is not a file of this site`);
+      return backend.getAsset({ repo: `${organizationName}/${projectName}`, ref: deployBranch, path: `${sitePath ? `${sitePath}/` : ''}static/${rel}` });
+    },
     defaultRef: (repo) => codeRepos.find((c) => `${c.owner}/${c.repo}` === repo)?.defaultRef ?? 'main',
   };
 }

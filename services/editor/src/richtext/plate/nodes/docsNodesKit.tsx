@@ -71,10 +71,28 @@ export const TabsPlugin = createPlatePlugin({ key: DOCS_KEYS.tabs, node: { isEle
   }),
 );
 
-/** A TabItem holds blocks (no okf block) and lives in a Tabs block (one outside Tabs gets wrapped in a new Tabs). */
+/**
+ * A TabItem holds blocks (no okf block) and lives in a Tabs block (one outside Tabs gets wrapped in a new Tabs).
+ * Only one tab of a group can be the default: the site shows the first tab marked `default`, so making another
+ * tab the default (the checkbox in its props) clears the mark on the others.
+ */
 export const TabItemPlugin = createPlatePlugin({ key: DOCS_KEYS.tabItem, node: { isElement: true, component: TabItemElement } }).overrideEditor(
-  ({ editor, tf: { normalizeNode } }) => ({
+  ({ editor, tf: { apply, normalizeNode } }) => ({
     transforms: {
+      apply(op) {
+        apply(op);
+        if (op.type !== 'set_node' || op.newProperties['default'] !== true) return;
+        const made = editor.api.node<TElement>(op.path)?.[0];
+        if (!made || made.type !== DOCS_KEYS.tabItem) return;
+        const groupPath = PathApi.parent(op.path);
+        const group = editor.api.node<TElement>(groupPath)?.[0];
+        if (!group || !ElementApi.isElement(group)) return;
+        editor.tf.withoutNormalizing(() => {
+          group.children.forEach((child, i) => {
+            if (i !== op.path[op.path.length - 1] && ElementApi.isElement(child) && child['default'] === true) editor.tf.unsetNodes('default', { at: [...groupPath, i] });
+          });
+        });
+      },
       normalizeNode(entry, options) {
         const [node, path] = entry;
         if (ElementApi.isElement(node) && node.type === DOCS_KEYS.tabItem) {

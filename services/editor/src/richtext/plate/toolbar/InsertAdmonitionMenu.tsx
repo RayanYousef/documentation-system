@@ -5,6 +5,7 @@ import { MessageSquareWarning } from 'lucide-react';
 import { ADMONITION_VARIANTS, insertCallout } from '../editor/transforms.js';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu.js';
 import { ToolbarButton } from '../ui/toolbar.js';
+import { returnFocusAfterMenu } from './menuFocus.js';
 
 const LABEL = 'Insert admonition';
 
@@ -18,9 +19,9 @@ export function InsertAdmonitionMenu() {
           <MessageSquareWarning />
         </ToolbarButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" onCloseAutoFocus={(e) => { e.preventDefault(); editor.tf.focus(); }}>
+      <DropdownMenuContent align="start" onCloseAutoFocus={(e) => returnFocusAfterMenu(editor, e)}>
         {ADMONITION_VARIANTS.map((v) => (
-          <DropdownMenuItem key={v} onSelect={() => insertCallout(editor, v)}>
+          <DropdownMenuItem key={v} onSelect={() => { editor.tf.focus(); insertCallout(editor, v); }}>
             <code className="font-mono text-xs">:::{v}</code>
           </DropdownMenuItem>
         ))}

@@ -41,6 +41,10 @@ sources:
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/plugins/platform-inplace-edit/devContentMiddleware.mjs
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.config.ts
   - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/support.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/services/content/src/github/apiErrors.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.dev.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/playwright.live.config.ts
+  - resource: https://github.com/RayanYousef/documentation-system/blob/main/site/e2e/live/live-save.spec.ts
 sidebar_position: 6
 ---
 
@@ -56,6 +60,28 @@ Pages are edited where they are read. Every Latest page of the docs site has an 
 
 **Page actions**: "New page in this folder..." (path prefilled with the current folder), "Rename...", "Delete..." (both in dialogs; not offered for folder intros), "Publish version..." (live site, role `editor`) and "Sign out". Frozen versions have no Edit button and no edit link; `log.md` and `code-maps/` are generated and not editable.
 
+## Create your token
+
+Saving on the live site needs a GitHub token that is allowed to write to this repository. A fine-grained token is the right kind:
+
+1. Open GitHub, then Settings, Developer settings, Personal access tokens, Fine-grained tokens, **Generate new token**.
+2. Give it a name and an expiry date you can live with.
+3. **Repository access**: choose **Only select repositories** and pick `documentation-system`.
+4. **Repository permissions**: set **Contents** to **Read and write**. **Metadata: Read-only** is added automatically.
+5. Generate it, copy it once, and paste it into the sign-in dialog.
+
+Sign-in checks this for you. After the read checks, it makes one harmless write (a tiny Git blob that no branch points to, which GitHub cleans up by itself). A token that can read the repository but cannot write is refused with "This token can read the repo but cannot write to it. Give it Repository permissions → Contents: Read and write." This matters because, for a fine-grained token, GitHub's `permissions.push` flag shows your role in the repository, not what the token may do, so a token without Contents write used to sign in fine and fail only at the first save. A lost connection during the check is reported as such, never as "cannot write". A remembered session is not re-checked this way.
+
+When a save fails, the editor says why and keeps your edits on the page, so you can fix the cause and press **Save** again:
+
+| What GitHub said | What you see |
+|---|---|
+| 401 | "Your GitHub token has expired or was revoked." Sign out from Page actions and sign in with a new token. |
+| 403 on a write | "This token can read the repo but cannot write to it." Give the token Contents: Read and write. |
+| Rate limit (403 or 429 with `retry-after` or `x-ratelimit-remaining: 0`, or the text "secondary rate limit") | "GitHub is limiting how fast this token can make requests." with how long to wait. |
+| Protected branch (403 or 422 with "Protected branch update failed") | 'The branch "main" is protected.' Ask a repository admin to allow the push. |
+| Someone else saved first | The conflict screen described under Saving. |
+
 ## Saving
 
 Every save goes through `ContentBackend.writePage` with the etag the page was loaded with, so the page, its regenerated folder index, `manifest.json`, code maps and a `log.md` entry land together (see [Content service](content.md)).
@@ -64,7 +90,7 @@ Every save goes through `ContentBackend.writePage` with the etag the page was lo
 - After a live save the page shows the saved version, read-only, with "Saved as abc1234 (view commit). The public site updates after the deploy finishes". The tab keeps that copy (`pendingEdits`, sessionStorage) across reloads until the site is served from a newer build (`customFields.buildSha`, set from `PLATFORM_BUILD_SHA` in the deploy workflow) or 15 minutes pass, which covers the GitHub Pages cache.
 - **Dev server** (`local-disk` mode, `npm start`): the save goes to the dev server's own endpoint and the files land in the working tree with no commit; Docusaurus hot-reloads the page. The banner says "Saved to disk"; commit with your usual git flow. Publishing is not offered in this mode. `PLATFORM_EDIT_BACKEND=github npm start` uses the live path instead.
 - A folder intro (`index.md`) is edited like any page; its generated okf block is shown rendered and read-only, and a save that would change it is refused.
-- Images and 3D models uploaded from the editor are committed at once (`uploads/`, `models/`, `models/fbx/`) and shown from the browser's copy until the site serves them, so a new viewer renders immediately.
+- Images and 3D models uploaded from the editor are committed at once (`uploads/`, `models/`, `models/fbx/`) and shown from the browser's copy until the site serves them, so a new viewer renders immediately. After a reload that copy is gone, so while the site still answers 404 for the file the image or viewer reads it from the deploy branch on GitHub (`RichTextServices.getSiteAsset`).
 
 ## Composition
 
@@ -121,8 +147,17 @@ Vitest (`npm test`) covers the editor library: composing the saved file, the edi
 
 The Playwright suite runs against the built site (`npm run e2e -w @platform/site`, which builds and serves it); GitHub is mocked in the browser by `site/e2e/support.ts` (a `FakeGitHub` seeded from this repository), and every test fails on a console error. It covers the Edit entry points and that readers download no editor code or styles before Edit, token sign-in, saving and the pending preview, the unsaved-changes guards, Raw mode, conflicts and the branch-moved retry, folder intros, page actions, theme isolation and the sticky toolbar, existing and newly added blocks (uploaded and repo 3D models, the component and "/" menus, tabs with editable props), and that every 3D viewer on the doc pages renders.
 
+### Save errors and end-to-end coverage
+
+`GitDataClient` (`services/content/src/github/apiErrors.ts`) turns GitHub's refusals into messages a person can act on and keeps the reason in `ContentError.details.reason` (`token-expired`, `cannot-write`, `cannot-read`, `rate-limited` with `retryAfterSeconds`, `branch-protected`). A failed save leaves the page in the editor with its edits, so the next **Save** retries.
+
+The Playwright specs insert each editor feature, save, reload, open the editor again and check both the page and the saved MDX read back from the fake `main`: formatting, links, code blocks, images, tables, admonitions, Tabs, 3D models, Raw round trips (Visual to Raw and back leaves every character alone), repeated saves, and the save errors above (`FakeGitHub` in `support.ts` has read-only tokens, revoked tokens, a rate limit, a protected branch and a dead connection). `npm run e2e -w @platform/site` runs the built-site suite and then `playwright.dev.config.ts` (dev-mode saving on `npm start`: it creates a temporary page, checks that the file is written and no commit is made, and restores `site/docs` afterwards). `npm run e2e:live -w @platform/site` is for a person with a token: it needs `GITHUB_TOKEN` in the terminal (never a file; traces, videos and screenshots are off, the page snapshot in `error-context.md` is off, and the token box is emptied before any check can fail, because that snapshot lists the value of every text box), builds the site, signs in against the real GitHub, and on one temporary page saves, saves again within a minute, adds Tabs and an FBX model, then deletes the page. Each step is a real commit to `main`. Without the token it stops with a short message.
+
+A pick from a toolbar menu (block type, admonition, component) focuses the editor at once, so keys typed right after the pick land in the page (`site/e2e/menu-focus.spec.ts`). When the menu has finished its close animation it gives the focus back to the editor only if nothing else took it, so a viewer's settings popover opened right after inserting the viewer stays open.
+
 ## Known minor issues
 
+- The visual editor has no buttons to remove or reorder tabs yet (use Raw); renaming a tab is the tab's props dialog (double-click it). Only one tab of a group can be the default: ticking default on a tab clears it on the others.
 - While editing, code blocks have no title bar or copy button of the page's own code blocks, and headings have no anchor links.
 - Tables keep the editor's own table chrome (cell selection, borders) with the page's cell styling.
 - After creating a page on the live site there is no page to open until the deploy finishes; the status line says so.

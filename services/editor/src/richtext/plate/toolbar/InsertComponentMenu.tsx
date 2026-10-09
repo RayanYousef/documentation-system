@@ -6,6 +6,7 @@ import { useDocsComponents } from '../context.js';
 import { insertComponent } from '../editor/transforms.js';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger } from '../ui/dropdown-menu.js';
 import { ToolbarButton } from '../ui/toolbar.js';
+import { returnFocusAfterMenu } from './menuFocus.js';
 
 export function InsertComponentMenu() {
   const editor = useEditorRef();
@@ -19,9 +20,9 @@ export function InsertComponentMenu() {
           <Puzzle />
         </ToolbarButton>
       </DropdownMenuTrigger>
-      <DropdownMenuContent align="start" onCloseAutoFocus={(e) => { e.preventDefault(); editor.tf.focus(); }}>
+      <DropdownMenuContent align="start" onCloseAutoFocus={(e) => returnFocusAfterMenu(editor, e)}>
         {manifest.components.map((c) => (
-          <DropdownMenuItem key={c.name} onSelect={() => insertComponent(editor, manifest, c)}>
+          <DropdownMenuItem key={c.name} onSelect={() => { editor.tf.focus(); insertComponent(editor, manifest, c); }}>
             <code className="font-mono text-xs">{`<${c.name}${c.hasChildren ? '>' : ' />'}`}</code>
           </DropdownMenuItem>
         ))}

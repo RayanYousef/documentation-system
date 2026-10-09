@@ -2,7 +2,7 @@
 // to an in-memory FakeGitHub seeded from this repository's own site/ files, so each test starts from a
 // copy of `main` and can inspect the commits it produced. Raw file downloads (3D models referenced by
 // repo + path) are served from the working tree. Every test fails on console errors unless it allows them.
-import { test as base, expect, type Page } from '@playwright/test';
+import { test as base, expect, type Locator, type Page } from '@playwright/test';
 import { readdirSync, readFileSync, existsSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { GitDataClient } from '@platform/content';
@@ -15,12 +15,43 @@ export const REPO_ROOT = path.resolve(__dirname, '..', '..');
 export const OWNER = 'RayanYousef';
 export const REPO = 'documentation-system';
 
-/** Tokens the fake accepts: a write collaborator and a read-only user. Anything else is rejected (401). */
-export const TOKENS = { writer: 'good-token', reader: 'reader-token' } as const;
-const USERS: Record<string, { login: string; name: string; email: string; push: boolean }> = {
-  [TOKENS.writer]: { login: 'mira', name: 'Mira Okonkwo', email: 'mira@example.com', push: true },
-  [TOKENS.reader]: { login: 'rita', name: 'Rita Reader', email: 'rita@example.com', push: false },
+/**
+ * Tokens the fake accepts. `writer` can do everything, `reader` is not a collaborator, and `noContents` is a
+ * fine-grained token of the repository owner that lacks "Contents: Read and write": GitHub shows the owner's
+ * role (push: true) but refuses every write with 403. Anything else is rejected (401).
+ */
+export const TOKENS = { writer: 'good-token', reader: 'reader-token', noContents: 'no-contents-token' } as const;
+const USERS: Record<string, { login: string; name: string; email: string; push: boolean; write: boolean }> = {
+  [TOKENS.writer]: { login: 'mira', name: 'Mira Okonkwo', email: 'mira@example.com', push: true, write: true },
+  [TOKENS.reader]: { login: 'rita', name: 'Rita Reader', email: 'rita@example.com', push: false, write: false },
+  [TOKENS.noContents]: { login: 'mira', name: 'Mira Okonkwo', email: 'mira@example.com', push: true, write: false },
 };
+
+/** A refusal GitHub gives for a write (real GitHub wording and headers). */
+export interface WriteFault { status: number; message: string; headers?: Record<string, string>; when?: (method: string, pathname: string) => boolean }
+
+/**
+ * Things that go wrong on the fake GitHub, switched on and off by a test while the page is open: tokens that
+ * stop working (expired or revoked), a rate limit, a protected branch, or a network that is down for writes.
+ */
+export class GitHubFaults {
+  /** Tokens GitHub now answers with 401 (Bad credentials). */
+  readonly revoked = new Set<string>();
+  /** Every write (POST, PATCH, PUT, DELETE) is answered with this, until cleared with `null`. */
+  writeFault: WriteFault | null = null;
+  /** Writes never reach GitHub (the request fails like a lost connection). */
+  writesOffline = false;
+
+  /** Secondary rate limit: 403 with retry-after, as GitHub sends it for bursts of writes. */
+  rateLimit(retryAfterSeconds = 120): void {
+    this.writeFault = { status: 403, message: 'You have exceeded a secondary rate limit. Please wait a few minutes before you try again.', headers: { 'retry-after': String(retryAfterSeconds) } };
+  }
+  /** A branch rule on `main`: the final ref update is refused. */
+  protectBranch(branch = 'main'): void {
+    this.writeFault = { status: 403, message: `Protected branch update failed for refs/heads/${branch}.`, when: (method) => method === 'PATCH' };
+  }
+  clear(): void { this.revoked.clear(); this.writeFault = null; this.writesOffline = false; }
+}
 
 function walk(rel: string, out: Record<string, Uint8Array>, skip: (rel: string) => boolean = () => false): void {
   const abs = path.join(REPO_ROOT, rel);
@@ -45,8 +76,15 @@ function seed(): Record<string, Uint8Array> {
 
 const cors = { 'access-control-allow-origin': '*', 'access-control-allow-headers': '*', 'access-control-allow-methods': 'GET, POST, PATCH, PUT, DELETE, OPTIONS', 'access-control-expose-headers': '*' };
 
+/** Bytes of a repo file on a fake branch (null when absent). */
+export function fileBytesAt(gh: FakeGitHub, branch: string, repoPath: string): Uint8Array | null {
+  const commit = gh.commits.get(gh.refs.get(`heads/${branch}`)!);
+  const sha = commit ? gh.trees.get(commit.tree)?.[repoPath] : undefined;
+  return sha ? gh.blobs.get(sha) ?? null : null;
+}
+
 /** Routes api.github.com (auth checks + FakeGitHub) and raw/media.githubusercontent.com (working tree). */
-export async function installGitHub(page: Page, gh: FakeGitHub): Promise<void> {
+export async function installGitHub(page: Page, gh: FakeGitHub, faults: GitHubFaults = new GitHubFaults()): Promise<void> {
   await page.route('https://api.github.com/**', async (route) => {
     const req = route.request();
     if (req.method() === 'OPTIONS') { await route.fulfill({ status: 204, headers: cors }); return; }
@@ -54,7 +92,14 @@ export async function installGitHub(page: Page, gh: FakeGitHub): Promise<void> {
     const token = (req.headers()['authorization'] ?? '').replace(/^(Bearer|token) /, '');
     const user = token ? USERS[token] : undefined;
     const json = (status: number, body: unknown) => route.fulfill({ status, headers: { ...cors, 'content-type': 'application/json' }, body: JSON.stringify(body) });
-    if (token && !user) { await json(401, { message: 'Bad credentials' }); return; }
+    if (token && (!user || faults.revoked.has(token))) { await json(401, { message: 'Bad credentials' }); return; }
+    const isWrite = req.method() !== 'GET' && req.method() !== 'HEAD';
+    if (isWrite && faults.writesOffline) { await route.abort('connectionfailed'); return; }
+    if (isWrite && user && !user.write) { await json(403, { message: 'Resource not accessible by personal access token' }); return; }
+    if (isWrite && faults.writeFault && (faults.writeFault.when?.(req.method(), url.pathname) ?? true)) {
+      await route.fulfill({ status: faults.writeFault.status, headers: { ...cors, 'content-type': 'application/json', ...faults.writeFault.headers }, body: JSON.stringify({ message: faults.writeFault.message }) });
+      return;
+    }
     if (url.pathname === `/repos/${OWNER}/${REPO}` && req.method() === 'GET') { await json(200, { full_name: `${OWNER}/${REPO}`, permissions: { pull: true, push: !!user?.push } }); return; }
     if (url.pathname === '/user') { if (!user) await json(401, { message: 'Requires authentication' }); else await json(200, { login: user.login, name: user.name, email: user.email }); return; }
     const res = await gh.fetch(req.url(), { method: req.method(), body: req.postData() ?? undefined });
@@ -65,18 +110,24 @@ export async function installGitHub(page: Page, gh: FakeGitHub): Promise<void> {
     const parts = url.pathname.split('/').filter(Boolean);
     const rest = url.hostname.startsWith('media') ? parts.slice(4) : parts.slice(3); // media/<o>/<r>/<ref>/... | <o>/<r>/<ref>/...
     const file = path.join(REPO_ROOT, ...rest.map(decodeURIComponent));
-    if (existsSync(file) && statSync(file).isFile()) await route.fulfill({ status: 200, headers: cors, body: readFileSync(file) });
+    if (existsSync(file) && statSync(file).isFile()) { await route.fulfill({ status: 200, headers: cors, body: readFileSync(file) }); return; }
+    // Not in the working tree: a file that was committed during the test (an upload), as raw.githubusercontent.com would serve it.
+    const from = url.hostname.startsWith('media') ? 1 : 0;
+    const committed = parts[from] === OWNER && parts[from + 1] === REPO ? fileBytesAt(gh, 'main', rest.slice(0).map(decodeURIComponent).join('/')) : null;
+    if (committed) await route.fulfill({ status: 200, headers: cors, body: Buffer.from(committed) });
     else await route.fulfill({ status: 404, headers: cors, body: 'Not Found' });
   });
 }
 
 export interface ConsoleGuard { allow(pattern: RegExp): void }
 
-export const test = base.extend<{ gh: FakeGitHub; consoleGuard: ConsoleGuard }>({
-  gh: async ({ page }, use) => {
+export const test = base.extend<{ gh: FakeGitHub; faults: GitHubFaults; consoleGuard: ConsoleGuard }>({
+  // eslint-disable-next-line no-empty-pattern -- Playwright requires a destructuring pattern for fixture parameters
+  faults: async ({}, use) => { await use(new GitHubFaults()); },
+  gh: async ({ page, faults }, use) => {
     const gh = new FakeGitHub(OWNER, REPO);
     gh.seed('main', seed());
-    await installGitHub(page, gh);
+    await installGitHub(page, gh, faults);
     await use(gh);
   },
   consoleGuard: [async ({ page }, use) => {
@@ -95,6 +146,9 @@ export const editButton = (page: Page) => page.getByTestId('inplace-edit-button'
 export const body = (page: Page) => page.locator('[data-platform-editing] [data-slate-editor]');
 export const editStatus = (page: Page) => page.getByTestId('edit-status');
 export const button = (page: Page, name: string) => page.getByRole('button', { name, exact: true });
+/** The editable region (the edited page) and a button of the formatting toolbar by its accessible name. */
+export const editing = (page: Page) => page.locator('[data-platform-editing]');
+export const toolbarButton = (page: Page, label: string) => page.getByRole('toolbar', { name: 'Formatting', exact: true }).getByLabel(label, { exact: true });
 
 /** Opens a page and clicks Edit (the sign-in dialog or the editor follows). */
 export async function clickEdit(page: Page, route: string): Promise<void> {
@@ -116,6 +170,19 @@ export async function openEditor(page: Page, route: string): Promise<void> {
 
 export async function save(page: Page): Promise<void> {
   await button(page, 'Save').click();
+}
+
+/**
+ * Saves, checks the saved banner, reloads (the tab keeps the saved copy until the next deploy) and opens the
+ * editor again, so what the editor shows afterwards was read back from the saved file on the fake `main`.
+ */
+export async function saveReloadAndEdit(page: Page): Promise<void> {
+  await save(page);
+  await expect(page.getByTestId('saved-banner')).toBeVisible();
+  await page.reload();
+  await expect(page.getByTestId('saved-banner')).toBeVisible();
+  await editButton(page).click();
+  await expect(body(page)).toBeVisible();
 }
 
 /** Text of a repo file on the fake `main` (null when absent). */
@@ -144,9 +211,43 @@ export function bundleOnMain(gh: FakeGitHub): Record<string, string> {
   return out;
 }
 
-/** Puts the caret at the end of the first paragraph of the editor that contains `text`. */
+/**
+ * Puts the caret at the very end of the first paragraph of the editor that contains `text`. (The End key only
+ * goes to the end of the visual line, which is the middle of a paragraph that wraps.)
+ */
 export async function caretAfter(page: Page, text: string): Promise<void> {
-  const p = body(page).locator('p', { hasText: text }).first();
-  await p.click();
-  await page.keyboard.press('End');
+  await caretAtEnd(page, body(page).locator('p', { hasText: text }).first());
+}
+
+/**
+ * Puts the caret at the very end of `el` (a paragraph or a code line of the editor) with one real click on the right
+ * half of its last character, then waits until the editor has read that caret. The editor reads DOM selection
+ * changes at most every 100 ms, so an Enter pressed right after a click and End (or a scripted selection) could
+ * still split the line where the click landed.
+ */
+export async function caretAtEnd(page: Page, el: Locator): Promise<void> {
+  await el.scrollIntoViewIfNeeded();
+  const point = await el.evaluate((node) => {
+    const walker = document.createTreeWalker(node, NodeFilter.SHOW_TEXT);
+    let last: Text | null = null;
+    for (let n = walker.nextNode(); n; n = walker.nextNode()) if ((n.textContent ?? '').replace(/\uFEFF/g, '').length) last = n as Text;
+    if (!last) return null;
+    const range = document.createRange();
+    range.setStart(last, last.length - 1);
+    range.setEnd(last, last.length);
+    const rects = range.getClientRects();
+    const r = rects[rects.length - 1] ?? range.getBoundingClientRect();
+    return { x: r.right - Math.min(1, r.width / 4), y: r.top + r.height / 2 };
+  });
+  if (point) await page.mouse.click(point.x, point.y);
+  else await el.click();
+  await expect.poll(() => el.evaluate((node) => {
+    const s = window.getSelection();
+    if (!s || !s.isCollapsed || !s.focusNode || !node.contains(s.focusNode)) return false;
+    const after = document.createRange();
+    after.setStart(s.focusNode, s.focusOffset);
+    after.setEnd(node, node.childNodes.length);
+    return after.toString().replace(/\uFEFF/g, '') === '';
+  })).toBe(true);
+  await page.waitForTimeout(150); // one throttle window of the editor's selection reading
 }

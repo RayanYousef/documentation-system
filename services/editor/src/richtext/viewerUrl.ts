@@ -9,7 +9,7 @@ import type { RichTextServices } from './RichTextEditor.js';
 
 export interface ViewerSourceProps { src?: string; repo?: string; gitRef?: string; path?: string }
 export type ViewerSource = { kind: 'url'; url: string } | { kind: 'asset'; ref: AssetRef } | null;
-export type ViewerUrlServices = Pick<RichTextServices, 'baseUrl' | 'getAsset' | 'defaultRef'>;
+export type ViewerUrlServices = Pick<RichTextServices, 'baseUrl' | 'getAsset' | 'getSiteAsset' | 'defaultRef'>;
 
 export function viewerSource({ src, repo, gitRef, path }: ViewerSourceProps, baseUrl: string, defaultRef: (repo: string) => string): ViewerSource {
   if (src) return { kind: 'url', url: localAssetUrl(src) ?? (src.startsWith('/') ? `${baseUrl}${src.slice(1)}` : src) };
@@ -33,7 +33,16 @@ export function useViewerUrl({ src, repo, gitRef, path }: ViewerSourceProps, ser
     const timer = setTimeout(() => {
       const s = servicesRef.current;
       const source = viewerSource({ src, repo, gitRef, path }, baseUrl, s?.defaultRef ?? (() => 'main'));
-      if (source?.kind === 'url') { setUrl(source.url); return; }
+      if (source?.kind === 'url') {
+        // A site file that the deploy has not published yet (an upload saved a moment ago, then a reload): read it from GitHub.
+        if (!src || !s?.getSiteAsset || localAssetUrl(src) || !src.startsWith('/')) { setUrl(source.url); return; }
+        const readFromGithub = () => s.getSiteAsset!(src).then(
+          (blob) => { if (cancelled) return; objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); },
+          () => { if (!cancelled) setUrl(source.url); },
+        );
+        fetch(source.url, { method: 'HEAD' }).then((res) => { if (cancelled) return; if (res.ok) setUrl(source.url); else return readFromGithub(); }, () => { if (!cancelled) setUrl(source.url); });
+        return;
+      }
       if (!source || !s) { setUrl(null); return; }
       s.getAsset(source.ref).then(
         (blob) => { if (cancelled) return; objectUrl = URL.createObjectURL(blob); setUrl(objectUrl); },

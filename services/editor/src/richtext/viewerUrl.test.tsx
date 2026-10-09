@@ -63,6 +63,24 @@ describe('useViewerUrl', () => {
     expect(host.textContent).toBe('/B/abc');
   });
 
+  it('uses the site copy of a model when the site serves it, and reads it from GitHub when the deploy has not published it yet', async () => {
+    const getSiteAsset = vi.fn(async () => new Blob(['x']));
+    const served = vi.fn(async () => new Response(null, { status: 200 }));
+    vi.stubGlobal('fetch', served);
+    const services = { baseUrl: '/B/', getAsset: vi.fn(), getSiteAsset, defaultRef };
+    await render({ src: '/m.glb' }, services);
+    await tick(300);
+    expect(host.textContent).toBe('/B/m.glb');
+    expect(getSiteAsset).not.toHaveBeenCalled();
+
+    vi.stubGlobal('fetch', vi.fn(async () => new Response(null, { status: 404 })));
+    await render({ src: '/new.glb' }, services);
+    await tick(300);
+    expect(getSiteAsset).toHaveBeenCalledWith('/new.glb');
+    expect(host.textContent).toBe('blob:1');
+    vi.unstubAllGlobals();
+  });
+
   it('fetches repo assets as object urls and revokes them on change', async () => {
     const getAsset = vi.fn(async () => new Blob(['x']));
     await render({ repo: 'o/r', path: 'a.fbx' }, { baseUrl: '/', getAsset, defaultRef });

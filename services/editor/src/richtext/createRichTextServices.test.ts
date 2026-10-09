@@ -6,7 +6,7 @@ import { UnsupportedFileError } from './assets.js';
 import { forgetLocalAssets, localAssetUrl } from './localAssets.js';
 
 const identity: Identity = { name: 'Ray', login: 'ray', email: null } as Identity;
-const config = { baseUrl: '/Base/', codeRepos: [{ owner: 'o', repo: 'r', defaultRef: 'dev' }] } as unknown as PlatformConfig;
+const config = { baseUrl: '/Base/', organizationName: 'o', projectName: 'r', deployBranch: 'main', sitePath: 'site', codeRepos: [{ owner: 'o', repo: 'r', defaultRef: 'dev' }] } as unknown as PlatformConfig;
 
 function fakeBackend(over: Partial<ContentBackend> = {}) {
   const uploads: { path: string; bytes: Uint8Array; opts: MutationOptions }[] = [];
@@ -78,6 +78,16 @@ describe('createRichTextServices', () => {
     await expect(s.listAssets()).rejects.toThrow('offline');
     await expect(s.listAssets()).resolves.toEqual([]);
     expect(listAssets).toHaveBeenCalledTimes(2);
+  });
+
+  it('reads a file the deploy has not published yet from the deploy branch of the site repository', async () => {
+    const { backend } = fakeBackend();
+    const s = createRichTextServices(session(backend), 'p.md');
+    await s.getSiteAsset!('/Base/uploads/pic.png');
+    await s.getSiteAsset!('/models/ship.glb');
+    expect(backend.getAsset).toHaveBeenNthCalledWith(1, { repo: 'o/r', ref: 'main', path: 'site/static/uploads/pic.png' });
+    expect(backend.getAsset).toHaveBeenNthCalledWith(2, { repo: 'o/r', ref: 'main', path: 'site/static/models/ship.glb' });
+    await expect(s.getSiteAsset!('https://example.com/a.png')).rejects.toThrow('not a file of this site');
   });
 
   it('passes asset reads through and resolves default refs from the code repos', async () => {

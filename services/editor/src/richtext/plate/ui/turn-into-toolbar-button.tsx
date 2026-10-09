@@ -29,6 +29,7 @@ import {
   DropdownMenuTrigger,
 } from '@/richtext/plate/ui/dropdown-menu';
 import { getBlockType, setBlockType } from '@/richtext/plate/editor/block-type';
+import { returnFocusAfterMenu } from '@/richtext/plate/toolbar/menuFocus';
 
 import { ToolbarButton, ToolbarMenuGroup } from './toolbar';
 
@@ -140,15 +141,15 @@ export function TurnIntoToolbarButton(props: DropdownMenuProps) {
 
       <DropdownMenuContent
         className="ignore-click-outside/toolbar w-auto min-w-0"
-        onCloseAutoFocus={(e) => {
-          e.preventDefault();
-          editor.tf.focus();
-        }}
+        onCloseAutoFocus={(e) => returnFocusAfterMenu(editor, e)}
         align="start"
       >
         <ToolbarMenuGroup
           value={value}
           onValueChange={(type) => {
+            // Focus first, at the pick: the menu keeps the focus through its close animation, so keys typed
+            // right after the pick would otherwise go to the closing menu and be lost.
+            editor.tf.focus();
             setBlockType(editor, type);
           }}
           label="Turn into"

@@ -50,7 +50,11 @@ export function SignInDialog({ host, initialError = '', onSignedIn, onCancel }: 
           <input type="checkbox" checked={remember} onChange={(e) => setRemember(e.target.checked)} /> Remember on this device
         </label>
         {remember && <div className="ped-notice">{panel.rememberWarning}</div>}
-        {error && <p className="ped-problems" role="alert">{error}</p>}
+        {error && (
+          <p className="ped-problems" role="alert">
+            {error}{panel.help && <> <a href={panel.help(host).href} target="_blank" rel="noreferrer">{panel.help(host).label}</a></>}
+          </p>
+        )}
         <div className="ped-actions">
           <button className="ped-btn" type="submit" disabled={busy || !value.trim()}>{busy ? 'Verifying...' : 'Sign in'}</button>
           <button className="ped-btn ped-btn--secondary" type="button" onClick={onCancel} disabled={busy}>Cancel</button>
