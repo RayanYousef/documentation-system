@@ -294,3 +294,29 @@ test('comments are not offered on frozen versions', async ({ page, gh: _gh }) =>
   await expect(page.locator('article h1').first()).toBeVisible();
   await expect(commentsButton(page)).toHaveCount(0);
 });
+
+test('comment text and author names are shown as text, never as HTML', async ({ page, gh }) => {
+  await seedComments(page, gh, PAGE, [{
+    id: 'c1', body: '<img src="x" onerror="window.__pwned = 1">Bold <b>claim</b>', exact: 'yellow highlight', tab: HOW_TO_USE, login: '<script>window.__pwned = 2</script>',
+    replies: [{ id: 'r1', body: '<a href="javascript:window.__pwned = 3">click</a>', login: '<i>x</i>' }],
+  }]);
+  await open(page);
+  await openCard(page, 'yellow highlight');
+  await expect(card(page)).toContainText('<img src="x" onerror="window.__pwned = 1">Bold <b>claim</b>');
+  await expect(card(page)).toContainText('<script>window.__pwned = 2</script>');
+  await expect(card(page)).toContainText('<a href="javascript:window.__pwned = 3">click</a>');
+  await expect(card(page).locator('img, script, b, a, i')).toHaveCount(0);
+  expect(await page.evaluate(() => (window as unknown as { __pwned?: number }).__pwned)).toBeUndefined();
+});
+
+test('when the comments code cannot load, the page is still shown (only without comments)', async ({ page, gh: _gh, consoleGuard }) => {
+  consoleGuard.allow(/Failed to load resource: net::ERR_FAILED|ChunkLoadError: Loading chunk \d+ failed[\s\S]*\/comments\.[0-9a-f]+\.js/);
+  await page.route(/\/assets\/js\/comments\.[0-9a-f]+\.js$/, (route) => route.abort());
+  await page.goto(ROUTE);
+  await expect(editButton(page)).toBeVisible();
+  await expect(pageContent(page)).toContainText('Anyone reading a Latest docs page');
+  await page.waitForLoadState('networkidle');
+  await expect(commentsButton(page)).toHaveCount(0);
+  await expect(page.getByText('This page crashed')).toHaveCount(0);
+  await expect(pageContent(page)).toContainText('Anyone reading a Latest docs page');
+});

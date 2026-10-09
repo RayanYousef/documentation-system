@@ -7,6 +7,7 @@ import Content from '@theme-original/DocItem/Content';
 import type ContentType from '@theme/DocItem/Content';
 import type { WrapperProps } from '@docusaurus/types';
 import useIsBrowser from '@docusaurus/useIsBrowser';
+import ErrorBoundary from '@docusaurus/ErrorBoundary';
 import { EditButton } from '@site/src/components/InPlaceEdit/EditButton';
 import { onEditRequest, setFlashNotice, takeFlashNotice } from '@site/src/components/InPlaceEdit/editRequest';
 import { useEditablePage } from '@site/src/components/InPlaceEdit/useEditablePage';
@@ -19,6 +20,10 @@ const InPlaceEditorMount = lazy(loadEditor);
 const SavedPreviewMount = lazy(() => loadEditor().then((m) => ({ default: m.SavedPreviewMount })));
 // Comments: a small chunk of its own, loaded after the page is shown; it never loads the editor.
 const CommentsMount = lazy(() => import(/* webpackChunkName: "comments" */ '@site/src/platform/comments/mountComments'));
+const commentsUnavailable = ({ error }: { error: Error }) => {
+  console.warn('[comments] not shown on this page:', error);
+  return null;
+};
 
 /** Same key the editor's pendingEdits uses; only checked for presence here (the editor checks expiry). */
 const PENDING_EDITS_KEY = 'docs-platform.pending-edits';
@@ -63,7 +68,11 @@ export default function ContentWrapper(props: Props) {
 
   // Not while editing: the highlights go away with the layer and come back after the save.
   // Keyed by page: moving to another doc starts with that page's comments only (no card or panel carried over).
-  const comments = commentsOn && view.kind !== 'edit' ? <Suspense fallback={null}><CommentsMount key={page.path} page={page} /></Suspense> : null;
+  // Comments are extra: if their chunk cannot load (offline, a deploy replaced it) or they fail, the page is
+  // still shown, only without comments; without this boundary the error would replace the whole page.
+  const comments = commentsOn && view.kind !== 'edit'
+    ? <ErrorBoundary key={page.path} fallback={commentsUnavailable}><Suspense fallback={null}><CommentsMount page={page} /></Suspense></ErrorBoundary>
+    : null;
 
   if (view.kind === 'edit') {
     return (
