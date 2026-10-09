@@ -173,6 +173,22 @@ export function CommentsLayer({ host, page }: CommentsLayerProps) {
     return () => { document.removeEventListener('selectionchange', onChange); clearTimeout(timer); };
   }, [root]);
 
+  // The opened card takes the focus, so its Reply and Resolve come next for the keyboard (the card is drawn
+  // apart from the panel and the text); closing it gives the focus back to what opened it (a panel entry).
+  const cardRef = useRef<HTMLDivElement>(null);
+  const cardId = card?.id ?? null;
+  useEffect(() => {
+    if (!cardId) return undefined;
+    const focused = document.activeElement;
+    const opener = focused instanceof HTMLElement && focused !== document.body && !cardRef.current?.contains(focused) ? focused : null;
+    cardRef.current?.focus({ preventScroll: true });
+    return () => {
+      const now = document.activeElement;
+      // Only when the focus went down with the card (Escape, the close button, Resolve), not when it moved on.
+      if (opener?.isConnected && (!now || now === document.body)) opener.focus({ preventScroll: true });
+    };
+  }, [cardId]);
+
   // Escape closes the card and the new-comment box.
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => { if (e.key === 'Escape') { setCard(null); setDraft(null); } };
@@ -267,7 +283,7 @@ export function CommentsLayer({ host, page }: CommentsLayerProps) {
             </div>
           )}
           {cardThread && card && (
-            <div className="pc-pop" role="dialog" aria-label="Comment thread" style={{ top: card.at.top, left: card.at.left }}>
+            <div ref={cardRef} tabIndex={-1} className="pc-pop" role="dialog" aria-label="Comment thread" style={{ top: card.at.top, left: card.at.left }}>
               <div style={{ display: 'flex' }}><button type="button" className="pc-x" aria-label="Close comment" onClick={() => setCard(null)}>×</button></div>
               <ThreadView thread={cardThread} actions={threadActions(cardThread, 'card')} busy={busy === 'card'} error={error?.where === 'card' ? error.message : null} />
             </div>
@@ -296,7 +312,7 @@ export function CommentsLayer({ host, page }: CommentsLayerProps) {
             <CommentsPanel threads={file?.threads ?? []} anchoring={anchoring} signedIn={signedIn}
               actionsFor={(t) => threadActions(t, `panel:${t.id}`)} busyId={busy?.startsWith('panel:') ? busy.slice(6) : null}
               errorFor={(id) => (error?.where === `panel:${id}` ? error.message : null)}
-              onReveal={reveal} onClose={() => setPanelOpen(false)} />
+              onReveal={reveal} onClose={() => { setPanelOpen(false); buttonRef.current?.focus({ preventScroll: true }); }} />
           )}
         </div>,
         document.body,

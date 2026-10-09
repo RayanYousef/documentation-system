@@ -36,7 +36,8 @@ export default function platformComments(context, options = {}) {
             middlewares.unshift({
               name: 'platform-comments',
               middleware: (req, res, next) => {
-                const pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://local').pathname);
+                let pathname;
+                try { pathname = decodeURIComponent(new URL(req.url ?? '/', 'http://local').pathname); } catch { next(); return; } // malformed %-escape
                 if (req.method !== 'GET' || !pathname.startsWith(base)) { next(); return; }
                 const name = pathname.slice(base.length);
                 if (!FILE.test(name) || name.split('/').some((s) => s === '..' || s.startsWith('.'))) { next(); return; }

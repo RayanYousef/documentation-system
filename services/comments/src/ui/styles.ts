@@ -14,6 +14,7 @@ export const COMMENTS_CSS = `
 .pc-pop { position: absolute; z-index: 195; width: 340px; max-width: calc(100vw - 16px); box-sizing: border-box; padding: 0.75rem;
   background: var(--ifm-background-surface-color); color: var(--ifm-font-color-base); border: 1px solid var(--ifm-color-emphasis-300);
   border-radius: var(--ifm-global-radius); box-shadow: var(--ifm-global-shadow-md); font-size: 0.875rem; line-height: 1.45; }
+.pc-pop:focus:not(:focus-visible) { outline: none; }
 .pc-pop--hover { z-index: 196; pointer-events: none; width: 300px; }
 .pc-selbtn { position: absolute; z-index: 194; }
 .pc-entry + .pc-entry { margin-top: 0.6rem; padding-top: 0.6rem; border-top: 1px solid var(--ifm-color-emphasis-200); }

@@ -54,8 +54,13 @@ export class GitDataClient {
     // Never from the browser's HTTP cache: a ref read up to a minute old would load a page as it was before
     // the last save, and make every retry of a save compute on the same stale head.
     const ref = await this.api<{ object: { sha: string } }>('GET', this.repoPath(`/git/ref/heads/${encodeURIComponent(branch)}`), undefined, 'no-store');
-    const commit = await this.api<{ tree: { sha: string } }>('GET', this.repoPath(`/git/commits/${ref.object.sha}`));
-    return { commitSha: ref.object.sha, treeSha: commit.tree.sha };
+    return { commitSha: ref.object.sha, treeSha: await this.getCommitTree(ref.object.sha) };
+  }
+
+  /** The tree sha of a commit (a commit never changes, so this read may come from the cache). */
+  async getCommitTree(commitSha: string): Promise<string> {
+    const commit = await this.api<{ tree: { sha: string } }>('GET', this.repoPath(`/git/commits/${commitSha}`));
+    return commit.tree.sha;
   }
 
   async getTree(treeSha: string): Promise<TreeEntry[]> {

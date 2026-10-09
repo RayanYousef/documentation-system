@@ -22,11 +22,15 @@ export class GithubCommentStore implements CommentStore {
 
   private repoPath(page: string): string { return `${this.opts.sitePath ? `${this.opts.sitePath}/` : ''}${commentsFilePath(page)}`; }
 
-  private async current(page: string): Promise<{ head: Head; sha: string | null }> {
+  /** The blob sha of the page's comments file in a tree, or null. */
+  private async fileIn(treeSha: string, page: string): Promise<string | null> {
     const path = this.repoPath(page);
+    return (await this.git.getTree(treeSha)).find((e) => e.type === 'blob' && e.path === path)?.sha ?? null;
+  }
+
+  private async current(page: string): Promise<{ head: Head; sha: string | null }> {
     const head = await this.git.getHead(this.opts.branch);
-    const entry = (await this.git.getTree(head.treeSha)).find((e) => e.type === 'blob' && e.path === path);
-    return { head, sha: entry?.sha ?? null };
+    return { head, sha: await this.fileIn(head.treeSha, page) };
   }
 
   async read(page: string): Promise<{ file: CommentsFile; etag: string | null }> {
@@ -44,7 +48,8 @@ export class GithubCommentStore implements CommentStore {
         if (sha !== opts.expectedEtag) throw commentsConflict(page);
         if (removes && !sha) return { commitSha: '', commitUrl: null, etag: null }; // nothing stored, nothing to remove
         const commitSha = await this.git.commitFiles(this.opts.branch, removes ? {} : { [path]: serializeCommentsFile(file) }, removes && sha ? [path] : [], opts.message, opts.author, { expectedParent: head });
-        const etag = removes ? null : (await this.current(page)).sha;
+        // The etag of what this commit wrote (read from the commit, not the branch: another save may follow it at once).
+        const etag = removes ? null : await this.fileIn(await this.git.getCommitTree(commitSha), page);
         return { commitSha, commitUrl: `https://github.com/${this.opts.owner}/${this.opts.repo}/commit/${commitSha}`, etag };
       } catch (e) {
         if (!isBranchMoved(e) || attempt >= BRANCH_MOVED_RETRIES) throw e;
