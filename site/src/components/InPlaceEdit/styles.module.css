@@ -1,0 +1,29 @@
+.editRow {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-bottom: 0.5rem;
+}
+
+.editButton {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.editButton svg {
+  margin-right: 0 !important;
+}
+
+.footerEdit {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  color: var(--ifm-link-color);
+  cursor: pointer;
+}
+
+.footerEdit:hover {
+  text-decoration: underline;
+}

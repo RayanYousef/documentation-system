@@ -202,25 +202,25 @@
 
 /* ---------- page content while editing ---------- */
 
-/* Infima sizes headings with `.markdown > h2` (direct child); in the editor they sit one level deeper. */
-.ped-ui .markdown [data-slate-editor] > h1 { --ifm-h1-font-size: 3rem; }
-.ped-ui .markdown [data-slate-editor] > h2 {
+/* Infima sizes headings with `.markdown > h2` (direct child); in the editor they sit inside block wrappers. */
+.ped-ui .markdown [data-slate-editor] h1 { --ifm-h1-font-size: 3rem; }
+.ped-ui .markdown [data-slate-editor] h2 {
   --ifm-h2-font-size: 2rem;
   margin-bottom: calc(var(--ifm-heading-vertical-rhythm-bottom) * var(--ifm-leading));
   margin-top: calc(var(--ifm-h2-vertical-rhythm-top) * var(--ifm-leading));
 }
-.ped-ui .markdown [data-slate-editor] > h3 {
+.ped-ui .markdown [data-slate-editor] h3 {
   --ifm-h3-font-size: 1.5rem;
   margin-bottom: calc(var(--ifm-heading-vertical-rhythm-bottom) * var(--ifm-leading));
   margin-top: calc(var(--ifm-h3-vertical-rhythm-top) * var(--ifm-leading));
 }
-.ped-ui .markdown [data-slate-editor] > :is(h4, h5, h6) {
+.ped-ui .markdown [data-slate-editor] :is(h4, h5, h6) {
   margin-bottom: calc(var(--ifm-heading-vertical-rhythm-bottom) * var(--ifm-leading));
   margin-top: calc(var(--ifm-heading-vertical-rhythm-top) * var(--ifm-leading));
 }
-.ped-ui .markdown [data-slate-editor] > :is(p, pre, ul) { margin-bottom: var(--ifm-leading); }
+.ped-ui .markdown [data-slate-editor] :is(p, pre, ul) { margin-bottom: var(--ifm-leading); }
 .ped-ui .markdown [data-slate-editor] { outline: none; }
-.ped-ui .markdown [data-slate-editor] > :first-child { margin-top: 0; }
+.ped-ui .markdown [data-slate-editor] > :first-child :is(h1, h2, h3, h4, h5, h6, p):first-child { margin-top: 0; }
 /* Subtle affordance: the block under the pointer. */
 .ped-ui .markdown [data-slate-editor]:not([contenteditable='false']) > [data-slate-node='element']:hover {
   box-shadow: -0.75rem 0 0 -0.6rem var(--ed-line);
@@ -297,7 +297,7 @@
 .ped-ui .ped-input, .ped-ui .ped-row input:not([type='checkbox']), .ped-ui .ped-row select {
   padding: 0.3rem 0.5rem; background: var(--ed-field); color: var(--ed-text); border: 1px solid var(--ed-line-strong); min-width: 0;
 }
-.ped-ui .ped-commit { flex: 1 1 14rem; max-width: 26rem; }
+.ped-ui .ped-commit { flex: 1 1 10rem; max-width: 18rem; }
 
 .ped-ui .ped-menu { position: relative; }
 .ped-ui .ped-menu-list {

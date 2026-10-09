@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./inplace": "./src/inplace/index.ts",
-    "./inplace/styles.pcss": "./src/theme-inpage/inplace.pcss"
+    "./inplace/styles.pcss": "./src/theme-inpage/inplace.pcss",
+    "./session": "./src/session/SessionStore.ts"
   },
   "scripts": {
     "test": "vitest run"

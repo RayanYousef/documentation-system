@@ -17,8 +17,12 @@ const config = {
   onBrokenLinks: 'throw',
   markdown: { hooks: { onBrokenMarkdownLinks: 'warn' } },
   i18n: { defaultLocale: 'en', locales: ['en'] },
+  // buildSha: the commit this build was made from (CI sets PLATFORM_BUILD_SHA). In-place editing keeps
+  // showing a just-saved page until a build from a newer commit is served.
+  customFields: { buildSha: process.env.PLATFORM_BUILD_SHA ?? 'local' },
 
   plugins: [
+    // In-place editing (Edit button on Latest doc pages; disk saves on `npm start`). See site/docs/platform/editor.md.
     ['./plugins/platform-inplace-edit/index.mjs', { enabled: platform.features.editor, codeRepos: platform.codeRepos }],
     ...(platform.features.search
     ? [[
@@ -64,7 +68,6 @@ const config = {
         { type: 'docsVersionDropdown', position: 'left', dropdownActiveClassDisabled: true },
         { type: 'docSidebar', sidebarId: 'docsSidebar', position: 'left', label: 'Documentation' },
         { to: '/log', label: 'Change Log', position: 'left' },
-        ...(platform.features.editor ? [{ href: 'pathname:///editor/', label: 'Editor', position: 'right', target: '_self' }] : []),
         { href: repoUrl, position: 'right', className: 'header-github-link', 'aria-label': 'GitHub repository' },
       ],
     },
@@ -72,10 +75,7 @@ const config = {
       style: 'dark',
       links: [
         { title: 'Docs', items: [{ label: 'Home', to: '/' }, { label: 'Change Log', to: '/log' }] },
-        { title: 'More', items: [
-          ...(platform.features.editor ? [{ label: 'Editor', href: 'pathname:///editor/', target: '_self' }] : []),
-          { label: 'GitHub Repository', href: repoUrl },
-        ] },
+        { title: 'More', items: [{ label: 'GitHub Repository', href: repoUrl }] },
       ],
       copyright: platform.footerCopyright,
     },

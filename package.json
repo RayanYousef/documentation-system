@@ -12,7 +12,7 @@
     "build": "npm run build --workspaces --if-present",
     "test": "vitest run",
     "lint": "eslint .",
-    "typecheck": "tsc -b packages/contracts packages/okf-core packages/viewers services/auth services/content services/editor",
+    "typecheck": "tsc -b packages/contracts packages/okf-core packages/viewers services/auth services/content services/editor && tsc -p site/tsconfig.json",
     "okf:generate": "node scripts/okf.mjs generate",
     "okf:check": "node scripts/okf.mjs check",
     "site:build": "npm run build -w @platform/site",

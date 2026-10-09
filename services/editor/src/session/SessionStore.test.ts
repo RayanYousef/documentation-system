@@ -25,4 +25,11 @@ describe('BrowserSessionStore', () => {
     expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
     expect(store.load()).toBeNull();
   });
+  it('can keep its session under another key', () => {
+    const storage = fakeStorage();
+    new BrowserSessionStore(storage, 'docs-platform.dev-session').save(session, true);
+    expect(storage.getItem(SESSION_STORAGE_KEY)).toBeNull();
+    expect(new BrowserSessionStore(storage, 'docs-platform.dev-session').load()).toEqual(session);
+    expect(new BrowserSessionStore(storage).load()).toBeNull();
+  });
 });
