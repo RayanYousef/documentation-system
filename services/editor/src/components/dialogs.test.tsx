@@ -47,6 +47,23 @@ describe('NewPageDialog', () => {
     expect(host.querySelector('[role="dialog"]')).not.toBeNull();
     expect(button(host, 'Create').disabled).toBe(false);
   });
+  it('offers Blank (the default) or Feature page; Feature page starts with three tabs', async () => {
+    const onCreate = vi.fn(async () => {});
+    const host = await mount(<NewPageDialog typesInUse={['guide']} defaultResource="" onCreate={onCreate} onClose={() => {}} />);
+    const radios = [...host.querySelectorAll<HTMLInputElement>('fieldset input[type="radio"]')];
+    expect(radios.map((r) => r.parentElement!.textContent!.trim())).toEqual(['Blank', 'Feature page']);
+    expect(radios[0]!.checked).toBe(true);
+    await act(async () => { radios[1]!.click(); });
+    await type(byLabel(host, 'New page path'), 'systems/crafting.md');
+    await type(byLabel(host, 'New page title'), 'Crafting');
+    await type(byLabel(host, 'New page description'), 'How crafting works.');
+    await click(button(host, 'Create'));
+    await tick();
+    const text = (onCreate.mock.calls[0] as unknown as [string, string])[1];
+    expect(text).toMatch(/^---\n[\s\S]*title: Crafting[\s\S]*---\n\n# Crafting\n\n<Tabs>\n {2}<TabItem value="how-to-use" label="How to use" default>/);
+    expect(text).toContain('<TabItem value="api" label="API">');
+    expect(text).toContain('<TabItem value="misc" label="Misc">');
+  });
   it('labels the dialog by its heading', async () => {
     const host = await mount(<NewPageDialog typesInUse={[]} defaultResource="" onCreate={async () => {}} onClose={() => {}} />);
     const dialog = host.querySelector('[role="dialog"]')!;

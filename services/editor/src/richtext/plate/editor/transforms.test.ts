@@ -7,7 +7,8 @@ import { repoAssetInsert } from '../../assets.js';
 import { ContentKit } from '../kits/content-kit.js';
 import { buildDocsMarkdown, exportBody, importBody } from '../markdown/docsMarkdown.js';
 import { DOCS_KEYS } from '../nodes/keys.js';
-import { addTab, insertAsset, insertBasicBlock, insertCallout, insertCodeBlock, insertComponent, insertDivider, insertImage, insertTable, insertTabs, insertViewer } from './transforms.js';
+import { addTab, insertAsset, insertBasicBlock, insertCallout, insertCodeBlock, insertComponent, insertDivider, insertImage, insertTable, insertTabs, insertViewer, moveTab, removeTab, renameTab } from './transforms.js';
+import { FEATURE_PAGE, PAGE_TEMPLATES } from '../../../components/pageTemplates.js';
 
 const MANIFEST: ComponentsManifest = {
   components: [
@@ -155,6 +156,61 @@ describe('insert transforms', () => {
     const added = el(editor.children[0]!.children[2]);
     expect(added).toMatchObject({ type: DOCS_KEYS.tabItem, jsxName: 'TabItem', value: 'tab3', label: 'Tab 3' });
     expect(stable(out(editor))).toContain('<TabItem value="tab3" label="Tab 3">');
+  });
+
+  it('adds any number of tabs, each with its own value', () => {
+    const editor = setup(`${TABS}\n`);
+    for (let i = 0; i < 5; i++) addTab(editor, MANIFEST, [0]);
+    const values = editor.children[0]!.children.map((c) => el(c).value);
+    expect(values).toEqual(['one', 'two', 'tab3', 'tab4', 'tab5', 'tab6', 'tab7']);
+    expect(new Set(values).size).toBe(7);
+  });
+
+  it('moves a tab left and right, keeping its content', () => {
+    const editor = setup(`${TABS}\n`);
+    addTab(editor, MANIFEST, [0]);
+    moveTab(editor, [0], 0, 2);
+    expect(editor.children[0]!.children.map((c) => el(c).value)).toEqual(['two', 'tab3', 'one']);
+    moveTab(editor, [0], 2, 1);
+    expect(editor.children[0]!.children.map((c) => el(c).value)).toEqual(['two', 'one', 'tab3']);
+    moveTab(editor, [0], 0, -1); // out of range: nothing happens
+    moveTab(editor, [0], 2, 3);
+    expect(editor.children[0]!.children.map((c) => el(c).value)).toEqual(['two', 'one', 'tab3']);
+    expect(stable(out(editor))).toMatch(/<TabItem value="two" label="Two">\n {4}Second tab\n {2}<\/TabItem>\n\n {2}<TabItem value="one" label="One" default>\n {4}First tab/);
+  });
+
+  it('removes a tab but never the last one', () => {
+    const editor = setup(`${TABS}\n`);
+    removeTab(editor, [0], 0);
+    expect(editor.children[0]!.children.map((c) => el(c).value)).toEqual(['two']);
+    removeTab(editor, [0], 0);
+    expect(editor.children[0]!.children.map((c) => el(c).value)).toEqual(['two']);
+    expect(stable(out(editor))).not.toContain('First tab');
+  });
+
+  it('renames a tab (its label); an empty name is ignored', () => {
+    const editor = setup(`${TABS}\n`);
+    renameTab(editor, [0], 1, '  Linux  ');
+    renameTab(editor, [0], 0, '   ');
+    expect(editor.children[0]!.children.map((c) => el(c).label)).toEqual(['One', 'Linux']);
+    expect(stable(out(editor))).toContain('<TabItem value="two" label="Linux">');
+  });
+});
+
+describe('page templates', () => {
+  it('the Feature page body opens in the visual editor with three tabs and writes back unchanged', () => {
+    const body = FEATURE_PAGE.body('Crafting');
+    const editor = setup(body);
+    const tabs = el(editor.children.find((c) => el(c).type === DOCS_KEYS.tabs));
+    expect(tabs.children.map((c) => el(c).label)).toEqual(['How to use', 'API', 'Misc']);
+    expect(tabs.children.map((c) => el(c).value)).toEqual(['how-to-use', 'api', 'misc']);
+    expect(el(tabs.children[0]).default).toBe(true);
+    expect(out(editor)).toBe(body.replace(/^\n/, ''));
+  });
+
+  it('Blank is the old one-paragraph page; templates are listed Blank first', () => {
+    expect(PAGE_TEMPLATES.map((t) => t.label)).toEqual(['Blank', 'Feature page']);
+    expect(PAGE_TEMPLATES[0]!.body('Crafting')).toBe('\n# Crafting\n\nWrite the page here.\n');
   });
 });
 
