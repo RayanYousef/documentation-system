@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": { "types": "./dist/index.d.ts", "default": "./dist/index.js" },
-    "./node": { "types": "./dist/node.d.ts", "default": "./dist/node.js" }
+    "./node": { "types": "./dist/node.d.ts", "default": "./dist/node.js" },
+    "./comments": { "types": "./dist/comments/index.d.ts", "default": "./dist/comments/index.js" }
   },
   "scripts": { "build": "tsc -b", "test": "vitest run" },
   "dependencies": { "@orama/orama": "^3.0.0", "@platform/contracts": "*", "@platform/okf-core": "*" },

@@ -18,8 +18,11 @@ export interface PlatformConfig {
   tagline: string;
   navbarTitle: string;
   footerCopyright: string;
-  /** editor: show the in-place Edit button on Latest doc pages. viewers: 3D viewer UI. search: Orama search. */
-  features: { editor: boolean; viewers: boolean; search: boolean };
+  /**
+   * editor: show the in-place Edit button on Latest doc pages. viewers: 3D viewer UI. search: Orama search.
+   * comments: comments on the text of Latest doc pages (needs editor for signing in; off when absent).
+   */
+  features: { editor: boolean; viewers: boolean; search: boolean; comments?: boolean };
   auth: { provider: 'github-token' | 'mock' };
   content: { backend: 'github-browser' | 'http'; url?: string };
   codeRepos: CodeRepoRef[];
