@@ -20,8 +20,13 @@
           "label": "Misc"
         }
       },
-      "status": "open",
-      "replies": []
+      "status": "resolved",
+      "replies": [],
+      "resolvedAt": "2026-10-09T16:19:03.753Z",
+      "resolvedBy": {
+        "login": "RayanYousef",
+        "name": "Rayan Yousef"
+      }
     }
   ]
 }
