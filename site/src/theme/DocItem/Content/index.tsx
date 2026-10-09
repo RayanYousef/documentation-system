@@ -8,7 +8,7 @@ import type ContentType from '@theme/DocItem/Content';
 import type { WrapperProps } from '@docusaurus/types';
 import useIsBrowser from '@docusaurus/useIsBrowser';
 import { EditButton } from '@site/src/components/InPlaceEdit/EditButton';
-import { onEditRequest } from '@site/src/components/InPlaceEdit/editRequest';
+import { onEditRequest, setFlashNotice, takeFlashNotice } from '@site/src/components/InPlaceEdit/editRequest';
 import { useEditablePage } from '@site/src/components/InPlaceEdit/useEditablePage';
 
 type Props = WrapperProps<typeof ContentType>;
@@ -36,6 +36,8 @@ export default function ContentWrapper(props: Props) {
   const { page } = useEditablePage();
   const [view, setView] = useState<View>({ kind: 'read' });
   const [notice, setNotice] = useState<string | null>(null);
+  // A notice from an editor exit that navigated here (delete -> folder page, rename -> new address).
+  useEffect(() => { const m = takeFlashNotice(); if (m) setNotice(m); }, []);
   const contentType = contentTypeOf(props.children);
 
   const startEdit = useCallback(() => { setNotice(null); setView({ kind: 'edit' }); }, []);
@@ -60,6 +62,7 @@ export default function ContentWrapper(props: Props) {
       <Suspense fallback={<><p className="margin-bottom--sm" role="status"><em>Loading editor...</em></p><Content {...props} /></>}>
         <InPlaceEditorMount page={page} onExit={(r) => {
           setNotice(r.notice ?? null);
+          setFlashNotice(r.notice ?? null);
           setView(r.saved ? { kind: 'saved', saved: { text: r.saved.text, commitSha: r.saved.commitSha, commitUrl: r.saved.commitUrl }, contentType } : { kind: 'read' });
         }} />
       </Suspense>

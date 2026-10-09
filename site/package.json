@@ -10,7 +10,8 @@
     "build": "docusaurus build",
     "clear": "docusaurus clear",
     "serve": "docusaurus serve",
-    "test": "vitest run"
+    "test": "vitest run",
+    "e2e": "playwright test"
   },
   "dependencies": {
     "@docusaurus/core": "^3.10.1",
